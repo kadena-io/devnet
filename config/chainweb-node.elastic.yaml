@@ -1,0 +1,15 @@
+logging:
+  telemetryBackend:
+    enabled: true
+    configuration:
+      handle: es::http://elasticsearch:9200
+      color: auto
+      format: json
+  logger:
+    log_level: info
+    policy: block
+    queue_size: 10000
+  backend:
+    handle: es::http://elasticsearch:9200
+    color: auto
+    format: json

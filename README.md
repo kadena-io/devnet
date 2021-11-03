@@ -1,0 +1,185 @@
+# Docker Compose Deployment of Kadena Devnet
+
+Before you begin, check your docker settings to make sure that docker has access
+to at least 8GB of RAM and 4 CPUs.
+
+Start network:
+
+```sh
+docker compose pull
+docker compose up -d
+```
+
+Stop network:
+
+```sh
+docker compose down
+```
+
+Services are exposed on the host on port 8080 via HTTP.
+
+## Settings
+
+Default values for some settings are defined in the `.env` file and can be
+overwritten with environment variables:
+
+```.env
+# Images
+CHAINWEB_NODE_IMAGE=ghcr.io/kadena-io/chainweb-node/ubuntu:latest
+MINING_CLIENT_IMAGE=ghcr.io/kadena-io/chainweb-mining-client:latest
+
+# Ports that are exposed on the host system
+HOST_SERVICE_PORT=8080
+HOST_STRATUM_PORT=1917
+
+# Miner keys
+MINER_PUBLIC_KEY=f89ef46927f506c70b6a58fd322450a936311dc6ac91f4ec3d8ef949608dbf1f
+MINER_PRIVATE_KEY=da81490c7efd5a95398a3846fa57fd17339bdf1b941d102f2d3217ad29785ff0
+```
+
+## chainweb-node Docker Images
+
+The fastest way to build for development and incremental builds is to build
+chainweb-node docker images locally. The docker compose file expects the
+chainweb-node binary on the image in the folder /chainweb/chainweb-node`.
+
+The Docker images for officially released chainweb versions are stored in the
+packages
+[chainweb-node/ubuntu](https://github.com/orgs/kadena-io/packages/container/package/chainweb-node%2Fubuntu)
+and
+[chainweb-node/alpine](https://github.com/orgs/kadena-io/packages/container/package/chainweb-node%2Falpine)
+
+Docker images of development versions of chainweb-node are created by [Build
+Applications
+Workflow](https://github.com/kadena-io/chainweb-node/actions/workflows/applications.yml)
+and stored in [this private github
+package](https://github.com/orgs/kadena-io/packages/container/package/chainweb-node)
+in the [Github Container Registry](https://ghcr.io). By default only images for
+revisions in the master branch are created. Images for other revisions can be
+[triggered on
+demand](https://github.com/kadena-io/chainweb-node/actions/workflows/applications.yml)
+by clicking on `Run Workflow` selecting the respective branch.
+
+The docker image URLs are:
+
+*   development image for git rev SHORT_REV: `ghcr.io/kadena-io/chainweb-node:sha-SHORT_REV` (private)
+*   latest released ubuntu image: `ghcr.io/kadena-io/chainweb-node/ubuntu:latest` (public)
+*   latest released alpine image: `ghcr.io/kadena-io/chainweb-node/alpine:latest` (public)
+
+Use of the private images requires to log into the ghcr.io docker registry:
+
+```
+docker login ghcr.io
+```
+
+While it might be possible to use the Github password for login, it is recommend
+to create a [PAT token for that purpose](https://docs.github.com/en/packages/working-with-a-github-packages-registry/migrating-to-the-container-registry-from-the-docker-registry#authenticating-to-the-container-registry).
+
+## Environment Variables
+
+Override docker image (chainweb-node revision):
+
+```sh
+export NODE_IMAGE=ghcr.io/kadena-io/chainweb-node:sha-SHORT_REV
+docker compose up -d
+```
+
+Override port on which services are exposed on the host:
+
+```sh
+export HOST_SERVICE_PORT=8000
+docker compose up -d
+```
+
+## Stratum Server
+
+Note that stratum server support is yet experimental. It can be enable via the
+docker compose `--profile stratum` flag. The stratum port is exposed on the host
+at port number 1917.
+
+## Logging To Elasticsearch
+
+In order to send telemetry and log messages to a local Elasticsearch stack
+run devnet as follows:
+
+```
+docker compose -f docker-compose.yaml -f elasticsearch.yaml up -d
+```
+
+It will take up to a minute until Elasticsearch and Kibana are initialized. In
+order to capture all logs right from the start it is recommended to first only
+start Kibana and Elasticsearch and start the other services only some time
+(~1min) later:
+
+```
+docker compose -f docker-compose.yaml -f elasticsearch.yaml up -d kibana
+sleep 60
+docker compose -f docker-compose.yaml -f elasticsearch.yaml up -d
+```
+
+Kibana is served on the host at [http://localhost:5601]().
+Elasticsearch is exposed on port 9200.
+
+All data saved in Elasticsearch is deleted when the service is shut down or
+restarted.
+
+Preinitialized Kibana definitions are available as saved objects in the
+file `./config/kibana.saved-objets.ndjson`. Changes and additions can be made
+permanent by exporting all Kibana objects and saving them to this file.
+
+## Running Tests
+
+The `test` service, which is disabled by default, can be used to run test
+scripts on a container within devnet. The service runs an ubuntu image with
+curl, jq, rsync, and nodejs pre-installed. The `test` sub-directory is
+mounted into that container. The default entry point is `/bin/bash`.
+
+The following command provides an interactive shell prompt on the test
+container.
+
+```
+docker compose run --rm test
+```
+
+The following is an example for a test script that prints the cuts for
+all nodes in the cluster:
+
+```
+docker compose run --rm -T test cuts.sh
+```
+
+## Debugging with Curl
+
+In order to make it easier to query individual nodes from the host there is a
+service definition that provide an alpine curl image. The service has the
+`debug` profile and is thus disabled by default.
+
+The entrypoint is just a curl binary which can be used to run curl in the
+context of the devnet network environment:
+
+```
+docker compose run -- curl -sk "https://devnet_api-node_1:1789/chainweb/0.0/development/cut"
+```
+
+The domaines of individual containers in the devnet network are the same as the
+names of the respective containers and are of the form:
+
+```
+devnet_{{SERVICE_NAME}}_{{REPLICA_NUMBER}}
+```
+
+It is also possible to use just the service name `{{SERVICE_NAME}}`, which case
+a random container for that service is choosen.
+
+```
+docker compose run -- curl -sk "https://common-node:1789/chainweb/0.0/development/cut"
+```
+
+## Caveats
+
+Restarting nodes via `docker compose up` does not preserve
+databases. Therefore nodes have to perform a complete catchup of restart.
+
+Node restarts without deleting the database can be performed by defining nodes
+in devnet.yaml that store the database on a named value or on the host.
+
