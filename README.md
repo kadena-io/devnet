@@ -80,7 +80,7 @@ to create a [PAT token for that purpose](https://docs.github.com/en/packages/wor
 Override docker image (chainweb-node revision):
 
 ```sh
-export NODE_IMAGE=ghcr.io/kadena-io/chainweb-node:sha-SHORT_REV
+export CHAINWEB_NODE_IMAGE=ghcr.io/kadena-io/chainweb-node:sha-SHORT_REV
 docker compose up -d
 ```
 
