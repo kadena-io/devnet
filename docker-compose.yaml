@@ -32,11 +32,13 @@ services:
     - --p2p-hostname=bootstrap-node
     - --bootstrap-reachability=1
     - --cluster-id=bootstrap-node
+    environment:
+    - DISABLE_POW_VALIDATION
 
   # ########################################################################## #
   common-node:
     deploy:
-      replicas: 2
+      replicas: 3
     extends:
       file: node.yaml
       service: node
@@ -50,6 +52,8 @@ services:
     - --bootstrap-reachability=1
     - --p2p-hostname=0.0.0.0
     - --cluster-id=common-node
+    environment:
+    - DISABLE_POW_VALIDATION
 
   # ########################################################################## #
   mining-node:
@@ -63,16 +67,22 @@ services:
       com.chainweb.devnet.mining-node: ""
     depends_on:
     - bootstrap-node
-    volumes:
-    - ${PWD}/config/chainweb-node.mining.yaml:/chainweb/config/chainweb-node.mining.yaml:ro
     command:
     - --known-peer-info=YNo7pXthYQ9RQKv1bbpQf2R5LcLYA3ppx2BL2Hf8fIM@bootstrap-node:1789
     - --bootstrap-reachability=1
     - --p2p-hostname=0.0.0.0
-    - --config-file=/chainweb/config/chainweb-node.mining.yaml
     - --cluster-id=mining-node
+    - --enable-mining-coordination
+    - --mining-public-key=${MINER_PUBLIC_KEY}
+    - --enable-node-mining
+    - --node-mining-public-key=${MINER_PUBLIC_KEY}
+    environment:
+    - DISABLE_POW_VALIDATION
+    profiles:
+    - cpu-mining
 
   # ########################################################################## #
+
   mining-api-node:
     deploy:
       replicas: 1
@@ -80,24 +90,26 @@ services:
       file: node.yaml
       service: node
     labels:
+      com.docker.lb.ip_hash: true
       com.chainweb.devnet.description: "Devnet Mining API Node"
       com.chainweb.devnet.mining-api-node: ""
     depends_on:
-    - bootstrap-node
-    volumes:
-    - ${PWD}/config/chainweb-node.mining-api.yaml:/chainweb/config/chainweb-node.mining-api.yaml:ro
+      bootstrap-node:
+        condition: service_healthy
     command:
     - --known-peer-info=YNo7pXthYQ9RQKv1bbpQf2R5LcLYA3ppx2BL2Hf8fIM@bootstrap-node:1789
     - --bootstrap-reachability=1
     - --p2p-hostname=0.0.0.0
-    - --config-file=/chainweb/config/chainweb-node.mining-api.yaml
     - --cluster-id=stratum-node
     - --log-level=info
-    profiles: ["stratum"]
+    - --enable-mining-coordination
+    - --mining-public-key=${MINER_PUBLIC_KEY}
+    environment:
+    - DISABLE_POW_VALIDATION
 
   stratum-server:
     container_name: stratum-server
-    image: ghcr.io/kadena-io/chainweb-mining-client:latest
+    image: ghcr.io/kadena-io/chainweb-mining-client:a9d04ff
     restart: unless-stopped
     depends_on:
       mining-api-node:
@@ -107,14 +119,31 @@ services:
     - --public-key=${MINER_PUBLIC_KEY}
     - --node=mining-api-node:1848
     - --worker=stratum
-    - --thread-count=4
-    - --log-level=debug
+    - --thread-count=2
+    - --log-level=info
     - --no-tls
     ports:
     - target: 1917
       published: ${HOST_STRATUM_PORT}
       protocol: tcp
     profiles: ["stratum"]
+
+  simulation-miner:
+    container_name: simulation-miner
+    image: ghcr.io/kadena-io/chainweb-mining-client:a9d04ff
+    restart: unless-stopped
+    depends_on:
+      mining-api-node:
+        condition: service_healthy
+    entrypoint: "/chainweb-mining-client/chainweb-mining-client"
+    command:
+    - --public-key=${MINER_PUBLIC_KEY}
+    - --node=mining-api-node:1848
+    - --worker=simulation
+    - --thread-count=2
+    - --log-level=info
+    - --no-tls
+    - --hash-rate=1000000
 
   # ########################################################################## #
   # chainweb-api:
@@ -137,6 +166,8 @@ services:
     - --rosetta
     - --allowReadsInLocal
     - --cluster-id=api-node
+    environment:
+    - DISABLE_POW_VALIDATION
 
   # ########################################################################## #
   # Nginx API Proxy
