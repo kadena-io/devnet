@@ -177,6 +177,7 @@ services:
       com.chainweb.devnet.api-proxy: ""
     depends_on:
     - api-node
+    - mining-api-node
     - common-node
     image: nginx:latest
     volumes:
