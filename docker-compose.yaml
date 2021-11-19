@@ -109,7 +109,7 @@ services:
 
   stratum-server:
     container_name: stratum-server
-    image: ghcr.io/kadena-io/chainweb-mining-client:a9d04ff
+    image: "${MINING_CLIENT_IMAGE}"
     restart: unless-stopped
     depends_on:
       mining-api-node:
@@ -130,7 +130,7 @@ services:
 
   simulation-miner:
     container_name: simulation-miner
-    image: ghcr.io/kadena-io/chainweb-mining-client:a9d04ff
+    image: "${MINING_CLIENT_IMAGE}"
     restart: unless-stopped
     depends_on:
       mining-api-node:
