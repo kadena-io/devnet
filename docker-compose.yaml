@@ -13,6 +13,9 @@ configs:
   chainweb-node.common:
     file: ${PWD}/config/chainweb-node.common.yaml
 
+volumes:
+  db-server-db: {}
+
 services:
 
   # ########################################################################## #
@@ -186,6 +189,73 @@ services:
     - target: 80
       published: ${HOST_SERVICE_PORT}
       protocol: tcp
+
+  # ########################################################################## #
+  # DB Sync Server
+
+  db-server-node:
+    container_name: db-server-node
+    extends:
+      file: node.yaml
+      service: node
+    labels:
+      com.chainweb.devnet.description: "Devnet DB Server Node"
+      com.chainweb.devnet.api-node: ""
+    depends_on:
+    - bootstrap-node
+    command:
+    - --known-peer-info=YNo7pXthYQ9RQKv1bbpQf2R5LcLYA3ppx2BL2Hf8fIM@bootstrap-node:1789
+    - --bootstrap-reachability=1
+    - --p2p-hostname=0.0.0.0
+    - --cluster-id=db-server-node
+    - --database-directory=/chainweb/db
+    environment:
+    - DISABLE_POW_VALIDATION
+    volumes:
+    - db-server-db:/chainweb/db:rw
+
+  db-server:
+    container_name: db-server
+    image: larsk/rsync
+    restart: unless-stopped
+    ports:
+    - "873:873"
+    volumes:
+    - db-server-db:/db:ro
+    depends_on:
+    - db-server-node
+    deploy:
+      restart_policy:
+        condition: on-failure
+        delay: "5s"
+        max_attempts: 3
+        window: "120s"
+      update_config:
+        delay: "60s"
+        order: stop-first
+    entrypoint:
+    - /bin/sh
+    - "-c"
+    command:
+    - |
+      cat > /etc/rsyncd.conf <<EOF
+      [db]
+      use chroot = yes
+      path = /db
+      comment = Chainweb Database
+      read only = yes
+      list = yes
+      max connections = 2
+      EOF
+      exec rsync --daemon --no-detach --dparam=pidfile=/var/run/rsyncd.pid
+    healthcheck:
+      interval: "1m"
+      retries: 3
+      start_period: "5s"
+      test: |
+        PID=$$(cat /var/run/rsyncd.pid)
+        [ -n "$${PID}" -a -d "/proc/$${PID}" ] || exit 1
+      timeout: "5s"
 
 # ############################################################################ #
 # Testing and Debugging
