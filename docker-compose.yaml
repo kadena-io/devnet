@@ -213,6 +213,7 @@ services:
     - DISABLE_POW_VALIDATION
     volumes:
     - db-server-db:/chainweb/db:rw
+    profiles: ["db-server"]
 
   db-server:
     container_name: db-server
@@ -256,6 +257,7 @@ services:
         PID=$$(cat /var/run/rsyncd.pid)
         [ -n "$${PID}" -a -d "/proc/$${PID}" ] || exit 1
       timeout: "5s"
+    profiles: ["db-server"]
 
 # ############################################################################ #
 # Testing and Debugging
