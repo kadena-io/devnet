@@ -291,3 +291,14 @@ services:
     - ${PWD}/test:/test
     profiles: ["test"]
 
+  pact:
+    labels:
+      com.chainweb.devnet.description: "Devnet Testing"
+      com.chainweb.devnet.debug: ""
+    build:
+      context: ./test
+      dockerfile: pact.Dockerfile
+    image: devnet-pact
+    volumes:
+    - ${PWD}/test:/test
+    profiles: ["pact"]
