@@ -37,6 +37,7 @@ services:
     - --cluster-id=bootstrap-node
     environment:
     - DISABLE_POW_VALIDATION
+    - DEVELOPMENT_BLOCK_RATE
 
   # ########################################################################## #
   common-node:
@@ -56,6 +57,7 @@ services:
     - --p2p-hostname=0.0.0.0
     - --cluster-id=common-node
     environment:
+    - DEVELOPMENT_BLOCK_RATE
     - DISABLE_POW_VALIDATION
 
   # ########################################################################## #
@@ -80,6 +82,7 @@ services:
     - --enable-node-mining
     - --node-mining-public-key=${MINER_PUBLIC_KEY}
     environment:
+    - DEVELOPMENT_BLOCK_RATE
     - DISABLE_POW_VALIDATION
     profiles:
     - cpu-mining
@@ -108,6 +111,7 @@ services:
     - --enable-mining-coordination
     - --mining-public-key=${MINER_PUBLIC_KEY}
     environment:
+    - DEVELOPMENT_BLOCK_RATE
     - DISABLE_POW_VALIDATION
 
   stratum-server:
@@ -170,6 +174,7 @@ services:
     - --allowReadsInLocal
     - --cluster-id=api-node
     environment:
+    - DEVELOPMENT_BLOCK_RATE
     - DISABLE_POW_VALIDATION
 
   # ########################################################################## #
@@ -210,6 +215,7 @@ services:
     - --cluster-id=db-server-node
     - --database-directory=/chainweb/db
     environment:
+    - DEVELOPMENT_BLOCK_RATE
     - DISABLE_POW_VALIDATION
     volumes:
     - db-server-db:/chainweb/db:rw
