@@ -235,11 +235,9 @@ Devnet requires that Docker have access to the following resources in order to p
 - At least 4 CPU cores
 
 **NOTE:**
-
 Running Devnet with less than 8 GB RAM memory could result in some containers exiting with code 137.
 
 
 **NOTE:**
-
 The resources Docker has access to can be changed in the Docker Desktop.
 
