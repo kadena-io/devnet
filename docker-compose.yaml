@@ -159,6 +159,7 @@ services:
       com.chainweb.devnet.api-node: ""
     depends_on:
     - bootstrap-node
+    - mining-api-node
     command:
     - --known-peer-info=YNo7pXthYQ9RQKv1bbpQf2R5LcLYA3ppx2BL2Hf8fIM@bootstrap-node:1789
     - --bootstrap-reachability=1
