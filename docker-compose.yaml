@@ -179,7 +179,6 @@ services:
     depends_on:
     - api-node
     - mining-api-node
-    - common-node
     image: nginx:latest
     volumes:
     - ${PWD}/config/nginx.api.conf:/etc/nginx/conf.d/default.conf
