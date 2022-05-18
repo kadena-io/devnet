@@ -41,7 +41,7 @@ services:
   # ########################################################################## #
   common-node:
     deploy:
-      replicas: 3
+      replicas: ${COMMON_NODE_REPLICAS:-2}
     extends:
       file: node.yaml
       service: node
@@ -61,7 +61,7 @@ services:
   # ########################################################################## #
   mining-node:
     deploy:
-      replicas: 2
+      replicas: ${MINING_NODE_REPLICAS:-1}
     extends:
       file: node.yaml
       service: node
@@ -87,8 +87,6 @@ services:
   # ########################################################################## #
 
   mining-api-node:
-    deploy:
-      replicas: 1
     extends:
       file: node.yaml
       service: node
@@ -152,7 +150,7 @@ services:
   # chainweb-api:
   api-node:
     deploy:
-      replicas: 2
+      replicas: ${API_NODE_REPLICAS:-1}
     extends:
       file: node.yaml
       service: node
