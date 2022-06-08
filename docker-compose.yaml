@@ -41,7 +41,7 @@ services:
   # ########################################################################## #
   common-node:
     deploy:
-      replicas: 3
+      replicas: ${COMMON_NODE_REPLICAS:-2}
     extends:
       file: node.yaml
       service: node
@@ -61,7 +61,7 @@ services:
   # ########################################################################## #
   mining-node:
     deploy:
-      replicas: 2
+      replicas: ${MINING_NODE_REPLICAS:-1}
     extends:
       file: node.yaml
       service: node
@@ -87,8 +87,6 @@ services:
   # ########################################################################## #
 
   mining-api-node:
-    deploy:
-      replicas: 1
     extends:
       file: node.yaml
       service: node
@@ -173,7 +171,7 @@ services:
   # chainweb-api:
   api-node:
     deploy:
-      replicas: 2
+      replicas: ${API_NODE_REPLICAS:-1}
     extends:
       file: node.yaml
       service: node
@@ -182,6 +180,7 @@ services:
       com.chainweb.devnet.api-node: ""
     depends_on:
     - bootstrap-node
+    - mining-api-node
     command:
     - --known-peer-info=YNo7pXthYQ9RQKv1bbpQf2R5LcLYA3ppx2BL2Hf8fIM@bootstrap-node:1789
     - --bootstrap-reachability=1
@@ -201,8 +200,6 @@ services:
       com.chainweb.devnet.api-proxy: ""
     depends_on:
     - api-node
-    - mining-api-node
-    - common-node
     image: nginx:latest
     volumes:
     - ${PWD}/config/nginx.api.conf:/etc/nginx/conf.d/default.conf
@@ -234,6 +231,7 @@ services:
     - DISABLE_POW_VALIDATION
     volumes:
     - db-server-db:/chainweb/db:rw
+    profiles: ["db-server"]
 
   db-server:
     container_name: db-server
@@ -277,6 +275,7 @@ services:
         PID=$$(cat /var/run/rsyncd.pid)
         [ -n "$${PID}" -a -d "/proc/$${PID}" ] || exit 1
       timeout: "5s"
+    profiles: ["db-server"]
 
 # ############################################################################ #
 # Testing and Debugging
@@ -310,3 +309,14 @@ services:
     - ${PWD}/test:/test
     profiles: ["test"]
 
+  pact:
+    labels:
+      com.chainweb.devnet.description: "Devnet Testing"
+      com.chainweb.devnet.debug: ""
+    build:
+      context: ./test
+      dockerfile: pact.Dockerfile
+    image: devnet-pact
+    volumes:
+    - ${PWD}/test:/test
+    profiles: ["pact"]

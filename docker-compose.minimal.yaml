@@ -1,0 +1,256 @@
+version: "3.9"
+
+# API Services are exposed on port 8080 on the host
+
+# boostrap certificate fingerprint: YNo7pXthYQ9RQKv1bbpQf2R5LcLYA3ppx2BL2Hf8fIM
+#
+# Miner Keys:
+# public: f89ef46927f506c70b6a58fd322450a936311dc6ac91f4ec3d8ef949608dbf1f
+# secret: da81490c7efd5a95398a3846fa57fd17339bdf1b941d102f2d3217ad29785ff0
+#
+
+configs:
+  chainweb-node.common:
+    file: ${PWD}/config/chainweb-node.common.yaml
+
+volumes:
+  db-server-db: {}
+
+services:
+
+  # ########################################################################## #
+  bootstrap-node:
+    extends:
+      file: node.yaml
+      service: node
+    labels:
+      com.chainweb.devnet.description: "Devnet Bootstrap Node"
+      com.chainweb.devnet.bootstrap-node: ""
+    volumes:
+    - ${PWD}/devnet-bootstrap-node.cert.pem:/chainweb/devnet-bootstrap-node.cert.pem:ro
+    - ${PWD}/devnet-bootstrap-node.key.pem:/chainweb/devnet-bootstrap-node.key.pem:ro
+    command:
+    - --p2p-certificate-chain-file=/chainweb/devnet-bootstrap-node.cert.pem
+    - --p2p-certificate-key-file=/chainweb/devnet-bootstrap-node.key.pem
+    - --p2p-hostname=bootstrap-node
+    - --bootstrap-reachability=1
+    - --cluster-id=bootstrap-node
+    environment:
+    - DISABLE_POW_VALIDATION
+
+      #      #  # ########################################################################## #
+      #  common-node:
+      #    deploy:
+      #      replicas: ${COMMON_NODE_REPLICAS:-1}
+      #    extends:
+      #      file: node.yaml
+      #      service: node
+      #    labels:
+      #      com.chainweb.devnet.description: "Devnet Common Node"
+      #      com.chainweb.devnet.common-node: ""
+      #    depends_on:
+      #    - bootstrap-node
+      #    command:
+      #    - --known-peer-info=YNo7pXthYQ9RQKv1bbpQf2R5LcLYA3ppx2BL2Hf8fIM@bootstrap-node:1789
+      #    - --bootstrap-reachability=1
+      #    - --p2p-hostname=0.0.0.0
+      #    - --cluster-id=common-node
+      #    - --enable-mining-coordination
+      #    - --mining-public-key=${MINER_PUBLIC_KEY}
+      #    environment:
+      #    - DISABLE_POW_VALIDATION
+
+  mining-api-node:
+    extends:
+      file: node.yaml
+      service: node
+    labels:
+      com.docker.lb.ip_hash: true
+      com.chainweb.devnet.description: "Devnet Mining API Node"
+      com.chainweb.devnet.mining-api-node: ""
+    depends_on:
+      bootstrap-node:
+        condition: service_healthy
+    command:
+    - --known-peer-info=YNo7pXthYQ9RQKv1bbpQf2R5LcLYA3ppx2BL2Hf8fIM@bootstrap-node:1789
+    - --bootstrap-reachability=1
+    - --p2p-hostname=0.0.0.0
+    - --cluster-id=stratum-node
+    - --log-level=info
+    - --enable-mining-coordination
+    - --mining-public-key=${MINER_PUBLIC_KEY}
+    environment:
+    - DISABLE_POW_VALIDATION
+
+
+  simulation-miner:
+    container_name: simulation-miner
+    image: "${MINING_CLIENT_IMAGE}"
+    restart: unless-stopped
+    depends_on:
+      mining-api-node:
+        condition: service_healthy
+    entrypoint: "/chainweb-mining-client/chainweb-mining-client"
+    command:
+    - --public-key=${MINER_PUBLIC_KEY}
+    - --node=mining-api-node:1848
+    - --worker=simulation
+    - --thread-count=1
+    - --log-level=info
+    - --no-tls
+    - --hash-rate=1000000
+      #
+      #      ##
+      #  # ########################################################################## #
+      # chainweb-api:
+  api-node:
+     deploy:
+       replicas: ${API_NODE_REPLICAS:-1}
+     extends:
+       file: node.yaml
+       service: node
+     labels:
+       com.chainweb.devnet.description: "Devnet API Node"
+       com.chainweb.devnet.api-node: ""
+     depends_on:
+     - bootstrap-node
+     - mining-api-node
+     command:
+     - --known-peer-info=YNo7pXthYQ9RQKv1bbpQf2R5LcLYA3ppx2BL2Hf8fIM@bootstrap-node:1789
+     - --bootstrap-reachability=1
+     - --p2p-hostname=0.0.0.0
+     - --header-stream
+     - --rosetta
+     - --allowReadsInLocal
+     - --cluster-id=api-node
+     environment:
+     - DISABLE_POW_VALIDATION
+    
+      #  # ########################################################################## #
+      #  # Nginx API Proxy
+  api-proxy:
+    labels:
+      com.chainweb.devnet.description: "Devnet API Proxy"
+      com.chainweb.devnet.api-proxy: ""
+    depends_on:
+    - api-node
+    image: nginx:latest
+    volumes:
+    - ${PWD}/config/nginx.api.conf:/etc/nginx/conf.d/default.conf
+    ports:
+    - target: 80
+      published: ${HOST_SERVICE_PORT}
+      protocol: tcp
+
+      #  # ########################################################################## #
+      #  # DB Sync Server
+      #
+      #  db-server-node:
+      #    container_name: db-server-node
+      #    extends:
+      #      file: node.yaml
+      #      service: node
+      #    labels:
+      #      com.chainweb.devnet.description: "Devnet DB Server Node"
+      #      com.chainweb.devnet.api-node: ""
+      #    depends_on:
+      #    - bootstrap-node
+      #    command:
+      #    - --known-peer-info=YNo7pXthYQ9RQKv1bbpQf2R5LcLYA3ppx2BL2Hf8fIM@bootstrap-node:1789
+      #    - --bootstrap-reachability=1
+      #    - --p2p-hostname=0.0.0.0
+      #    - --cluster-id=db-server-node
+      #    - --database-directory=/chainweb/db
+      #    environment:
+      #    - DISABLE_POW_VALIDATION
+      #    volumes:
+      #    - db-server-db:/chainweb/db:rw
+      #    profiles: ["db-server"]
+      #
+      #  db-server:
+      #    container_name: db-server
+      #    image: larsk/rsync
+      #    restart: unless-stopped
+      #    ports:
+      #    - "873:873"
+      #    volumes:
+      #    - db-server-db:/db:ro
+      #    depends_on:
+      #    - db-server-node
+      #    deploy:
+      #      restart_policy:
+      #        condition: on-failure
+      #        delay: "5s"
+      #        max_attempts: 3
+      #        window: "120s"
+      #      update_config:
+      #        delay: "60s"
+      #        order: stop-first
+      #    entrypoint:
+      #    - /bin/sh
+      #    - "-c"
+      #    command:
+      #    - |
+      #      cat > /etc/rsyncd.conf <<EOF
+      #      [db]
+      #      use chroot = yes
+      #      path = /db
+      #      comment = Chainweb Database
+      #      read only = yes
+      #      list = yes
+      #      max connections = 2
+      #      EOF
+      #      exec rsync --daemon --no-detach --dparam=pidfile=/var/run/rsyncd.pid
+      #    healthcheck:
+      #      interval: "1m"
+      #      retries: 3
+      #      start_period: "5s"
+      #      test: |
+      #        PID=$$(cat /var/run/rsyncd.pid)
+      #        [ -n "$${PID}" -a -d "/proc/$${PID}" ] || exit 1
+      #      timeout: "5s"
+      #    profiles: ["db-server"]
+      #
+      ## ############################################################################ #
+      ## Testing and Debugging
+      ## ############################################################################ #
+      #
+      #  # ########################################################################## #
+      #  # Curl
+      #  curl:
+      #    labels:
+      #      com.chainweb.devnet.description: "Curl Into Network"
+      #      com.chainweb.devnet.debug: ""
+      #    image: curlimages/curl:latest
+      #    profiles: ["debug"]
+      #
+  # ########################################################################## #
+  # Test Container
+  #
+  # Mounts the test sub-directory into an ubuntu container.
+  # The default entrypoint of the container is /bin/bash.
+  # The container is build from ./test/Dockerfile.
+  #
+  test:
+    labels:
+      com.chainweb.devnet.description: "Devnet Testing"
+      com.chainweb.devnet.debug: ""
+    build:
+      context: ./test
+      dockerfile: Dockerfile
+    image: devnet-test
+    volumes:
+    - ${PWD}/test:/test
+    profiles: ["test"]
+
+  pact:
+    labels:
+      com.chainweb.devnet.description: "Devnet Testing"
+      com.chainweb.devnet.debug: ""
+    build:
+      context: ./test
+      dockerfile: pact.Dockerfile
+    image: devnet-pact
+    volumes:
+    - ${PWD}/test:/test
+    profiles: ["pact"]

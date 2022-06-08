@@ -1,0 +1,8 @@
+devnet-bootstrap-node-1
+devnet-common-node-1
+devnet-common-node-2
+devnet-common-node-3
+devnet-api-node-1
+devnet-api-node-2
+devnet-mining-api-node-1
+db-server-node
