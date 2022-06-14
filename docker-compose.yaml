@@ -145,28 +145,21 @@ services:
     - --log-level=info
     - --no-tls
     - --hash-rate=1000000
-  txg-client-crank-debug:
+  txg-client:
     deploy:
       replicas: 1
-    image: emmanueldenloye/txg-with-nix:debug
-    restart: "no"
+    image: emmanueldenloye/txg-with-nix:debug-predate-tx-creation-time
+    restart: unless-stopped
     labels:
        com.chainweb.devnet.description: "TXG"
-       com.chainweb.devnet.txg-client-crank-debug: ""
+       com.chainweb.devnet.txg-client: ""
     depends_on:
-      mining-node:
+      bootstrap-node:
         condition: "service_healthy"
     volumes:
-    - ${PWD}/config/guards.pact:/txg/guards.pact
-    - ${PWD}/config/crank.pact:/txg/crank.pact
-    - ${PWD}/config/fungible-util.pact:/txg/fungible-util.pact
-    - ${PWD}/config/pactAgent18.pact:/txg/pactAgent18.pact
-    - ${PWD}/config/simpleSales20.pact:/txg/simpleSales20.pact
     - ${PWD}/deploy.config:/txg/deploy.config
     command:
     - --config-file=/txg/deploy.config
-    - --hostname=mining-node
-    - --port=1848
   # ########################################################################## #
   # chainweb-api:
   api-node:
