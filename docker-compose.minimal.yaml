@@ -32,6 +32,7 @@ services:
     volumes:
     - ${PWD}/devnet-bootstrap-node.cert.pem:/chainweb/devnet-bootstrap-node.cert.pem:ro
     - ${PWD}/devnet-bootstrap-node.key.pem:/chainweb/devnet-bootstrap-node.key.pem:ro
+    - ${PWD}/db:/chainweb/db
     command:
     - --p2p-certificate-chain-file=/chainweb/devnet-bootstrap-node.cert.pem
     - --p2p-certificate-key-file=/chainweb/devnet-bootstrap-node.key.pem
@@ -48,6 +49,7 @@ services:
     - --header-stream
     - --rosetta
     - --allowReadsInLocal
+    - --database-directory=/chainweb/db
     expose:
       - "1848"
       - "1789"
