@@ -183,6 +183,36 @@ databases. Therefore nodes have to perform a complete catchup of restart.
 Node restarts without deleting the database can be performed by defining nodes
 in devnet.yaml that store the database on a named value or on the host.
 
+# Minimal Devnet
+
+In instances where only a single devnet node is required, such as doing transaction tests and running or having limited system resources, you can use a minimal devnet installation availible in docker-compose.minimal.yaml.
+
+This should be started from the root of the devnet folder just like the main docker-copose.yaml, as it references local files.
+```
+docker compose -f docker-compose.minimal.yaml up --remove-orphans -d
+# use --remove-orphans if you no longer need the full devnet containers and they're causing problems 
+```
+
+This instance features a single node, simulation mining client, and nginix proxy.  It does not have a stratum profile or others from the main docker-compose.yaml at this time (profiles 'test' and 'pact' are present, but have not been tested with this compose file).  It does utilize the the same environment variables (except the unused stratum port or the node replica counts).
+
+## Database bind mount
+The docker-compose.minimal.yaml devnet instance references a folder called 'db' in the devnet directory.  If this folder does not exist, it will create one when you first start a minimal node.  The chainweb databases will be stored as such:
+```
+db/0/rocksDb
+db/0/sqlite
+```
+* You can delete this folder to reset your devnet blockchain, or back it up to make a savestate
+    * _Turn off the node container before doing stuff to this folder_
+    * The structure must match the above with a 0/ folder
+    * You do not *need* the sqlite folder if you want to save backup space, as chainweb-node will rebuild one from the rocksDb if present
+* If you are starting from a fresh database, you may wish to wait for the block height of each chain to pass the latest feature fork for devnet
+    * As of 2.15, this is a height of 165.  It takes an hour or so to reach this from scratch.
+    * The rest api should be exposed on your localhost, so you can use the command below to check the height of chain 0.
+    
+        ```curl -s http://localhost:8080/chainweb/0.0/development/cut | jq '.hashes."'0'".height'```
+        
+        You can also use the commands listed elsewhere in this document to query into the node container directly if you reference the right container name: devnet-bootstrap-node-1
+
 # Setup Machine
 
 ### Ubuntu:
