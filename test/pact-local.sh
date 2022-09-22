@@ -10,7 +10,7 @@ code: |
 publicMeta:
   chainId: "$CHAINID"
   sender: "sender00"
-  gasLimit: 5000
+  gasLimit: 150000
   gasPrice: 0.0000001
   ttl: 150000
   creationTime: $(date +%s)
