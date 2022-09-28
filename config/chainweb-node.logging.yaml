@@ -1,0 +1,8 @@
+logging:
+  logger:
+    log_level: warn
+  backend:
+    format: json
+  telemetryBackend:
+    configuration:
+      format: json

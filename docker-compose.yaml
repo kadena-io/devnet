@@ -11,7 +11,9 @@ version: "3.9"
 
 configs:
   chainweb-node.common:
-    file: ${PWD}/config/chainweb-node.common.yaml
+    file: ./config/chainweb-node.common.yaml
+  chainweb-node.logging:
+    file: ./config/chainweb-node.logging.yaml
 
 volumes:
   db-server-db: {}
@@ -102,7 +104,6 @@ services:
     - --bootstrap-reachability=1
     - --p2p-hostname=0.0.0.0
     - --cluster-id=stratum-node
-    - --log-level=info
     - --enable-mining-coordination
     - --mining-public-key=${MINER_PUBLIC_KEY}
     environment:
@@ -121,7 +122,6 @@ services:
     - --node=mining-api-node:1848
     - --worker=stratum
     - --thread-count=2
-    - --log-level=info
     - --no-tls
     ports:
     - target: 1917
@@ -142,7 +142,6 @@ services:
     - --node=mining-api-node:1848
     - --worker=simulation
     - --thread-count=2
-    - --log-level=info
     - --no-tls
     - --hash-rate=1000000
 

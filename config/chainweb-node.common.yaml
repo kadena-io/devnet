@@ -17,6 +17,3 @@ chainweb:
   mempoolP2p:
     configuration:
       maxSessionCount: 2
-logging:
-  logger:
-    log_level: warn
