@@ -43,7 +43,7 @@ services:
   # ########################################################################## #
   common-node:
     deploy:
-      replicas: ${COMMON_NODE_REPLICAS:-2}
+      replicas: ${COMMON_NODE_REPLICAS:-1}
     extends:
       file: node.yaml
       service: node
@@ -63,7 +63,7 @@ services:
   # ########################################################################## #
   mining-node:
     deploy:
-      replicas: ${MINING_NODE_REPLICAS:-1}
+      replicas: ${MINING_NODE_REPLICAS:-0}
     extends:
       file: node.yaml
       service: node
