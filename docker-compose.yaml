@@ -22,6 +22,7 @@ services:
 
   # ########################################################################## #
   bootstrap-node:
+    container_name: bootstrap-node
     extends:
       file: node.yaml
       service: node
@@ -61,6 +62,7 @@ services:
     - DISABLE_POW_VALIDATION
 
   # ########################################################################## #
+  # This performs CPU mining. It should be used only for testing actual POW.
   mining-node:
     deploy:
       replicas: ${MINING_NODE_REPLICAS:-0}
@@ -89,6 +91,7 @@ services:
   # ########################################################################## #
 
   mining-api-node:
+    container_name: mining-api-node
     extends:
       file: node.yaml
       service: node
@@ -148,6 +151,7 @@ services:
   # ########################################################################## #
   # chainweb-api:
   api-node:
+    container_name: api-node
     deploy:
       replicas: ${API_NODE_REPLICAS:-1}
     extends:
@@ -173,6 +177,7 @@ services:
   # ########################################################################## #
   # Nginx API Proxy
   api-proxy:
+    container_name: api-proxy
     labels:
       com.chainweb.devnet.description: "Devnet API Proxy"
       com.chainweb.devnet.api-proxy: ""
