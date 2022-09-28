@@ -3,16 +3,18 @@
 #
 # Usage:
 #
-# docker compose -f docker-compose.yaml -f elasticsearch.yaml
+# docker compose -f docker-compose.yaml -f elasticsearch.yaml up -d
 #
 
-version: "3.9"
-
 configs:
-  chainweb-node.elastic:
+  chainweb-node.logging:
     file: ./config/chainweb-node.elastic.yaml
   kibana.saved-objects:
     file: ./config/kibana.saved-objects.ndjson
+  metricbeat:
+    file: ./config/metricbeat.yaml
+  filebeat:
+    file: ./config/filebeat.yaml
 
 services:
 
@@ -20,54 +22,51 @@ services:
   # Configure Nodes Logging for Elasticsearch
 
   bootstrap-node:
-    command:
-    - --config-file=config/chainweb-node.elastic.yaml
-    configs:
-    - source: chainweb-node.elastic
-      target: /chainweb/config/chainweb-node.elastic.yaml
-      mode: 0440
     depends_on:
-    - elasticsearch
+      elasticsearch:
+        condition: service_healthy
 
   common-node:
-    command:
-    - --config-file=config/chainweb-node.elastic.yaml
-    configs:
-    - source: chainweb-node.elastic
-      target: /chainweb/config/chainweb-node.elastic.yaml
-      mode: 0440
     depends_on:
-    - elasticsearch
+      elasticsearch:
+        condition: service_healthy
 
   mining-node:
-    command:
-    - --config-file=config/chainweb-node.elastic.yaml
-    configs:
-    - source: chainweb-node.elastic
-      target: /chainweb/config/chainweb-node.elastic.yaml
-      mode: 0440
     depends_on:
-    - elasticsearch
+      elasticsearch:
+        condition: service_healthy
+
+  mining-api-node:
+    depends_on:
+      elasticsearch:
+        condition: service_healthy
 
   api-node:
-    command:
-    - --config-file=config/chainweb-node.elastic.yaml
-    configs:
-    - source: chainweb-node.elastic
-      target: /chainweb/config/chainweb-node.elastic.yaml
-      mode: 0440
     depends_on:
-    - elasticsearch
+      elasticsearch:
+        condition: service_healthy
+
+  api-proxy:
+    labels:
+      co.elastic.metrics/module: nginx
+      co.elastic.metrics/metricsets: stubstatus
+      co.elastic.metrics/hosts: '$${data.host}:80'
+      co.elastic.metrics/period: 10s
 
   # ########################################################################## #
   # Elastic Search
+
   elasticsearch:
-    image: docker.elastic.co/elasticsearch/elasticsearch:7.13.0
+    container_name: elasticsearch
+    image: docker.elastic.co/elasticsearch/elasticsearch:8.4.2
     environment:
       - xpack.security.enabled=false
+      - xpack.security.http.ssl.enabled=false
+      - xpack.security.transport.ssl.enabled=false
       - discovery.type=single-node
       - bootstrap.memory_lock=true
       - "ES_JAVA_OPTS=-Xms512m -Xmx512m"
+    mem_limit: 2147483648
     ulimits:
       memlock:
         soft: -1
@@ -77,38 +76,54 @@ services:
         hard: 65536
     cap_add:
       - IPC_LOCK
+    healthcheck:
+      test: "curl --fail -s http://elasticsearch:9200"
+      interval: 5s
+      timeout: 5s
+      retries: 120
 
   # ########################################################################## #
   # Kibana
+
   kibana:
-    image: docker.elastic.co/kibana/kibana:7.13.0
+    container_name: kibana
+    depends_on:
+      elasticsearch:
+        condition: service_healthy
+    image: docker.elastic.co/kibana/kibana:8.4.2
     ports:
     - 5601:5601
     environment:
       ELASTICSEARCH_URL: http://elasticsearch:9200
       ELASTICSEARCH_HOSTS: http://elasticsearch:9200
-    depends_on:
-    - elasticsearch
+      KIBANA_FLEET_SETUP: false
+    healthcheck:
+      test: "curl --fail -s http://kibana:5601/api/status"
+      interval: 5s
+      timeout: 5s
+      retries: 120
 
   # Upload saved objects
   kibana-objects:
+    container_name: kibana-objects
+    depends_on:
+      kibana:
+        condition: service_healthy
     image: curlimages/curl:latest
     configs:
     - source: kibana.saved-objects
       target: /chainweb/config/kibana.saved-objects.ndjson
       mode: 0440
-    depends_on:
-    - kibana
     entrypoint: ["/bin/sh"]
     command:
     - -c
     - |
       RESULT=1
       COUNT=0
-      while [ ! $$RESULT -eq 0 -a $$COUNT -lt 4 ] ; do
+      while [ ! $$RESULT -eq 0 -a $$COUNT -lt 8 ] ; do
         sleep 5
         echo "attempt to upload kibana saved objects"
-        curl -s 'http://kibana:5601/api/saved_objects/_import?overwrite=true' \
+        curl --fail -s 'http://kibana:5601/api/saved_objects/_import?overwrite=true' \
           -X POST \
           -H 'kbn-xsrf: true' \
           --form 'file=@/chainweb/config/kibana.saved-objects.ndjson'
@@ -118,4 +133,57 @@ services:
         echo "result: $$RESULT"
       done
       echo "done"
+
+  # ########################################################################## #
+  # Metricbeat
+
+  metricbeat:
+    container_name: metricbeat
+    depends_on:
+      elasticsearch:
+        condition: service_healthy
+      kibana:
+        condition: service_healthy
+    image: docker.elastic.co/beats/metricbeat:8.4.2
+    command:
+      - -e
+      - --strict.perms=false
+      - -e
+      - -system.hostfs=/hostfs
+    environment:
+      setup.kibana.host: kibana:5601
+      output.elasticsearch.hosts: '["elasticsearch:9200"]'
+    user: root
+    cap_add:
+    - sys_ptrace
+    - dac_read_search
+    volumes:
+    - ./config/metricbeat.yaml:/usr/share/metricbeat/metricbeat.yml:ro
+    - /var/run/docker.sock:/var/run/docker.sock:ro
+    - /proc:/hostfs/proc:ro
+    - /sys/fs/cgroup:/hostfs/sys/fs/cgroup:ro
+    - /:/hostfs:ro
+
+  # ########################################################################## #
+  # Filebeat
+
+  filebeat:
+    container_name: filebeat
+    depends_on:
+      elasticsearch:
+        condition: service_healthy
+      kibana:
+        condition: service_healthy
+    image: docker.elastic.co/beats/filebeat:8.4.2
+    command:
+      - -e
+      - --strict.perms=false
+    environment:
+      setup.kibana.host: kibana:5601
+      output.elasticsearch.hosts: '["elasticsearch:9200"]'
+    user: root
+    volumes:
+    - ./config/filebeat.yaml:/usr/share/filebeat/filebeat.yml:ro
+    - /var/lib/docker/containers:/var/lib/docker/containers:ro
+    - /var/run/docker.sock:/var/run/docker.sock:ro
 
