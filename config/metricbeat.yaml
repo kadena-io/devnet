@@ -12,8 +12,8 @@ output.elasticsearch:
   # username: '${ELASTICSEARCH_USERNAME:}'
   # password: '${ELASTICSEARCH_PASSWORD:}'
 
-# TODO: do not upload all dashboards
-setup.dashboards.enabled: true
+# uploads all dashboards that ship with metricbeat
+setup.dashboards.enabled: false
 setup.kibana:
   host: 'http://kibana:5601'
 
