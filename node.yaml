@@ -25,6 +25,9 @@ services:
     - source: chainweb-node.common
       target: /chainweb/config/chainweb-node.common.yaml
       mode: 0440
+    - source: chainweb-node.logging
+      target: /chainweb/config/chainweb-node.logging.yaml
+      mode: 0440
 
     entrypoint:
     - /chainweb/chainweb-node
@@ -36,6 +39,7 @@ services:
     - -RTS
     # Common Configuration
     - --config-file=config/chainweb-node.common.yaml
+    - --config-file=config/chainweb-node.logging.yaml
 
     deploy:
       restart_policy:

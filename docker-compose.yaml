@@ -11,7 +11,9 @@ version: "3.9"
 
 configs:
   chainweb-node.common:
-    file: ${PWD}/config/chainweb-node.common.yaml
+    file: ./config/chainweb-node.common.yaml
+  chainweb-node.logging:
+    file: ./config/chainweb-node.logging.yaml
 
 volumes:
   db-server-db: {}
@@ -20,6 +22,7 @@ services:
 
   # ########################################################################## #
   bootstrap-node:
+    container_name: bootstrap-node
     extends:
       file: node.yaml
       service: node
@@ -41,7 +44,7 @@ services:
   # ########################################################################## #
   common-node:
     deploy:
-      replicas: ${COMMON_NODE_REPLICAS:-2}
+      replicas: ${COMMON_NODE_REPLICAS:-1}
     extends:
       file: node.yaml
       service: node
@@ -59,9 +62,10 @@ services:
     - DISABLE_POW_VALIDATION
 
   # ########################################################################## #
+  # This performs CPU mining. It should be used only for testing actual POW.
   mining-node:
     deploy:
-      replicas: ${MINING_NODE_REPLICAS:-1}
+      replicas: ${MINING_NODE_REPLICAS:-0}
     extends:
       file: node.yaml
       service: node
@@ -87,6 +91,7 @@ services:
   # ########################################################################## #
 
   mining-api-node:
+    container_name: mining-api-node
     extends:
       file: node.yaml
       service: node
@@ -102,7 +107,6 @@ services:
     - --bootstrap-reachability=1
     - --p2p-hostname=0.0.0.0
     - --cluster-id=stratum-node
-    - --log-level=info
     - --enable-mining-coordination
     - --mining-public-key=${MINER_PUBLIC_KEY}
     environment:
@@ -121,7 +125,6 @@ services:
     - --node=mining-api-node:1848
     - --worker=stratum
     - --thread-count=2
-    - --log-level=info
     - --no-tls
     ports:
     - target: 1917
@@ -142,13 +145,13 @@ services:
     - --node=mining-api-node:1848
     - --worker=simulation
     - --thread-count=2
-    - --log-level=info
     - --no-tls
     - --hash-rate=1000000
 
   # ########################################################################## #
   # chainweb-api:
   api-node:
+    container_name: api-node
     deploy:
       replicas: ${API_NODE_REPLICAS:-1}
     extends:
@@ -174,6 +177,7 @@ services:
   # ########################################################################## #
   # Nginx API Proxy
   api-proxy:
+    container_name: api-proxy
     labels:
       com.chainweb.devnet.description: "Devnet API Proxy"
       com.chainweb.devnet.api-proxy: ""

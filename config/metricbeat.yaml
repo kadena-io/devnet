@@ -1,0 +1,55 @@
+metricbeat.config.modules:
+  path: ${path.config}/modules.d/*.yml
+  reload.enabled: false
+
+processors:
+  - add_cloud_metadata: ~
+  - add_docker_metadata: ~
+  - add_host_metadata: ~
+
+output.elasticsearch:
+  hosts: [ "http://elasticsearch:9200" ]
+  # username: '${ELASTICSEARCH_USERNAME:}'
+  # password: '${ELASTICSEARCH_PASSWORD:}'
+
+# uploads all dashboards that ship with metricbeat
+setup.dashboards.enabled: false
+setup.kibana:
+  host: 'http://kibana:5601'
+
+# adding hint support
+metricbeat.autodiscover:
+  providers:
+  - type: docker
+    templates:
+    - condition:
+        contains:
+          docker.container.image: nginx
+      config:
+      - module: nginx
+        hosts: "${data.host}:${data.port}"
+        metricsets: ["stubstatus"]
+        enabled: true
+        period: 10s
+
+metricbeat.modules:
+- module: system
+  enabled: true
+- module: linux
+  enabled: true
+- module: docker
+  metricsets:
+  - "container"
+  - "cpu"
+  - "diskio"
+  - "event"
+  - "healthcheck"
+  - "info"
+  - "image"
+  - "memory"
+  - "network"
+  - "network_summary"
+  hosts: ["unix:///var/run/docker.sock"]
+  period: 10s
+  enabled: true
+
