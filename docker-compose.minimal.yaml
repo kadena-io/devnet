@@ -12,6 +12,8 @@ version: "3.9"
 configs:
   chainweb-node.common:
     file: ${PWD}/config/chainweb-node.common.yaml
+  chainweb-node.logging:
+    file: ./config/chainweb-node.logging.yaml
 
 volumes:
   db-server-db: {}
