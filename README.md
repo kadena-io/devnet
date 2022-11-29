@@ -1,13 +1,28 @@
 # Docker Compose Deployment of Kadena Devnet
 
+A collection of [docker compose](https://docs.docker.com/compose)
+configurations for running a full Kadena blockchain network on your development
+machine.
+
+
+## Prerequisites
+
 Before you begin, check your docker settings to make sure that docker has access
 to at least 8GB of RAM and 4 CPUs.
+
+## Run the network
 
 Start network:
 
 ```sh
 docker compose pull
 docker compose up -d
+```
+
+Show that the network is making progress:
+
+```sh
+docker compose run --rm curl -sk https://api-node:1789/chainweb/0.0/development/cut
 ```
 
 Stop network:
@@ -93,7 +108,7 @@ docker compose up -d
 
 ## Stratum Server
 
-Note that stratum server support is yet experimental. It can be enable via the
+Note that stratum server support is yet experimental. It can be enabled via the
 docker compose `--profile stratum` flag. The stratum port is exposed on the host
 at port number 1917.
 
@@ -178,7 +193,7 @@ docker compose run -- curl -sk "https://common-node:1789/chainweb/0.0/developmen
 ## Caveats
 
 Restarting nodes via `docker compose up` does not preserve
-databases. Therefore nodes have to perform a complete catchup of restart.
+databases. Therefore nodes have to perform a complete catchup after restart.
 
 Node restarts without deleting the database can be performed by defining nodes
 in devnet.yaml that store the database on a named value or on the host.
