@@ -52,7 +52,7 @@ services:
     - --rosetta
     - --allowReadsInLocal
     - --database-directory=/chainweb/db
-    - --fork-upper-bound=chainweb216Pact
+    - --fork-upper-bound=chainweb217Pact
     expose:
       - "1848"
       - "1789"
