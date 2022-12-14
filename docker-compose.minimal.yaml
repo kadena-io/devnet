@@ -69,11 +69,11 @@ services:
     command:
     - --public-key=${MINER_PUBLIC_KEY}
     - --node=bootstrap-node:1848
-    - --worker=simulation
+    - --worker=constant-delay
     - --thread-count=1
     - --log-level=info
     - --no-tls
-    - --hash-rate=1000000
+    - --constant-delay-block-time=5
       
 # ########################################################################## #
 # Nginx API Proxy
