@@ -73,7 +73,7 @@ services:
     - --thread-count=1
     - --log-level=info
     - --no-tls
-    - --constant-delay-block-time=5
+    - --constant-delay-block-time=10
       
 # ########################################################################## #
 # Nginx API Proxy
