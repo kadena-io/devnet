@@ -71,11 +71,15 @@ services:
     - --public-key=${MINER_PUBLIC_KEY}
     - --node=bootstrap-node:1848
     - --worker=constant-delay
+    - --constant-delay-block-time=5
     - --thread-count=1
     - --log-level=info
     - --no-tls
-    - --constant-delay-block-time=10
-      
+    ports:
+    - target: 1917
+      published: 1917
+      protocol: tcp
+
 # ########################################################################## #
 # Nginx API Proxy
   api-proxy:
