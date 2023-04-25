@@ -218,7 +218,7 @@ db/0/sqlite
   - You do not _need_ the sqlite folder if you want to save backup space, as chainweb-node will rebuild one from the rocksDb if present
 - If you are starting from a fresh database, you may wish to wait for the block height of each chain to pass the latest feature fork for devnet
 
-  - As of 2.15, this is a height of 165. It takes an hour or so to reach this from scratch.
+  - As of 2.18, this is a height of 500. It takes four hours or so to reach this from scratch.
   - The rest api should be exposed on your localhost, so you can use the command below to check the height of chain 0.
 
     `curl -s http://localhost:8080/chainweb/0.0/development/cut | jq '.hashes."'0'".height'`
