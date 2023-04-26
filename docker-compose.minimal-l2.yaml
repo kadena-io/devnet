@@ -11,7 +11,7 @@ version: "3.9"
 
 configs:
   chainweb-node.common:
-    file: ${PWD}/config/chainweb-node.common.yaml
+    file: ${PWD}/config/chainweb-node.common-l2.yaml
   chainweb-node.logging:
     file: ./config/chainweb-node.logging.yaml
 
@@ -26,7 +26,7 @@ services:
 #
   bootstrap-node:
     extends:
-      file: node.yaml
+      file: node-l2.yaml
       service: node
     labels:
       com.chainweb.devnet.description: "Devnet Bootstrap Node"
@@ -44,7 +44,7 @@ services:
       #    - --disable-mempool-p2p
     - --p2p-max-session-count=2
     - --mempool-p2p-max-session-count=2
-    - --known-peer-info=YNo7pXthYQ9RQKv1bbpQf2R5LcLYA3ppx2BL2Hf8fIM@bootstrap-node:1789
+    - --known-peer-info=YNo7pXthYQ9RQKv1bbpQf2R5LcLYA3ppx2BL2Hf8fIM@bootstrap-node:1790
     - --log-level=info
     - --enable-mining-coordination
     - --mining-public-key=${MINER_PUBLIC_KEY}
@@ -54,13 +54,13 @@ services:
     - --database-directory=/chainweb/db
     - --disable-pow
     expose:
-      - "1848"
-      - "1789"
+      - "1849"
+      - "1790"
     environment:
     - DISABLE_POW_VALIDATION
 
-  simulation-miner:
-    container_name: simulation-miner
+  l2-simulation-miner:
+    container_name: l2-simulation-miner
     image: "${MINING_CLIENT_IMAGE}"
     restart: unless-stopped
     depends_on:
@@ -69,7 +69,7 @@ services:
     entrypoint: "/chainweb-mining-client/chainweb-mining-client"
     command:
     - --public-key=${MINER_PUBLIC_KEY}
-    - --node=bootstrap-node:1848
+    - --node=bootstrap-node:1849
     - --worker=constant-delay
     - --constant-delay-block-time=5
     - --thread-count=1
@@ -91,7 +91,7 @@ services:
         condition: service_healthy
     image: nginx:latest
     volumes:
-    - ${PWD}/config/nginx.api.minimal.conf:/etc/nginx/conf.d/default.conf
+    - ${PWD}/config/nginx.api.minimal-l2.conf:/etc/nginx/conf.d/default.conf
     ports:
     - target: 80
       published: ${HOST_SERVICE_PORT}
