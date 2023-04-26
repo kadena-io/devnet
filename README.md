@@ -62,9 +62,9 @@ by clicking on `Run Workflow` selecting the respective branch.
 
 The docker image URLs are:
 
-*   development image for git rev SHORT_REV: `ghcr.io/kadena-io/chainweb-node:sha-SHORT_REV` (private)
-*   latest released ubuntu image: `ghcr.io/kadena-io/chainweb-node/ubuntu:latest` (public)
-*   latest released alpine image: `ghcr.io/kadena-io/chainweb-node/alpine:latest` (public)
+- development image for git rev SHORT_REV: `ghcr.io/kadena-io/chainweb-node:sha-SHORT_REV` (private)
+- latest released ubuntu image: `ghcr.io/kadena-io/chainweb-node/ubuntu:latest` (public)
+- latest released alpine image: `ghcr.io/kadena-io/chainweb-node/alpine:latest` (public)
 
 Use of the private images requires to log into the ghcr.io docker registry:
 
@@ -188,30 +188,42 @@ in devnet.yaml that store the database on a named value or on the host.
 In instances where only a single devnet node is required, such as doing transaction tests and running or having limited system resources, you can use a minimal devnet installation availible in docker-compose.minimal.yaml.
 
 This should be started from the root of the devnet folder just like the main docker-copose.yaml, as it references local files.
+
 ```
 docker compose -f docker-compose.minimal.yaml up --remove-orphans -d
-# use --remove-orphans if you no longer need the full devnet containers and they're causing problems 
+# use --remove-orphans if you no longer need the full devnet containers and they're causing problems
 ```
 
-This instance features a single node, simulation mining client, and nginix proxy.  It does not have a stratum profile or others from the main docker-compose.yaml at this time (profiles 'test' and 'pact' are present, but have not been tested with this compose file).  It does utilize the the same environment variables (except the unused stratum port or the node replica counts).
+For MacOS with M1 chips you could use:
+
+```
+docker compose -f docker-compose.mac.minimal.yaml up --remove-orphans -d
+# use --remove-orphans if you no longer need the full devnet containers and they're causing problems
+```
+
+This instance features a single node, simulation mining client, and nginix proxy. It does not have a stratum profile or others from the main docker-compose.yaml at this time (profiles 'test' and 'pact' are present, but have not been tested with this compose file). It does utilize the the same environment variables (except the unused stratum port or the node replica counts).
 
 ## Database bind mount
-The docker-compose.minimal.yaml devnet instance references a folder called 'db' in the devnet directory.  If this folder does not exist, it will create one when you first start a minimal node.  The chainweb databases will be stored as such:
+
+The docker-compose.minimal.yaml devnet instance references a folder called 'db' in the devnet directory. If this folder does not exist, it will create one when you first start a minimal node. The chainweb databases will be stored as such:
+
 ```
 db/0/rocksDb
 db/0/sqlite
 ```
-* You can delete this folder to reset your devnet blockchain, or back it up to make a savestate
-    * _Turn off the node container before doing stuff to this folder_
-    * The structure must match the above with a 0/ folder
-    * You do not *need* the sqlite folder if you want to save backup space, as chainweb-node will rebuild one from the rocksDb if present
-* If you are starting from a fresh database, you may wish to wait for the block height of each chain to pass the latest feature fork for devnet
-    * As of 2.15, this is a height of 165.  It takes an hour or so to reach this from scratch.
-    * The rest api should be exposed on your localhost, so you can use the command below to check the height of chain 0.
-    
-        ```curl -s http://localhost:8080/chainweb/0.0/development/cut | jq '.hashes."'0'".height'```
-        
-        You can also use the commands listed elsewhere in this document to query into the node container directly if you reference the right container name: devnet-bootstrap-node-1
+
+- You can delete this folder to reset your devnet blockchain, or back it up to make a savestate
+  - _Turn off the node container before doing stuff to this folder_
+  - The structure must match the above with a 0/ folder
+  - You do not _need_ the sqlite folder if you want to save backup space, as chainweb-node will rebuild one from the rocksDb if present
+- If you are starting from a fresh database, you may wish to wait for the block height of each chain to pass the latest feature fork for devnet
+
+  - As of 2.18, this is a height of 500. It takes four hours or so to reach this from scratch.
+  - The rest api should be exposed on your localhost, so you can use the command below to check the height of chain 0.
+
+    `curl -s http://localhost:8080/chainweb/0.0/development/cut | jq '.hashes."'0'".height'`
+
+    You can also use the commands listed elsewhere in this document to query into the node container directly if you reference the right container name: devnet-bootstrap-node-1
 
 # Setup Machine
 
@@ -261,13 +273,12 @@ git clone https://github.com/kadena-io/devnet
 ### Docker:
 
 Devnet requires that Docker have access to the following resources in order to perform as expected:
+
 - At least 8 GB of RAM memory
 - At least 4 CPU cores
 
 **NOTE:**
 Running Devnet with less than 8 GB RAM memory could result in some containers exiting with code 137.
 
-
 **NOTE:**
 The resources Docker has access to can be changed in the Docker Desktop.
-
