@@ -52,7 +52,6 @@ services:
     - --rosetta
     - --allowReadsInLocal
     - --database-directory=/chainweb/db
-    - --disable-pow
     expose:
       - "1848"
       - "1789"
@@ -71,15 +70,11 @@ services:
     - --public-key=${MINER_PUBLIC_KEY}
     - --node=bootstrap-node:1848
     - --worker=constant-delay
-    - --constant-delay-block-time=5
     - --thread-count=1
     - --log-level=info
     - --no-tls
-    ports:
-    - target: ${HOST_STRATUM_PORT}
-      published: ${HOST_STRATUM_PORT}
-      protocol: tcp
-
+    - --constant-delay-block-time=10
+      
 # ########################################################################## #
 # Nginx API Proxy
   api-proxy:
