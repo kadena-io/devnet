@@ -52,6 +52,7 @@ services:
     - --rosetta
     - --allowReadsInLocal
     - --database-directory=/chainweb/db
+    - --disable-pow
     expose:
       - "1848"
       - "1789"
