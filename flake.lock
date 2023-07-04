@@ -214,15 +214,16 @@
         "nixpkgs": "nixpkgs_6"
       },
       "locked": {
-        "lastModified": 1688152823,
-        "narHash": "sha256-NWZpdjO3U6GUAqLZZa7MsM8MorXNsAotqIPSIzo9v78=",
+        "lastModified": 1688075590,
+        "narHash": "sha256-RXtM9dTwW2tbwsmmCgWDzKEwB1tpmmSFC/Trfk2SDGE=",
         "owner": "kadena-io",
         "repo": "chainweb-node",
-        "rev": "0cc8cba81b5dfba28ddd62ed78f13086e54e9ca5",
+        "rev": "15180f85eab0dd7bad72e5a0c66bd57d87419959",
         "type": "github"
       },
       "original": {
         "owner": "kadena-io",
+        "ref": "edmund/fast-devnet",
         "repo": "chainweb-node",
         "type": "github"
       }
@@ -597,16 +598,17 @@
     "hackage_2": {
       "flake": false,
       "locked": {
-        "lastModified": 1688084768,
-        "narHash": "sha256-D+cywOtgcNfigo0qWQCoSaf/1z5t4f2Z5UMrlqWgtlA=",
-        "owner": "input-output-hk",
+        "lastModified": 1686358490,
+        "narHash": "sha256-2nNt7hhvWlMNmWrkzSzkSopte+ne3ZcrM/KaZUPyM60=",
+        "owner": "kadena-io",
         "repo": "hackage.nix",
-        "rev": "be1caefa5b3122deaf3fbb80b5721fe49f908f0e",
+        "rev": "257b8f758d2b0f62173a72cb279cc865793a9c50",
         "type": "github"
       },
       "original": {
-        "owner": "input-output-hk",
+        "owner": "kadena-io",
         "repo": "hackage.nix",
+        "rev": "257b8f758d2b0f62173a72cb279cc865793a9c50",
         "type": "github"
       }
     },
@@ -847,22 +849,6 @@
         "ref": "hkm/remote-iserv",
         "type": "git",
         "url": "https://gitlab.haskell.org/hamishmack/iserv-proxy.git"
-      }
-    },
-    "kadena-js": {
-      "flake": false,
-      "locked": {
-        "lastModified": 1688376101,
-        "narHash": "sha256-tI1GDDt4nFztp5ScuK7ToftY/tpYDnmuN8OQXMbQPBQ=",
-        "owner": "kadena-community",
-        "repo": "kadena.js",
-        "rev": "396934567f3102bbbb89b7686b7bdba4d5f33ba8",
-        "type": "github"
-      },
-      "original": {
-        "owner": "kadena-community",
-        "repo": "kadena.js",
-        "type": "github"
       }
     },
     "lowdown-src": {
@@ -1594,7 +1580,6 @@
         "chainweb-data": "chainweb-data",
         "chainweb-node": "chainweb-node",
         "devenv": "devenv",
-        "kadena-js": "kadena-js",
         "nixpkgs": "nixpkgs_8",
         "systems": "systems_3"
       }

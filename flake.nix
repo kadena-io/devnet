@@ -3,10 +3,8 @@
     nixpkgs.url = "github:NixOS/nixpkgs/nixos-22.11";
     systems.url = "github:nix-systems/default";
     devenv.url = "github:cachix/devenv";
-    chainweb-node.url = "github:kadena-io/chainweb-node";
+    chainweb-node.url = "github:kadena-io/chainweb-node/edmund/fast-devnet";
     chainweb-data.url = "github:kadena-io/chainweb-data";
-    kadena-js.url = "github:kadena-community/kadena.js";
-    kadena-js.flake = false;
   };
 
   nixConfig = {
@@ -14,7 +12,11 @@
     extra-substituters = "https://devenv.cachix.org";
   };
 
-  outputs = { self, nixpkgs, devenv, systems, ... } @ inputs:
+  outputs = { self
+            , nixpkgs
+            , devenv
+            , systems
+            , ... } @ inputs:
     let
       forEachSystem = nixpkgs.lib.genAttrs (import systems);
     in
@@ -23,6 +25,26 @@
         (system:
           let
             pkgs = nixpkgs.legacyPackages.${system};
+            start-chainweb-node = pkgs.writeShellScript "start-chainweb-node" ''
+              chainweb-node \
+              --config-file=./chainweb/config/chainweb-node.common.yaml \
+              --p2p-certificate-chain-file=./chainweb/devnet-bootstrap-node.cert.pem \
+              --p2p-certificate-key-file=./chainweb/devnet-bootstrap-node.key.pem \
+              --p2p-hostname=bootstrap-node \
+              --bootstrap-reachability=2 \
+              --cluster-id=devnet-minimal \
+              --p2p-max-session-count=3 \
+              --mempool-p2p-max-session-count=3 \
+              --known-peer-info=YNo8pXthYQ9RQKv1bbpQf2R5LcLYA3ppx2BL2Hf8fIM@bootstrap-node:1789 \
+              --log-level=info \
+              --enable-mining-coordination \
+              --mining-public-key=f90ef46927f506c70b6a58fd322450a936311dc6ac91f4ec3d8ef949608dbf1f \
+              --header-stream \
+              --rosetta \
+              --allowReadsInLocal \
+              --database-directory=./chainweb/db \
+              --disable-pow
+            '';
           in
           {
             default = devenv.lib.mkShell {
@@ -47,20 +69,7 @@
                     }
                   '';
 
-                  processes.chainweb-node.exec = ''
-                    chainweb-node --help
-                  '';
-
-                  enterShell = ''
-                    # npm install --global @microsoft/rush
-                    # cd ${inputs.kadena-js}
-                    # rush install --to @kadena/kda-cli
-                    # rush build --to @kadena/kda-cli
-                    # chmod +x ./lib/index.js
-                    # if you are using NVM, you should have this environment variable available
-                    # ln -s $(pwd)/lib/index.js $NVM_BIN/kda
-                    # if not, you can replace $NVM_BIN to any path you have added in your $PATH
-                  '';
+                  processes.chainweb-node.exec = "${start-chainweb-node}";
                 }
               ];
             };
