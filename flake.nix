@@ -37,14 +37,28 @@
                     nixpkgs.legacyPackages.${system}.nodejs-18_x
                   ];
 
+                  services.nginx.enable = true;
+                  services.nginx.httpConfig = ''
+                    server {
+                      listen 1337;
+                      location / {
+                        proxy_pass https://www.google.com;
+                      }
+                    }
+                  '';
+
+                  processes.chainweb-node.exec = ''
+                    chainweb-node --help
+                  '';
+
                   enterShell = ''
-                    npm install --global @microsoft/rush
-                    cd ${inputs.kadena-js}
-                    rush install --to @kadena/kda-cli
-                    rush build --to @kadena/kda-cli
-                    chmod +x ./lib/index.js
+                    # npm install --global @microsoft/rush
+                    # cd ${inputs.kadena-js}
+                    # rush install --to @kadena/kda-cli
+                    # rush build --to @kadena/kda-cli
+                    # chmod +x ./lib/index.js
                     # if you are using NVM, you should have this environment variable available
-                    ln -s $(pwd)/lib/index.js $NVM_BIN/kda
+                    # ln -s $(pwd)/lib/index.js $NVM_BIN/kda
                     # if not, you can replace $NVM_BIN to any path you have added in your $PATH
                   '';
                 }
