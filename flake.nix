@@ -5,6 +5,7 @@
     devenv.url = "github:cachix/devenv";
     chainweb-node.url = "github:kadena-io/chainweb-node/edmund/fast-devnet";
     chainweb-data.url = "github:kadena-io/chainweb-data";
+    chainweb-mining-client.url = "github:kadena-io/chainweb-mining-client/enis/update-to-flakes-and-haskellNix";
   };
 
   nixConfig = {
@@ -21,6 +22,7 @@
       forEachSystem = nixpkgs.lib.genAttrs (import systems);
     in
     {
+      packages."x86_64-linux".default = inputs.chainweb-mining-client.packages."x86_64-linux".default;
       devShells = forEachSystem
         (system:
           let
@@ -45,6 +47,16 @@
               --database-directory=./chainweb/db \
               --disable-pow
             '';
+            start-chainweb-mining-client = pkgs.writeShellScript "start-chainweb-mining-client" ''
+              chainweb-mining-client \
+              --public-key=f90ef46927f506c70b6a58fd322450a936311dc6ac91f4ec3d8ef949608dbf1f \
+              --node=bootstrap-node:1848 \
+              --worker=constant-delay \
+              --constant-delay-block-time=5 \
+              --thread-count=1 \
+              --log-level=info \
+              --no-tls
+            '';
           in
           {
             default = devenv.lib.mkShell {
@@ -54,8 +66,7 @@
                   # https://devenv.sh/reference/options/
                   packages = [ 
                     inputs.chainweb-node.packages.${system}.default
-                    # inputs.chainweb-data.packages.${system}.default
-                    # inputs.kadena-js 
+                    inputs.chainweb-mining-client.packages.${system}.default
                     nixpkgs.legacyPackages.${system}.nodejs-18_x
                   ];
 
@@ -70,6 +81,7 @@
                   '';
 
                   processes.chainweb-node.exec = "${start-chainweb-node}";
+                  processes.chainweb-mining-client.exec = "${start-chainweb-mining-client}";
                 }
               ];
             };
