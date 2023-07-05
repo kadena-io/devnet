@@ -1,6 +1,6 @@
 {
   inputs = {
-    nixpkgs.url = "github:NixOS/nixpkgs/nixos-22.11";
+    nixpkgs.url = "github:NixOS/nixpkgs/nixpkgs-unstable";
     systems.url = "github:nix-systems/default";
     devenv.url = "github:cachix/devenv";
     chainweb-node.url = "github:kadena-io/chainweb-node/edmund/fast-devnet";
@@ -64,7 +64,7 @@
               modules = [
                 {
                   # https://devenv.sh/reference/options/
-                  packages = [ 
+                  packages = [
                     inputs.chainweb-node.packages.${system}.default
                     inputs.chainweb-mining-client.packages.${system}.default
                     nixpkgs.legacyPackages.${system}.nodejs-18_x
@@ -79,7 +79,8 @@
                       }
                     }
                   '';
-
+                  process-managers.process-compose.enable = true;
+                  process.implementation = "process-compose";
                   processes.chainweb-node.exec = "${start-chainweb-node}";
                   processes.chainweb-mining-client.exec = "${start-chainweb-mining-client}";
                 }
