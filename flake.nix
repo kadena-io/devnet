@@ -50,7 +50,7 @@
             start-chainweb-mining-client = pkgs.writeShellScript "start-chainweb-mining-client" ''
               chainweb-mining-client \
               --public-key=f90ef46927f506c70b6a58fd322450a936311dc6ac91f4ec3d8ef949608dbf1f \
-              --node=bootstrap-node:1848 \
+              --node=127.0.0.1:1848 \
               --worker=constant-delay \
               --constant-delay-block-time=5 \
               --thread-count=1 \
@@ -67,7 +67,7 @@
                   packages = [
                     inputs.chainweb-node.packages.${system}.default
                     inputs.chainweb-mining-client.packages.${system}.default
-                    nixpkgs.legacyPackages.${system}.nodejs-18_x
+                    pkgs.nodejs-18_x
                   ];
 
                   services.nginx.enable = true;
@@ -81,8 +81,28 @@
                   '';
                   process-managers.process-compose.enable = true;
                   process.implementation = "process-compose";
-                  processes.chainweb-node.exec = "${start-chainweb-node}";
-                  processes.chainweb-mining-client.exec = "${start-chainweb-mining-client}";
+                  processes.chainweb-node = {
+                    exec = "${start-chainweb-node}";
+                    process-compose.readiness_probe = {
+                      http_get = {
+                        host = "127.0.0.1";
+                        scheme = "http";
+                        port = 1848;
+                        path = "/health-check";
+                      };
+                      initial_delay_seconds = 5;
+                      period_seconds = 10;
+                      timeout_seconds = 30;
+                      success_threshold = 1;
+                      failure_threshold = 10;
+                    };
+                  };
+                  processes.chainweb-mining-client = {
+                    exec = "${start-chainweb-mining-client}";
+                    process-compose = {
+                      depends_on.chainweb-node.condition = "process_healthy";
+                    };
+                  };
                 }
               ];
             };
