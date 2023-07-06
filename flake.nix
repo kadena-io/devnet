@@ -89,7 +89,7 @@
                     }
 
                     server {
-                        server_name api.devnet.chainweb.com
+                        # server_name api.devnet.chainweb.com
                         listen 1337;
 
                         # access_log /var/log/nginx/chainweb-api-access.log;
