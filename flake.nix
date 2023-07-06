@@ -21,14 +21,31 @@
     let
       forEachSystem = nixpkgs.lib.genAttrs (import systems);
     in
-    {
-      packages."x86_64-linux".default = inputs.chainweb-mining-client.packages."x86_64-linux".default;
+    rec {  
+      packages = forEachSystem
+        (system: {
+          default = inputs.chainweb-mining-client.packages.${system}.default;
+        });
+
+      apps = forEachSystem
+        (system: {
+          default = {
+            type = "app";
+            program = (nixpkgs.legacyPackages.${system}.writeShellScript "default-script" ''
+              ${devShells.${system}.default}/bin/devenv up
+            '').outPath;
+          };
+        });
+          
+
       devShells = forEachSystem
         (system:
           let
             pkgs = nixpkgs.legacyPackages.${system};
+            chainweb-node = inputs.chainweb-node.packages.${system}.default;
+            chainweb-mining-client = inputs.chainweb-mining-client.packages.${system}.default;
             start-chainweb-node = pkgs.writeShellScript "start-chainweb-node" ''
-              chainweb-node \
+              ${chainweb-node}/bin/chainweb-node \
               --config-file=./chainweb/config/chainweb-node.common.yaml \
               --p2p-certificate-chain-file=./chainweb/devnet-bootstrap-node.cert.pem \
               --p2p-certificate-key-file=./chainweb/devnet-bootstrap-node.key.pem \
@@ -48,7 +65,7 @@
               --disable-pow
             '';
             start-chainweb-mining-client = pkgs.writeShellScript "start-chainweb-mining-client" ''
-              chainweb-mining-client \
+              ${chainweb-mining-client}/bin/chainweb-mining-client \
               --public-key=f90ef46927f506c70b6a58fd322450a936311dc6ac91f4ec3d8ef949608dbf1f \
               --node=127.0.0.1:1848 \
               --worker=constant-delay \
@@ -65,8 +82,8 @@
                 {
                   # https://devenv.sh/reference/options/
                   packages = [
-                    inputs.chainweb-node.packages.${system}.default
-                    inputs.chainweb-mining-client.packages.${system}.default
+                    chainweb-node
+                    chainweb-mining-client
                     pkgs.nodejs-18_x
                   ];
 
