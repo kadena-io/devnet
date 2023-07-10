@@ -31,9 +31,7 @@
         (system: {
           default = {
             type = "app";
-            program = (nixpkgs.legacyPackages.${system}.writeShellScript "default-script" ''
-              ${devShells.${system}.default}/bin/devenv up
-            '').outPath;
+            program = devShells.${system}.default.config.procfileScript.outPath;
           };
         });
           
