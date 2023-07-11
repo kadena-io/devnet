@@ -25,20 +25,26 @@
     let
       forEachSystem = nixpkgs.lib.genAttrs (import systems);
     in
-    rec {  
+    rec {
       packages = forEachSystem
         (system: {
-          default = inputs.chainweb-mining-client.packages.${system}.default;
+          default =
+            let config = devShells.${system}.default.config;
+                pkgs = nixpkgs.legacyPackages.${system};
+            in pkgs.writeShellScript "start-processes" ''
+              ${pkgs.python3Packages.python-dotenv}/bin/dotenv \
+                -f ${config.procfileEnv} run ${config.procfileScript}
+            '';
         });
 
       apps = forEachSystem
         (system: {
           default = {
             type = "app";
-            program = devShells.${system}.default.config.procfileScript.outPath;
+            program = packages.${system}.default.outPath;
           };
         });
-          
+
 
       devShells = forEachSystem
         (system:
