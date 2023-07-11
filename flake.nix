@@ -2,7 +2,7 @@
   inputs = {
     nixpkgs.url = "github:NixOS/nixpkgs/nixpkgs-unstable";
     systems.url = "github:nix-systems/default";
-    devenv.url = "github:cachix/devenv";
+    devenv.url = "github:kadena-io/devenv/devnet-setup";
     chainweb-node.url = "github:kadena-io/chainweb-node/edmund/fast-devnet";
     chainweb-data.url = "github:kadena-io/chainweb-data";
     chainweb-mining-client = {
@@ -189,6 +189,7 @@
                       depends_on.chainweb-node.condition = "process_healthy";
                     };
                   };
+                  devenv.root = ".";
                 }
               ];
             };
