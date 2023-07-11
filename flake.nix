@@ -52,11 +52,11 @@
             pkgs = nixpkgs.legacyPackages.${system};
             chainweb-node = inputs.chainweb-node.packages.${system}.default;
             chainweb-mining-client = inputs.chainweb-mining-client.packages.${system}.default;
-            start-chainweb-node = pkgs.writeShellScript "start-chainweb-node" ''
+            start-chainweb-node = stateDir: pkgs.writeShellScript "start-chainweb-node" ''
               ${chainweb-node}/bin/chainweb-node \
-              --config-file=./chainweb/config/chainweb-node.common.yaml \
-              --p2p-certificate-chain-file=./chainweb/devnet-bootstrap-node.cert.pem \
-              --p2p-certificate-key-file=./chainweb/devnet-bootstrap-node.key.pem \
+              --config-file=${./chainweb/config/chainweb-node.common.yaml} \
+              --p2p-certificate-chain-file=${./chainweb/devnet-bootstrap-node.cert.pem} \
+              --p2p-certificate-key-file=${./chainweb/devnet-bootstrap-node.key.pem} \
               --p2p-hostname=bootstrap-node \
               --bootstrap-reachability=2 \
               --cluster-id=devnet-minimal \
@@ -69,7 +69,7 @@
               --header-stream \
               --rosetta \
               --allowReadsInLocal \
-              --database-directory=./chainweb/db \
+              --database-directory=${stateDir}/chainweb/db \
               --disable-pow
             '';
             start-chainweb-mining-client = pkgs.writeShellScript "start-chainweb-mining-client" ''
@@ -87,7 +87,7 @@
             default = devenv.lib.mkShell {
               inherit inputs pkgs;
               modules = [
-                {
+                ({config, ...}: {
                   # https://devenv.sh/reference/options/
                   packages = [
                     chainweb-node
@@ -168,7 +168,7 @@
                   process-managers.process-compose.enable = true;
                   process.implementation = "process-compose";
                   processes.chainweb-node = {
-                    exec = "${start-chainweb-node}";
+                    exec = "${start-chainweb-node config.env.DEVENV_STATE}";
                     process-compose.readiness_probe = {
                       http_get = {
                         host = "127.0.0.1";
@@ -190,7 +190,7 @@
                     };
                   };
                   devenv.root = ".";
-                }
+                })
               ];
             };
           });
