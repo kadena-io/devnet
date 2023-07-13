@@ -10,6 +10,7 @@
       inputs.haskellNix.follows = "chainweb-node/haskellNix";
       inputs.nixpkgs.follows = "chainweb-node/nixpkgs";
     };
+    nix-exe-bundle = { url = "github:3noch/nix-bundle-exe"; flake = false; };
   };
 
   nixConfig = {
@@ -50,8 +51,10 @@
         (system:
           let
             pkgs = nixpkgs.legacyPackages.${system};
-            chainweb-node = inputs.chainweb-node.packages.${system}.default;
-            chainweb-mining-client = inputs.chainweb-mining-client.packages.${system}.default;
+            bundle = pkgs.callPackage inputs.nix-exe-bundle {};
+            bundleCond = drv: if system == "aarch64-darwin" then bundle drv else drv;
+            chainweb-node = bundleCond inputs.chainweb-node.packages.${system}.default;
+            chainweb-mining-client = bundleCond inputs.chainweb-mining-client.packages.${system}.default;
             start-chainweb-node = stateDir: pkgs.writeShellScript "start-chainweb-node" ''
               ${chainweb-node}/bin/chainweb-node \
               --config-file=${./chainweb/config/chainweb-node.common.yaml} \
