@@ -52,9 +52,8 @@
           let
             pkgs = nixpkgs.legacyPackages.${system};
             bundle = pkgs.callPackage inputs.nix-exe-bundle {};
-            bundleCond = drv: if system == "aarch64-darwin" then bundle drv else drv;
-            chainweb-node = bundleCond inputs.chainweb-node.packages.${system}.default;
-            chainweb-mining-client = bundleCond inputs.chainweb-mining-client.packages.${system}.default;
+            chainweb-node = bundle inputs.chainweb-node.packages.${system}.default;
+            chainweb-mining-client = bundle inputs.chainweb-mining-client.packages.${system}.default;
             start-chainweb-node = stateDir: pkgs.writeShellScript "start-chainweb-node" ''
               ${chainweb-node}/bin/chainweb-node \
               --config-file=${./chainweb/config/chainweb-node.common.yaml} \
