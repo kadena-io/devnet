@@ -37,16 +37,7 @@
               ${config.procfileScript}
             '';
           container =
-            let pkgs = import nixpkgs {
-                  overlays = [ (self: super: {
-                    vmTools = super.vmTools // {
-                      runInLinuxVM = x: super.lib.overrideDerivation
-                        (super.vmTools.runInLinuxVM x)
-                        (a: { requiredSystemFeatures = []; });
-                    };
-                  })];
-                  inherit system;
-                };
+            let pkgs = nixpkgs.legacyPackages.${system};
             in pkgs.dockerTools.buildImage {
               name = "devnet";
               fromImage = pkgs.dockerTools.pullImage {
@@ -56,9 +47,9 @@
                 finalImageTag = "22.04";
                 finalImageName = "ubuntu";
               };
-              runAsRoot = ''
-                #!${pkgs.runtimeShell}
-                mkdir -p /root/.devenv
+
+              copyToRoot = pkgs.runCommand "contents" {} ''
+                mkdir -p $out/root/.devenv
               '';
 
               config = {
