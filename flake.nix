@@ -124,7 +124,6 @@
                   packages = [
                     chainweb-node
                     chainweb-mining-client
-                    pkgs.nodejs-18_x
                   ];
 
                   services.nginx.enable = true;
