@@ -33,8 +33,8 @@
             let config = devShells.${system}.default.config;
                 pkgs = nixpkgs.legacyPackages.${system};
             in pkgs.writeShellScript "start-processes" ''
-              ${pkgs.python3Packages.python-dotenv}/bin/dotenv \
-                -f ${config.procfileEnv} run ${config.procfileScript}
+              export $(${pkgs.busybox}/bin/xargs < ${config.procfileEnv})
+              ${config.procfileScript}
             '';
         });
 
