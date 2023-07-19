@@ -28,14 +28,32 @@
     in
     rec {
       packages = forEachSystem
-        (system: {
+        (system: let pkgs = nixpkgs.legacyPackages.${system}; in rec {
           default =
             let config = devShells.${system}.default.config;
-                pkgs = nixpkgs.legacyPackages.${system};
             in pkgs.writeShellScript "start-processes" ''
               export $(${pkgs.busybox}/bin/xargs < ${config.procfileEnv})
               ${config.procfileScript}
             '';
+          container = pkgs.dockerTools.buildImage {
+            name = "devnet";
+            fromImage = pkgs.dockerTools.pullImage {
+              imageName = "ubuntu";
+              imageDigest = "sha256:965fbcae990b0467ed5657caceaec165018ef44a4d2d46c7cdea80a9dff0d1ea";
+              sha256 = "10wlr8rhiwxmz1hk95s9vhkrrjkzyvrv6nshg23j86rw08ckrqnz";
+              finalImageTag = "22.04";
+              finalImageName = "ubuntu";
+            };
+            runAsRoot = ''
+              #!${pkgs.runtimeShell}
+              mkdir -p /root/.devenv
+            '';
+
+            config = {
+              WorkingDir = "/root";
+              Cmd = [ default.outPath ];
+            };
+          };
         });
 
       apps = forEachSystem
