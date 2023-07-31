@@ -189,7 +189,7 @@
                     location ~ ^/chainweb/0.0/[0-9a-zA-Z\-\_]+/chain/[0-9]+/(header|hash|branch|payload) {
                         proxy_pass http://service-api;
                     }
-                    location = /chainweb/0.0/[0-9a-zA-Z\-\_]+/cut {
+                    location ~ /chainweb/0.0/[0-9a-zA-Z\-\_]+/cut {
                         proxy_pass http://service-api;
                     }
 
@@ -197,7 +197,7 @@
                     location ~ ^/chainweb/0.0/[0-9a-zA-Z\-\_]+/rosetta/ {
                         proxy_pass http://service-api;
                     }
-                    location = /chainweb/0.0/[0-9a-zA-Z\-\_]+/header/updates {
+                    location ~ /chainweb/0.0/[0-9a-zA-Z\-\_]+/header/updates {
                         proxy_buffering off;
                         proxy_pass http://service-api;
                     }
