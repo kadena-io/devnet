@@ -255,6 +255,39 @@
         "type": "github"
       }
     },
+    "chainweb-node-l2": {
+      "flake": false,
+      "locked": {
+        "lastModified": 1690807888,
+        "narHash": "sha256-5yMMG7/aiMRgrQf3CA/gfDAiXlXx28y59GCdZLpxqEw=",
+        "owner": "kadena-io",
+        "repo": "chainweb-node",
+        "rev": "6257d7d68e21bf6d44d757b69e5d3a231af2c045",
+        "type": "github"
+      },
+      "original": {
+        "owner": "kadena-io",
+        "ref": "edmund/l2-spv-poc-nix-fix",
+        "repo": "chainweb-node",
+        "type": "github"
+      }
+    },
+    "chainweb-node-l2-pkgs": {
+      "locked": {
+        "lastModified": 1653936696,
+        "narHash": "sha256-M6bJShji9AIDZ7Kh7CPwPBPb/T7RiVev2PAcOi4fxDQ=",
+        "owner": "NixOS",
+        "repo": "nixpkgs",
+        "rev": "7a94fcdda304d143f9a40006c033d7e190311b54",
+        "type": "github"
+      },
+      "original": {
+        "owner": "NixOS",
+        "repo": "nixpkgs",
+        "rev": "7a94fcdda304d143f9a40006c033d7e190311b54",
+        "type": "github"
+      }
+    },
     "devenv": {
       "inputs": {
         "flake-compat": "flake-compat_4",
@@ -1642,6 +1675,8 @@
         "chainweb-data": "chainweb-data",
         "chainweb-mining-client": "chainweb-mining-client",
         "chainweb-node": "chainweb-node",
+        "chainweb-node-l2": "chainweb-node-l2",
+        "chainweb-node-l2-pkgs": "chainweb-node-l2-pkgs",
         "devenv": "devenv",
         "nix-exe-bundle": "nix-exe-bundle",
         "nixpkgs": "nixpkgs_8",
