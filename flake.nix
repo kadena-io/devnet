@@ -4,9 +4,7 @@
     systems.url = "github:nix-systems/default";
     devenv.url = "github:kadena-io/devenv/devnet-setup";
     chainweb-node.url = "github:kadena-io/chainweb-node/edmund/fast-devnet";
-    chainweb-node-l2.url = "github:kadena-io/chainweb-node/edmund/l2-spv-poc-nix-fix";
-    chainweb-node-l2.flake = false;
-    chainweb-node-l2-pkgs.url = "github:NixOS/nixpkgs/7a94fcdda304d143f9a40006c033d7e190311b54";
+    chainweb-node-l2.url = "github:kadena-io/chainweb-node/edmund/l2-spv-poc";
     chainweb-data.url = "github:kadena-io/chainweb-data";
     chainweb-mining-client = {
       url = "github:kadena-io/chainweb-mining-client/enis/update-to-flakes-and-haskellNix";
@@ -69,9 +67,7 @@
         };
         l2 = mkDevnet {
           system = system;
-          chainweb-node = import inputs.chainweb-node-l2 {
-            pkgs = inputs.chainweb-node-l2-pkgs.legacyPackages.${system};
-          };
+          chainweb-node = inputs.chainweb-node-l2.packages.${system}.default;
         };
       });
 
