@@ -42,11 +42,11 @@
           };
           container = mkContainer {
             system = system;
-            devnet = default;
+            devnetRunner = default;
           };
           container-l2 = mkContainer {
             system = system;
-            devnet = l2;
+            devnetRunner = l2;
           };
         });
 
