@@ -258,11 +258,11 @@
     "chainweb-node-l2": {
       "flake": false,
       "locked": {
-        "lastModified": 1690811261,
-        "narHash": "sha256-WL+IdWhsi0Z8iuu/0G11F9JLuGpP0SQ+mxqMe/nNS68=",
+        "lastModified": 1690875660,
+        "narHash": "sha256-lsp2QKOhYSxqc9b0JaA01H4tNQ3nylqMDzGMMelIi2Y=",
         "owner": "kadena-io",
         "repo": "chainweb-node",
-        "rev": "b5aaae9d8ebfb955fe8beef7138120f72fd3d986",
+        "rev": "a1b20088b97342b5919d23804f0536e849a0d131",
         "type": "github"
       },
       "original": {
