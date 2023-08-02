@@ -102,7 +102,7 @@
         let config = devnet.config;
             pkgs = nixpkgs.legacyPackages.${system};
         in pkgs.writeShellScript "start-processes" ''
-          export $(${pkgs.toybox}/bin/xargs < ${config.procfileEnv})
+          export $(${pkgs.findutils}/bin/xargs < ${config.procfileEnv})
           ${config.procfileScript}
         '';
 
