@@ -110,29 +110,17 @@
         let
           overlays = [(self: super: {
             chainweb-node = bundle args.chainweb-node;
+            chainweb-mining-client = bundle inputs.chainweb-mining-client.packages.${system}.default;
           })];
           pkgs = import nixpkgs { inherit system overlays; };
           bundle = pkgs.callPackage inputs.nix-exe-bundle {};
-          chainweb-mining-client = bundle inputs.chainweb-mining-client.packages.${system}.default;
-          start-chainweb-mining-client = pkgs.writeShellScript "start-chainweb-mining-client" ''
-            ${chainweb-mining-client}/bin/chainweb-mining-client \
-            --public-key=f90ef46927f506c70b6a58fd322450a936311dc6ac91f4ec3d8ef949608dbf1f \
-            --node=127.0.0.1:1848 \
-            --worker=constant-delay \
-            --constant-delay-block-time=5 \
-            --thread-count=1 \
-            --log-level=info \
-            --no-tls
-          '';
         in devenv.lib.mkShell {
           inherit inputs pkgs;
           modules = [
             modules/chainweb-node.nix
+            modules/chainweb-mining-client.nix
             ({config, ...}: {
               # https://devenv.sh/reference/options/
-              packages = [
-                chainweb-mining-client
-              ];
 
               services.nginx.enable = true;
               services.nginx.httpConfig = ''
@@ -206,12 +194,6 @@
               '';
               process-managers.process-compose.enable = true;
               process.implementation = "process-compose";
-              processes.chainweb-mining-client = {
-                exec = "${start-chainweb-mining-client}";
-                process-compose = {
-                  depends_on.chainweb-node.condition = "process_healthy";
-                };
-              };
               devenv.root = ".";
             })
           ];
