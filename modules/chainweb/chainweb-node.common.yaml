@@ -17,3 +17,6 @@ chainweb:
   mempoolP2p:
     configuration:
       maxSessionCount: 2
+logging:
+  backend:
+    color: "True"
