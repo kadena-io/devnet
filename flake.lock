@@ -275,11 +275,11 @@
         ]
       },
       "locked": {
-        "lastModified": 1685987224,
-        "narHash": "sha256-iTmHEX63yHOOu7Y2PC+krJ0KzwwAHPuZU/SIAU/1c1s=",
+        "lastModified": 1690899802,
+        "narHash": "sha256-cRdIlOcNb07VK7lLxlwCAyeDxzlj9bXoeSbSWVoei1A=",
         "owner": "kadena-io",
         "repo": "chainweb-data",
-        "rev": "b12c80732868a864703662528a6527a706820cb9",
+        "rev": "c5b308079135555813f39d33dd46ef3d7d201f60",
         "type": "github"
       },
       "original": {
