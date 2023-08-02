@@ -110,6 +110,7 @@
         let
           overlays = [(self: super: {
             chainweb-node = bundle args.chainweb-node;
+            chainweb-data = bundle inputs.chainweb-data.packages.${system}.default;
             chainweb-mining-client = bundle inputs.chainweb-mining-client.packages.${system}.default;
           })];
           pkgs = import nixpkgs { inherit system overlays; };
@@ -117,6 +118,7 @@
         in devenv.lib.mkShell {
           inherit inputs pkgs;
           modules = [
+            modules/chainweb-data.nix
             modules/chainweb-node.nix
             modules/chainweb-mining-client.nix
             ({config, ...}: {

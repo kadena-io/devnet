@@ -273,11 +273,11 @@
         "pre-commit-hooks": "pre-commit-hooks"
       },
       "locked": {
-        "lastModified": 1689064310,
-        "narHash": "sha256-KqwCng03eT9XQdO1Ofx4cnhwqA/q9T6pFkwHWOxq0/0=",
+        "lastModified": 1690979385,
+        "narHash": "sha256-BNbNnl/xyRI8Adkj4bQINel6Qo7Ls0Jn5ZPz9cW0Dz4=",
         "owner": "kadena-io",
         "repo": "devenv",
-        "rev": "664851bcd1b8f9051da73aee5673d12e37799891",
+        "rev": "760e44131c0d684df5db093b5e551ed2c8f4b6d2",
         "type": "github"
       },
       "original": {
