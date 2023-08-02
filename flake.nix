@@ -213,11 +213,6 @@
                 };
               };
               devenv.root = ".";
-              # Work around a process-compose log display bug, remove these lines
-              # once we start using a process-compsoe with the following merged:
-              # https://github.com/F1bonacc1/process-compose/pull/74 is merged
-              processes.nginx.process-compose.disable_ansi_colors = true;
-              processes.chainweb-mining-client.process-compose.disable_ansi_colors = true;
             })
           ];
         };
