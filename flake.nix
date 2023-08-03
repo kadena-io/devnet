@@ -84,27 +84,26 @@
                   pkgs.nano
                 ];
               };
+              runAsRoot = ''
+                #!${pkgs.runtimeShell}
+                ${pkgs.dockerTools.shadowSetup}
+
+                mkdir /tmp
+                chmod 777 /tmp
+
+                # Nginx needs a nobody:nogroup
+                groupadd -r nogroup
+                useradd -r -g nogroup nobody
+
+                groupadd -r devnet
+                useradd -r -g devnet -d /devnet devnet
+                mkdir -p /devnet/.devenv
+                chown -R devnet:devnet /devnet
+              '';
             };
           in pkgs.dockerTools.buildImage {
             name = "devnet";
             fromImage = baseImage;
-
-            runAsRoot = ''
-              #!${pkgs.runtimeShell}
-              ${pkgs.dockerTools.shadowSetup}
-
-              mkdir /tmp
-              chmod 777 /tmp
-
-              # Nginx needs a nobody:nogroup
-              groupadd -r nogroup
-              useradd -r -g nogroup nobody
-
-              groupadd -r devnet
-              useradd -r -g devnet -d /devnet devnet
-              mkdir -p /devnet/.devenv
-              chown -R devnet:devnet /devnet
-            '';
 
             config = {
               WorkingDir = "/devnet";
