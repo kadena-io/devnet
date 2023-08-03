@@ -1,7 +1,7 @@
 {
   inputs = {
     nixpkgs.url = "github:NixOS/nixpkgs/nixpkgs-unstable";
-    systems.url = "github:nix-systems/default";
+    flake-utils.url = "github:numtide/flake-utils";
     devenv.url = "github:kadena-io/devenv/devnet-setup";
     chainweb-node.url = "github:kadena-io/chainweb-node/edmund/fast-devnet";
     chainweb-node-l2.url = "github:kadena-io/chainweb-node/edmund/l2-spv-poc";
@@ -26,96 +26,80 @@
   outputs = { self
             , nixpkgs
             , devenv
-            , systems
             , ... } @ inputs:
-    let
-      forEachSystem = nixpkgs.lib.genAttrs (import systems);
-    in
-    rec {
-      packages = forEachSystem
-        (system: rec {
-          default = mkDevnetRunner {
-            system = system;
-            devnet = devShells.${system}.default;
-          };
-          l2 = mkDevnetRunner {
-            system = system;
-            devnet = devShells.${system}.l2;
-          };
-          container = mkContainer {
-            system = system;
-            devnetRunner = default;
-          };
-          container-l2 = mkContainer {
-            system = system;
-            devnetRunner = l2;
-          };
-          cwd = inputs.chainweb-data.packages.${system}.default;
-        });
+    inputs.flake-utils.lib.eachDefaultSystem (system:
+      let common-overlay = (self: super: {
+            chainweb-data = bundle inputs.chainweb-data.packages.${system}.default;
+            chainweb-mining-client = bundle inputs.chainweb-mining-client.packages.${system}.default;
+          });
+          l1-overlay = (self: super: {
+            chainweb-node = bundle inputs.chainweb-node.packages.${system}.default;
+          });
+          l2-overlay = (self: super: {
+            chainweb-node = bundle inputs.chainweb-node-l2.packages.${system}.default;
+          });
+          pkgs = nixpkgs.legacyPackages.${system};
+          l1-pkgs = import nixpkgs { inherit system; overlays = [ common-overlay l1-overlay ]; };
+          l2-pkgs = import nixpkgs { inherit system; overlays = [ common-overlay l2-overlay ]; };
+          bundle = pkgs.callPackage inputs.nix-exe-bundle {};
+      in rec {
+        packages = rec {
+          default = mkDevnetRunner { devnet = devShells.default; };
+          l2 = mkDevnetRunner { devnet = devShells.l2; };
+          container = mkContainer l1-pkgs;
+          container-l2 = mkContainer l2-pkgs;
+          cwd = inputs.chainweb-data.packages.default;
+        };
 
-      apps = forEachSystem
-        (system: {
+        apps = {
           default = {
             type = "app";
-            program = packages.${system}.default.outPath;
+            program = packages.default.outPath;
           };
           l2 = {
             type = "app";
-            program = packages.${system}.l2.outPath;
+            program = packages.l2.outPath;
           };
-        });
-
-      devShells = forEachSystem (system: {
-        default = mkDevnet {
-          system = system;
-          chainweb-node = inputs.chainweb-node.packages.${system}.default;
         };
-        l2 = mkDevnet {
-          system = system;
-          chainweb-node = inputs.chainweb-node-l2.packages.${system}.default;
-        };
-      });
 
-      mkContainer = inputs@{ devnetRunner, system }:
-        let pkgs = nixpkgs.legacyPackages.${system};
-        in pkgs.dockerTools.buildImage {
-          name = "devnet";
-          fromImage = pkgs.dockerTools.pullImage {
-            imageName = "ubuntu";
-            imageDigest = "sha256:965fbcae990b0467ed5657caceaec165018ef44a4d2d46c7cdea80a9dff0d1ea";
-            sha256 = "10wlr8rhiwxmz1hk95s9vhkrrjkzyvrv6nshg23j86rw08ckrqnz";
-            finalImageTag = "22.04";
-            finalImageName = "ubuntu";
+        devShells = {
+          default = mkDevnet { pkgs = l1-pkgs; };
+          l2 = mkDevnet { pkgs = l2-pkgs; };
+        };
+
+        mkContainer = pkgs:
+          let
+            devnet = mkDevnet { inherit pkgs; };
+            devnetRunner = mkDevnetRunner {inherit devnet;};
+          in pkgs.dockerTools.buildImage {
+            name = "devnet";
+            fromImage = pkgs.dockerTools.pullImage {
+              imageName = "ubuntu";
+              imageDigest = "sha256:965fbcae990b0467ed5657caceaec165018ef44a4d2d46c7cdea80a9dff0d1ea";
+              sha256 = "10wlr8rhiwxmz1hk95s9vhkrrjkzyvrv6nshg23j86rw08ckrqnz";
+              finalImageTag = "22.04";
+              finalImageName = "ubuntu";
+            };
+
+            copyToRoot = pkgs.runCommand "contents" {} ''
+              mkdir -p $out/root/.devenv
+            '';
+
+            config = {
+              WorkingDir = "/root";
+              Cmd = [ devnetRunner.outPath ];
+            };
           };
 
-          copyToRoot = pkgs.runCommand "contents" {} ''
-            mkdir -p $out/root/.devenv
+        mkDevnetRunner = { devnet }:
+          let config = devnet.config;
+              pkgs = nixpkgs.legacyPackages.${system};
+          in pkgs.writeShellScript "start-processes" ''
+            export $(${pkgs.findutils}/bin/xargs < ${config.procfileEnv})
+            ${config.procfileScript}
           '';
 
-          config = {
-            WorkingDir = "/root";
-            Cmd = [ devnetRunner.outPath ];
-          };
-        };
-
-      mkDevnetRunner = { devnet, system }:
-        let config = devnet.config;
-            pkgs = nixpkgs.legacyPackages.${system};
-        in pkgs.writeShellScript "start-processes" ''
-          export $(${pkgs.findutils}/bin/xargs < ${config.procfileEnv})
-          ${config.procfileScript}
-        '';
-
-      mkDevnet = args@{ chainweb-node, system }:
-        let
-          overlays = [(self: super: {
-            chainweb-node = bundle args.chainweb-node;
-            chainweb-data = bundle inputs.chainweb-data.packages.${system}.default;
-            chainweb-mining-client = bundle inputs.chainweb-mining-client.packages.${system}.default;
-          })];
-          pkgs = import nixpkgs { inherit system overlays; };
-          bundle = pkgs.callPackage inputs.nix-exe-bundle {};
-        in devenv.lib.mkShell {
+        mkDevnet = args@{ pkgs }: devenv.lib.mkShell {
           inherit inputs pkgs;
           modules = [
             modules/chainweb-data.nix
@@ -194,11 +178,11 @@
                     }
                 }
               '';
-              process-managers.process-compose.enable = true;
               process.implementation = "process-compose";
               devenv.root = ".";
             })
           ];
         };
-    };
+      }
+    );
 }
