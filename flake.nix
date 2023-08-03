@@ -70,24 +70,50 @@
         mkContainer = pkgs:
           let
             devnet = mkDevnet { inherit pkgs; };
+            config = devnet.config;
             devnetRunner = mkDevnetRunner {inherit devnet;};
+            baseImage = pkgs.dockerTools.buildImage {
+              name = "devnet-base";
+              copyToRoot = pkgs.buildEnv {
+                name = "devnet-base-root";
+                paths = [
+                  config.services.postgres.package
+                  config.services.nginx.package
+                  pkgs.chainweb-node
+                  pkgs.chainweb-mining-client
+                  pkgs.coreutils
+                  pkgs.findutils
+                  pkgs.bashInteractive
+                  pkgs.su
+                  pkgs.nano
+                ];
+              };
+            };
           in pkgs.dockerTools.buildImage {
             name = "devnet";
-            fromImage = pkgs.dockerTools.pullImage {
-              imageName = "ubuntu";
-              imageDigest = "sha256:965fbcae990b0467ed5657caceaec165018ef44a4d2d46c7cdea80a9dff0d1ea";
-              sha256 = "10wlr8rhiwxmz1hk95s9vhkrrjkzyvrv6nshg23j86rw08ckrqnz";
-              finalImageTag = "22.04";
-              finalImageName = "ubuntu";
-            };
+            fromImage = baseImage;
 
-            copyToRoot = pkgs.runCommand "contents" {} ''
-              mkdir -p $out/root/.devenv
+            runAsRoot = ''
+              #!${pkgs.runtimeShell}
+              ${pkgs.dockerTools.shadowSetup}
+
+              mkdir /tmp
+              chmod 777 /tmp
+
+              # Nginx needs a nobody:nogroup
+              groupadd -r nogroup
+              useradd -r -g nogroup nobody
+
+              groupadd -r devnet
+              useradd -r -g devnet -d /devnet devnet
+              mkdir -p /devnet/.devenv
+              chown -R devnet:devnet /devnet
             '';
 
             config = {
-              WorkingDir = "/root";
+              WorkingDir = "/devnet";
               Cmd = [ devnetRunner.outPath ];
+              User = "devnet";
             };
           };
 
