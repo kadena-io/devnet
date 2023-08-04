@@ -21,5 +21,13 @@ in
     };
 
     services.postgres.enable = true;
+    services.http-server = {
+      upstreams.chainweb-data = "server localhost:1849;";
+      servers.devnet.extraConfig = ''
+          location ~ /(stats$|coins$|cwd-spec|txs|richlist.csv$) {
+            proxy_pass http://chainweb-data;
+          }
+        '';
+      };
   };
 }
