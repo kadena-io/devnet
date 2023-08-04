@@ -81,7 +81,7 @@
                   pkgs.findutils
                   pkgs.bashInteractive
                   pkgs.su
-                  pkgs.nano
+                  pkgs.dockerTools.caCertificates
                 ];
               };
               runAsRoot = ''
