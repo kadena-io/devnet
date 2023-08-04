@@ -41,5 +41,65 @@ in
           failure_threshold = 10;
       };
     };
-  };  
+
+    services.http-server = {
+      upstreams = {
+        service-api = "server localhost:1848;";
+        mining-api = ''
+          ip_hash; # for work and solve we need sticky connections
+          server localhost:1848;
+        '';
+        peer-api = "server localhost:1789;";
+      };
+      servers.devnet = {
+        listen = 1337;
+        extraConfig = ''
+          location = /info {
+            proxy_pass http://service-api;
+          }
+          location = /health-check {
+            proxy_pass http://service-api;
+          }
+          location ~ ^/chainweb/0.0/[0-9a-zA-Z\-\_]+/chain/[0-9]+/pact/ {
+            proxy_pass http://service-api;
+          }
+          location ~ ^/chainweb/0.0/[0-9a-zA-Z\-\_]+/chain/[0-9]+/(header|hash|branch|payload) {
+            proxy_pass http://service-api;
+          }
+          location ~ /chainweb/0.0/[0-9a-zA-Z\-\_]+/cut {
+            proxy_pass http://service-api;
+          }
+
+          # Optional Service APIs
+          location ~ ^/chainweb/0.0/[0-9a-zA-Z\-\_]+/rosetta/ {
+            proxy_pass http://service-api;
+          }
+          location ~ /chainweb/0.0/[0-9a-zA-Z\-\_]+/header/updates {
+            proxy_buffering off;
+            proxy_pass http://service-api;
+          }
+
+          # Mining
+          location /chainweb/0.0/[0-9a-zA-Z\-\_]+/mining/ {
+            proxy_buffering off;
+            proxy_pass http://mining-api;
+          }
+
+          # Config (P2P API)
+          location = /config {
+            proxy_pass https://peer-api;
+            # needed if self signed certificates are used for nodes:
+            # proxy_ssl_verify off;
+          }
+
+          # Default
+          location / {
+            return 404;
+          }
+        '';
+
+      };
+
+    };
+  };
 }
