@@ -67,21 +67,24 @@
             devnet = mkDevnet { inherit pkgs; };
             config = devnet.config;
             devnetRunner = mkDevnetRunner {inherit devnet;};
-            baseImage = pkgs.dockerTools.buildImage {
+            nixConf = pkgs.writeTextDir "/etc/nix/nix.conf" ''
+              experimental-features = nix-command flakes
+            '';
+            baseImage = pkgs.dockerTools.buildImageWithNixDb {
               name = "devnet-base";
               copyToRoot = pkgs.buildEnv {
                 name = "devnet-base-root";
                 paths = [
-                  config.services.postgres.package
                   config.services.nginx.package
                   pkgs.chainweb-node
-                  pkgs.chainweb-data
                   pkgs.chainweb-mining-client
                   pkgs.coreutils
                   pkgs.findutils
                   pkgs.bashInteractive
                   pkgs.su
                   pkgs.dockerTools.caCertificates
+                  pkgs.nix
+                  nixConf
                 ];
               };
               runAsRoot = ''
@@ -101,13 +104,24 @@
                 chown -R devnet:devnet /devnet
               '';
             };
+            packagesImage = pkgs.dockerTools.buildImage {
+              name = "devnet-packages";
+              fromImage = baseImage;
+              copyToRoot = pkgs.buildEnv {
+                name = "devnet-base-root";
+                paths = devnet.config.packages;
+              };
+            };
           in pkgs.dockerTools.buildImage {
             name = "devnet";
-            fromImage = baseImage;
-
+            fromImage = packagesImage;
+            copyToRoot = pkgs.runCommand "start-devnet-bin" {} ''
+              mkdir -p $out/bin
+              ln -s ${devnetRunner.outPath} $out/bin/start-devnet
+            '';
             config = {
               WorkingDir = "/devnet";
-              Cmd = [ devnetRunner.outPath ];
+              Cmd = [ "start-devnet" ];
               User = "devnet";
             };
           };
@@ -115,7 +129,7 @@
         mkDevnetRunner = { devnet }:
           let config = devnet.config;
               pkgs = nixpkgs.legacyPackages.${system};
-          in pkgs.writeShellScript "start-processes" ''
+          in pkgs.writeShellScript "start-devnet" ''
             export $(${pkgs.findutils}/bin/xargs < ${config.procfileEnv})
             ${config.procfileScript}
           '';
