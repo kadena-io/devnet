@@ -43,5 +43,5 @@ cat $(nix build github:kadena-community/nix-kda-cli#container --no-link --print-
 
 The docker image serves an HTTP API at the port 1337. The image also stores its environment state under the /root/.devenv folder. The following docker invocation will run the environment while exposing its HTTP port at 8080 and keeping the environment state under the user's `$HOME/l1`:
 ``` bash
-docker run -it -p 8080:1337 -v $HOME/l1:/root/.devenv <devnet-image-name>
+docker run -it -p 8080:1337 -v $HOME/l1:/devnet/.devenv <devnet-image-name>
 ```
