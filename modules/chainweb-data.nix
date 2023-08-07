@@ -13,7 +13,7 @@ in
     packages = [ pkgs.chainweb-data ];
 
     processes.chainweb-data = {
-      exec = "${start-chainweb-data}";
+      exec = "${pkgs.expect}/bin/unbuffer ${start-chainweb-data}";
       process-compose.depends_on = {
         chainweb-node.condition = "process_healthy";
         postgres.condition = "process_healthy";
