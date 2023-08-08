@@ -52,7 +52,6 @@ in
         peer-api = "server localhost:1789;";
       };
       servers.devnet = {
-        listen = 1337;
         extraConfig = ''
           location = /info {
             proxy_pass http://service-api;
