@@ -90,15 +90,8 @@ in
             # needed if self signed certificates are used for nodes:
             # proxy_ssl_verify off;
           }
-
-          # Default
-          location / {
-            return 404;
-          }
         '';
-
       };
-
     };
   };
 }

@@ -141,6 +141,7 @@
             modules/chainweb-node.nix
             modules/chainweb-mining-client.nix
             modules/http-server.nix
+            modules/landing-page/module.nix
             ({config, ...}: {
               # https://devenv.sh/reference/options/
               process.implementation = "process-compose";
