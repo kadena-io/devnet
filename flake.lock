@@ -179,16 +179,15 @@
         ]
       },
       "locked": {
-        "lastModified": 1691413894,
-        "narHash": "sha256-Fk3S/svNHas9zkrGBdap41wj6CH6sW75L6c459EO5DQ=",
+        "lastModified": 1691481945,
+        "narHash": "sha256-mqFkNuDyBbocdIFACTJnkWMl/74JBQq58SEQmv9LBg4=",
         "owner": "kadena-io",
         "repo": "chainweb-data",
-        "rev": "72faed164240be9285c07f1a17720143fe307cf3",
+        "rev": "f1927c7eb6769b8b534e680dd7368ca0d1db0e03",
         "type": "github"
       },
       "original": {
         "owner": "kadena-io",
-        "ref": "enis/events-min-height-for-devnet",
         "repo": "chainweb-data",
         "type": "github"
       }

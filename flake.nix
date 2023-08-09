@@ -6,7 +6,7 @@
     chainweb-node.url = "github:kadena-io/chainweb-node/edmund/fast-devnet";
     chainweb-node-l2.url = "github:kadena-io/chainweb-node/edmund/l2-spv-poc";
     chainweb-data = {
-      url = "github:kadena-io/chainweb-data/enis/events-min-height-for-devnet";
+      url = "github:kadena-io/chainweb-data/";
       inputs.nixpkgs.follows = "chainweb-node/nixpkgs";
       inputs.haskellNix.follows = "chainweb-node/haskellNix";
     };
