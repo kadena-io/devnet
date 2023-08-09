@@ -18,7 +18,7 @@ in
   config = {
     services.http-server.servers.devnet.extraConfig = ''
       location / {
-        alias ${cfg.landing-page-root}/;
+        alias ${cfg.root}/;
       }
     '';
   };
