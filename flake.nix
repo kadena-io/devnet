@@ -44,7 +44,9 @@
           container = mkContainer l1-pkgs;
           container-l2 = mkContainer l2-pkgs;
           cwd = inputs.chainweb-data.packages.default;
-          landing-page = devShells.default.config.sites.landing-page.root;
+          landing-page = devShells.default.config.sites.landing-page.root.overrideAttrs (_:_:{
+            allowSubstitutes = false;
+          });
         };
 
         apps = {

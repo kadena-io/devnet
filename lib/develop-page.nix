@@ -2,16 +2,17 @@
 , packageName
 }:
 let
-  update = no-substituters: pkgs.writeShellScript "update-${packageName}" ''
+  update = pkgs.writeShellScript "update-${packageName}" ''
+    set -euo pipefail
     RESULT=$(
       nix build .#${packageName} --no-link --print-out-paths \
-        --option warn-dirty 'false' \
-        ${pkgs.lib.strings.optionalString no-substituters ''--substituters ""''}
+        --option warn-dirty 'false'
     )
     ${pkgs.rsync}/bin/rsync -a --delete --chmod=ugo+rwX $RESULT/ $1/
   '';
   runBuild = pkgs.writeShellScript "run-build-${packageName}" ''
-    ${update true} $1
+    set -euo pipefail
+    ${update} $1
     ${pkgs.nodePackages.browser-sync}/bin/browser-sync reload
   '';
 in pkgs.writeShellScript "develop-${packageName}" ''
@@ -19,7 +20,7 @@ in pkgs.writeShellScript "develop-${packageName}" ''
 
   TMP_DIR=$(${pkgs.coreutils}/bin/mktemp -d -t ${packageName}_XXXXXX)
 
-  ${update false} $TMP_DIR
+  ${update} $TMP_DIR
 
   ${pkgs.nodePackages.browser-sync}/bin/browser-sync start --server $TMP_DIR &
   BROWSER_SYNC_PID=$!
