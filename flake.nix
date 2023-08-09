@@ -44,6 +44,7 @@
           container = mkContainer l1-pkgs;
           container-l2 = mkContainer l2-pkgs;
           cwd = inputs.chainweb-data.packages.default;
+          landing-page = devShells.default.config.sites.landing-page.root;
         };
 
         apps = {
@@ -54,6 +55,10 @@
           l2 = {
             type = "app";
             program = packages.l2.outPath;
+          };
+          develop-landing-page = {
+            type = "app";
+            program = (import ./lib/develop-page.nix {inherit pkgs; packageName = "landing-page";}).outPath;
           };
         };
 
