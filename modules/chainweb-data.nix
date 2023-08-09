@@ -1,16 +1,20 @@
 { pkgs, config, ...}:
 let
   absolutePgData = "$(${pkgs.coreutils}/bin/realpath ${config.env.PGDATA})";
+  dbString = "postgresql:///$USER?host=${absolutePgData}";
   start-chainweb-data = pkgs.writeShellScript "start-chainweb-data" ''
     ${pkgs.chainweb-data}/bin/chainweb-data \
-      --dbstring "postgresql:///$USER?host=${absolutePgData}" \
+      --dbstring "${dbString}" \
       --service-host localhost --p2p-host localhost --p2p-port 1789 \
       --migrate server --port 1849 --serve-swagger-ui
+  '';
+  psql-cwd = pkgs.writeShellScriptBin "psql-cwd" ''
+    ${pkgs.postgresql}/bin/psql "${dbString}"
   '';
 in
 {
   config = {
-    packages = [ pkgs.chainweb-data ];
+    packages = [ pkgs.chainweb-data psql-cwd ];
 
     processes.chainweb-data = {
       exec = "${pkgs.expect}/bin/unbuffer ${start-chainweb-data}";
