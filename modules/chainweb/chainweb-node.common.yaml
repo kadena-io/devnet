@@ -1,11 +1,14 @@
 chainweb:
   chainwebVersion: fast-development
+  allowReadsInLocal: true
+  headerStream: true
   throttling:
     local: 10000
     mining: 10000
     global: 10000
     putPeer: 10000
   serviceApi:
+    payloadBatchLimit: 1000
     interface: '*'
     port: 1848
   p2p:
