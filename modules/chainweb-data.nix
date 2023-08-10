@@ -23,24 +23,14 @@ in
         postgres.condition = "process_healthy";
       };
     };
-    processes.psql-cwd = {
-      exec = "${pkgs.ttyd}/bin/ttyd ${psql-cwd}/bin/psql-cwd";
-      process-compose.depends_on.postgres.condition = "process_healthy";
-    };
+    services.ttyd.commands.psql-cwd = "${psql-cwd}/bin/psql-cwd";
 
     services.postgres.enable = true;
     services.http-server = {
       upstreams.chainweb-data = "server localhost:1849;";
-      upstreams.ttyd-psql-cwd = "server localhost:7861;";
       servers.devnet.extraConfig = ''
         location ~ /(stats$|coins$|cwd-spec|txs|richlist.csv$) {
           proxy_pass http://chainweb-data;
-        }
-        location ~ ^/psql-cwd(.*)$ {
-            proxy_http_version 1.1;
-            proxy_set_header Upgrade $http_upgrade;
-            proxy_set_header Connection "upgrade";
-            proxy_pass http://127.0.0.1:7681/$1;
         }
       '';
     };
