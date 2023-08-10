@@ -7,6 +7,7 @@
 ### Chainweb Data
 
 - [Open API Spec](/cwd-spec/)
+- [DB Access](/psql-cwd/)
 
 ## Available Commands
 
