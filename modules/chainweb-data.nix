@@ -2,19 +2,23 @@
 let
   absolutePgData = "$(${pkgs.coreutils}/bin/realpath ${config.env.PGDATA})";
   dbString = "postgresql:///$USER?host=${absolutePgData}";
-  start-chainweb-data = pkgs.writeShellScript "start-chainweb-data" ''
+  chainweb-data-with-conn-params = pkgs.writeShellScript "cwd-with-conn-params" ''
     ${pkgs.chainweb-data}/bin/chainweb-data \
-      --dbstring "${dbString}" \
-      --service-host localhost --p2p-host localhost --p2p-port 1789 \
-      --migrate server --port 1849 --serve-swagger-ui
+      --dbstring "${dbString}" --service-host localhost --p2p-host localhost --p2p-port 1789 "$@"
+  '' ;
+  start-chainweb-data = pkgs.writeShellScript "start-chainweb-data" ''
+    ${chainweb-data-with-conn-params} --migrate server --port 1849 --serve-swagger-ui
   '';
   psql-cwd = pkgs.writeShellScriptBin "psql-cwd" ''
     ${pkgs.postgresql}/bin/psql "${dbString}"
   '';
+  chainweb-data-fill = pkgs.writeShellScriptBin "chainweb-data-fill" ''
+    ${chainweb-data-with-conn-params} fill --level debug
+  '';
 in
 {
   config = {
-    packages = [ pkgs.chainweb-data psql-cwd ];
+    packages = [ pkgs.chainweb-data psql-cwd chainweb-data-fill ];
 
     processes.chainweb-data = {
       exec = "${pkgs.expect}/bin/unbuffer ${start-chainweb-data}";
@@ -24,6 +28,7 @@ in
       };
     };
     services.ttyd.commands.psql-cwd = "${psql-cwd}/bin/psql-cwd";
+    services.ttyd.commands.chainweb-data-fill = "${chainweb-data-fill}/bin/chainweb-data-fill";
 
     services.postgres.enable = true;
     services.http-server = {

@@ -8,6 +8,7 @@
 
 - [Open API Spec](/cwd-spec/)
 - [DB Access](/ttyd/psql-cwd/)
+- [Run `fill` operation](/ttyd/chainweb-data-fill/)
 
 ## Available Commands
 
