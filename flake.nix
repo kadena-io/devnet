@@ -23,19 +23,13 @@
             , devenv
             , ... } @ inputs:
     inputs.flake-utils.lib.eachDefaultSystem (system:
-      let common-overlay = (self: super: {
+      let overlay = (self: super: {
             chainweb-data = bundle inputs.chainweb-data.packages.${system}.default;
             chainweb-mining-client = bundle inputs.chainweb-mining-client.packages.${system}.default;
-          });
-          l1-overlay = (self: super: {
             chainweb-node = bundle inputs.chainweb-node.packages.${system}.default;
+            chainweb-node-l2 = bundle inputs.chainweb-node-l2.packages.${system}.default;
           });
-          l2-overlay = (self: super: {
-            chainweb-node = bundle inputs.chainweb-node-l2.packages.${system}.default;
-          });
-          pkgs = nixpkgs.legacyPackages.${system};
-          l1-pkgs = import nixpkgs { inherit system; overlays = [ common-overlay l1-overlay ]; };
-          l2-pkgs = import nixpkgs { inherit system; overlays = [ common-overlay l2-overlay ]; };
+          pkgs = import nixpkgs { inherit system; overlays = [ overlay ]; };
           bundle = pkgs.callPackage inputs.nix-exe-bundle {};
           modules = [
             modules/chainweb-data.nix
@@ -51,9 +45,15 @@
               devenv.root = ".";
             })
           ];
-          mkFlake = pkgs: import ./mkDevnetFlake.nix { inherit pkgs nixpkgs devenv modules; };
-          l1-flake = mkFlake l1-pkgs;
-          l2-flake = mkFlake l2-pkgs;
+          mkFlake = extraModules:
+            import ./mkDevnetFlake.nix {
+              inherit pkgs nixpkgs devenv;
+              modules = modules ++ extraModules;
+            };
+          l1-flake = mkFlake [];
+          l2-flake = mkFlake [({pkgs, ...}: {
+            services.chainweb-node.package = pkgs.chainweb-node-l2;
+          })];
       in rec {
         packages = rec {
           default = l1-flake.packages.default;
