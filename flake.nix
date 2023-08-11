@@ -37,112 +37,6 @@
           l1-pkgs = import nixpkgs { inherit system; overlays = [ common-overlay l1-overlay ]; };
           l2-pkgs = import nixpkgs { inherit system; overlays = [ common-overlay l2-overlay ]; };
           bundle = pkgs.callPackage inputs.nix-exe-bundle {};
-      in rec {
-        packages = rec {
-          default = mkDevnetRunner { devnet = devShells.default; };
-          l2 = mkDevnetRunner { devnet = devShells.l2; };
-          container = mkContainer l1-pkgs;
-          container-l2 = mkContainer l2-pkgs;
-          cwd = inputs.chainweb-data.packages.default;
-          landing-page = devShells.default.config.sites.landing-page.root.overrideAttrs (_:_:{
-            allowSubstitutes = false;
-          });
-        };
-
-        apps = {
-          default = {
-            type = "app";
-            program = packages.default.outPath;
-          };
-          l2 = {
-            type = "app";
-            program = packages.l2.outPath;
-          };
-          develop-landing-page = {
-            type = "app";
-            program = (import ./lib/develop-page.nix {inherit pkgs; packageName = "landing-page";}).outPath;
-          };
-        };
-
-        devShells = {
-          default = mkDevnet { pkgs = l1-pkgs; };
-          l2 = mkDevnet { pkgs = l2-pkgs; };
-        };
-
-        mkContainer = pkgs:
-          let
-            devnet = mkDevnet { inherit pkgs; };
-            config = devnet.config;
-            devnetRunner = mkDevnetRunner {inherit devnet;};
-            nixConf = pkgs.writeTextDir "/etc/nix/nix.conf" ''
-              experimental-features = nix-command flakes
-            '';
-            baseImage = pkgs.dockerTools.buildImageWithNixDb {
-              name = "devnet-base";
-              copyToRoot = pkgs.buildEnv {
-                name = "devnet-base-root";
-                paths = [
-                  config.services.nginx.package
-                  pkgs.chainweb-node
-                  pkgs.chainweb-mining-client
-                  pkgs.coreutils
-                  pkgs.findutils
-                  pkgs.bashInteractive
-                  pkgs.su
-                  pkgs.dockerTools.caCertificates
-                  pkgs.nix
-                  nixConf
-                ];
-              };
-              runAsRoot = ''
-                #!${pkgs.runtimeShell}
-                ${pkgs.dockerTools.shadowSetup}
-
-                mkdir /tmp
-                chmod 777 /tmp
-
-                # Nginx needs a nobody:nogroup
-                groupadd -r nogroup
-                useradd -r -g nogroup nobody
-
-                groupadd -r devnet
-                useradd -r -g devnet -d /devnet devnet
-                mkdir -p /devnet/.devenv
-                chown -R devnet:devnet /devnet
-              '';
-            };
-            packagesImage = pkgs.dockerTools.buildImage {
-              name = "devnet-packages";
-              fromImage = baseImage;
-              copyToRoot = pkgs.buildEnv {
-                name = "devnet-base-root";
-                paths = devnet.config.packages;
-              };
-            };
-          in pkgs.dockerTools.buildImage {
-            name = "devnet";
-            fromImage = packagesImage;
-            copyToRoot = pkgs.runCommand "start-devnet-bin" {} ''
-              mkdir -p $out/bin
-              ln -s ${devnetRunner.outPath} $out/bin/start-devnet
-            '';
-            config = {
-              WorkingDir = "/devnet";
-              Cmd = [ "start-devnet" ];
-              User = "devnet";
-            };
-          };
-
-        mkDevnetRunner = { devnet }:
-          let config = devnet.config;
-              pkgs = nixpkgs.legacyPackages.${system};
-          in pkgs.writeShellScript "start-devnet" ''
-            export $(${pkgs.findutils}/bin/xargs < ${config.procfileEnv})
-            ${config.procfileScript}
-          '';
-
-        mkDevnet = args@{ pkgs }: devenv.lib.mkShell {
-          inherit inputs pkgs;
           modules = [
             modules/chainweb-data.nix
             modules/chainweb-node.nix
@@ -157,6 +51,30 @@
               devenv.root = ".";
             })
           ];
+          mkFlake = pkgs: import ./mkDevnetFlake.nix { inherit pkgs nixpkgs devenv modules; };
+          l1-flake = mkFlake l1-pkgs;
+          l2-flake = mkFlake l2-pkgs;
+      in rec {
+        packages = rec {
+          default = l1-flake.packages.default;
+          l2 = l2-flake.packages.default;
+          container = l1-flake.container;
+          container-l2 = l2-flake.container;
+          landing-page = l1-flake.packages.landing-page;
+        };
+
+        apps = {
+          default = l1-flake.apps.default;
+          l2 = l2-flake.apps.default;
+          develop-page = {
+            type = "app";
+            program = (import ./lib/develop-page.nix {inherit pkgs;}).outPath;
+          };
+        };
+
+        devShells = {
+          default = l1-flake.devShells.default;
+          l2 = l2-flake.devShells.default;
         };
       }
     );
