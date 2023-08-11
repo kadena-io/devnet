@@ -27,7 +27,7 @@ in pkgs.writeShellScript "develop-${packageName}" ''
 
   # Function to cleanup on exit
   cleanup() {
-    ${pkgs.coreutils}/bin/kill $BROWSER_SYNC_PID
+    ${pkgs.coreutils}/bin/kill $BROWSER_SYNC_PID || true
     ${pkgs.coreutils}/bin/rm -rf $TMP_DIR
   }
   trap cleanup EXIT
