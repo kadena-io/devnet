@@ -42,6 +42,13 @@ in
       };
     };
 
+    sites.landing-page.services.chainweb-node = {
+      order = 0;
+      markdown = ''
+        ### Chainweb Node
+      '';
+    };
+
     services.http-server = {
       upstreams = {
         service-api = "server localhost:1848;";

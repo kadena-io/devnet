@@ -4,7 +4,7 @@ let
   dbString = "postgresql:///$USER?host=${absolutePgData}";
   chainweb-data-with-conn-params = pkgs.writeShellScript "cwd-with-conn-params" ''
     ${pkgs.chainweb-data}/bin/chainweb-data \
-      --dbstring "${dbString}" --service-host localhost --p2p-host localhost --p2p-port 1789 "$@"
+      --dbstring "${dbString}" --service-host localhost "$@"
   '' ;
   start-chainweb-data = pkgs.writeShellScript "start-chainweb-data" ''
     ${chainweb-data-with-conn-params} --migrate server --port 1849 --serve-swagger-ui
@@ -39,5 +39,18 @@ in
         }
       '';
     };
+    sites.landing-page.services.chainweb-data = {
+      order = 10;
+      markdown = ''
+        ### Chainweb Data
+
+        - [Open API Spec](/cwd-spec/)
+        - [DB Access](/ttyd/psql-cwd/)
+        - [Run `fill` operation](/ttyd/chainweb-data-fill/)
+      '';
+    };
+    sites.landing-page.commands.chainweb-data.markdown = ''
+      * `psql-cwd`: Start a `psql` session as the `chainweb-data` service.
+    '';
   };
 }
