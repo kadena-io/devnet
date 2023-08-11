@@ -51,6 +51,7 @@ in
     };
     sites.landing-page.commands.chainweb-data.markdown = ''
       * `psql-cwd`: Start a `psql` session as the `chainweb-data` service.
+      * `chainweb-data-fill`: Run the `fill` operation of `chainweb-data`.
     '';
   };
 }
