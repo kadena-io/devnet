@@ -50,32 +50,16 @@
               inherit pkgs nixpkgs devenv;
               modules = modules ++ extraModules;
             };
-          l1-flake = mkFlake [];
-          l2-flake = mkFlake [({pkgs, ...}: {
-            services.chainweb-node.package = pkgs.chainweb-node-l2;
-          })];
-      in rec {
-        packages = rec {
-          default = l1-flake.packages.default;
-          l2 = l2-flake.packages.default;
-          container = l1-flake.container;
-          container-l2 = l2-flake.container;
-          landing-page = l1-flake.packages.landing-page;
-        };
-
-        apps = {
-          default = l1-flake.apps.default;
-          l2 = l2-flake.apps.default;
-          develop-page = {
-            type = "app";
-            program = (import ./lib/develop-page.nix {inherit pkgs;}).outPath;
+          combined-flake = import lib/combine-flakes.nix pkgs.lib {
+            default = mkFlake [];
+            l2 = mkFlake [({pkgs, ...}: {
+              services.chainweb-node.package = pkgs.chainweb-node-l2;
+            })];
           };
+      in pkgs.lib.recursiveUpdate combined-flake {
+        apps.develop-page = {
+          type = "app";
+          program = (import ./lib/develop-page.nix {inherit pkgs;}).outPath;
         };
-
-        devShells = {
-          default = l1-flake.devShells.default;
-          l2 = l2-flake.devShells.default;
-        };
-      }
-    );
+      });
 }
