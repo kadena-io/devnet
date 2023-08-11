@@ -22,40 +22,40 @@
             , nixpkgs
             , devenv
             , ... } @ inputs:
-    inputs.flake-utils.lib.eachDefaultSystem (system:
-      let overlay = (self: super: {
-            chainweb-data = bundle inputs.chainweb-data.packages.${system}.default;
-            chainweb-mining-client = bundle inputs.chainweb-mining-client.packages.${system}.default;
-            chainweb-node = bundle inputs.chainweb-node.packages.${system}.default;
-            chainweb-node-l2 = bundle inputs.chainweb-node-l2.packages.${system}.default;
-          });
-          pkgs = import nixpkgs { inherit system; overlays = [ overlay ]; };
-          bundle = pkgs.callPackage inputs.nix-exe-bundle {};
-          modules = [
-            modules/chainweb-data.nix
-            modules/chainweb-node.nix
-            modules/chainweb-mining-client.nix
-            modules/http-server.nix
-            modules/ttyd.nix
-            modules/landing-page/module.nix
-            ({config, ...}: {
-              services.ttyd.enable = true;
-              # https://devenv.sh/reference/options/
-              process.implementation = "process-compose";
-              devenv.root = ".";
-            })
-          ];
-          mkFlake = extraModules:
-            import ./mkDevnetFlake.nix {
-              inherit pkgs nixpkgs devenv;
-              modules = modules ++ extraModules;
-            };
-          combined-flake = import lib/combine-flakes.nix pkgs.lib {
-            default = mkFlake [];
-            l2 = mkFlake [({pkgs, ...}: {
-              services.chainweb-node.package = pkgs.chainweb-node-l2;
-            })];
-          };
+    inputs.flake-utils.lib.eachDefaultSystem (system: let
+      overlay = (self: super: {
+        chainweb-data = bundle inputs.chainweb-data.packages.${system}.default;
+        chainweb-mining-client = bundle inputs.chainweb-mining-client.packages.${system}.default;
+        chainweb-node = bundle inputs.chainweb-node.packages.${system}.default;
+        chainweb-node-l2 = bundle inputs.chainweb-node-l2.packages.${system}.default;
+      });
+      pkgs = import nixpkgs { inherit system; overlays = [ overlay ]; };
+      bundle = pkgs.callPackage inputs.nix-exe-bundle {};
+      modules = [
+        modules/chainweb-data.nix
+        modules/chainweb-node.nix
+        modules/chainweb-mining-client.nix
+        modules/http-server.nix
+        modules/ttyd.nix
+        modules/landing-page/module.nix
+        ({config, ...}: {
+          services.ttyd.enable = true;
+          # https://devenv.sh/reference/options/
+          process.implementation = "process-compose";
+          devenv.root = ".";
+        })
+      ];
+      mkFlake = extraModules:
+        import ./mkDevnetFlake.nix {
+          inherit pkgs nixpkgs devenv;
+          modules = modules ++ extraModules;
+        };
+      combined-flake = import lib/combine-flakes.nix pkgs.lib {
+        default = mkFlake [];
+        l2 = mkFlake [({pkgs, ...}: {
+          services.chainweb-node.package = pkgs.chainweb-node-l2;
+        })];
+      };
       in pkgs.lib.recursiveUpdate combined-flake {
         apps.develop-page = {
           type = "app";
