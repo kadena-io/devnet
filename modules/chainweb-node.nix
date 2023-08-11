@@ -1,8 +1,8 @@
-{ pkgs, config, ... }:
+{ pkgs, lib, config, ... }:
 let
-  chainweb-node = pkgs.chainweb-node;
+  cfg = config.services.chainweb-node;
   start-chainweb-node = stateDir: pkgs.writeShellScript "start-chainweb-node" ''
-    ${chainweb-node}/bin/chainweb-node \
+    ${cfg.package}/bin/chainweb-node \
     --config-file=${./chainweb/chainweb-node.common.yaml} \
     --p2p-certificate-chain-file=${./chainweb/devnet-bootstrap-node.cert.pem} \
     --p2p-certificate-key-file=${./chainweb/devnet-bootstrap-node.key.pem} \
@@ -23,8 +23,16 @@ let
   '';
 in
 {
+  options.services.chainweb-node = {
+    package = lib.mkOption {
+      type = lib.types.package;
+      default = pkgs.chainweb-node;
+      defaultText = lib.literalExpression "pkgs.chainweb-node";
+      description = "The chainweb-node package to use.";
+    };
+  };
   config = {
-    packages = [ chainweb-node ];
+    packages = [ cfg.package ];
     processes.chainweb-node = {
       exec = "${start-chainweb-node config.env.DEVENV_STATE}";
       process-compose.readiness_probe = {
