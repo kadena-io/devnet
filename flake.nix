@@ -27,8 +27,8 @@
         chainweb-data = bundle inputs.chainweb-data.packages.${system}.default;
         chainweb-mining-client = bundle inputs.chainweb-mining-client.packages.${system}.default;
         chainweb-node = bundle inputs.chainweb-node.packages.${system}.default;
-        chainweb-node-l2 = bundle inputs.chainweb-node-l2.packages.${system}.default;
       });
+      chainweb-node-l2 = bundle inputs.chainweb-node-l2.packages.${system}.default;
       pkgs = import nixpkgs { inherit system; overlays = [ overlay ]; };
       bundle = pkgs.callPackage inputs.nix-exe-bundle {};
       modules = [
@@ -49,7 +49,7 @@
           inherit pkgs nixpkgs devenv;
           modules = modules ++ extraModules;
         };
-      combined-flake = let
+      configurations = let
         minimal = {
           services.chainweb-node.enable = true;
           services.chainweb-mining-client.enable = true;
@@ -61,18 +61,22 @@
           services.ttyd.enable = true;
         };
         chainweb-node-l2 = {pkgs, ...}: {
-          services.chainweb-node.package = pkgs.chainweb-node-l2;
+          services.chainweb-node.package = chainweb-node-l2;
         };
-      in import lib/combine-flakes.nix pkgs.lib {
-        default = mkFlake [common];
-        l2 = mkFlake [common chainweb-node-l2];
-        minimal = mkFlake [minimal];
+      in {
+        default = [common];
+        l2 = [common chainweb-node-l2];
+        minimal = [minimal];
       };
+      combined-flake = import lib/combine-flakes.nix pkgs.lib (
+        builtins.mapAttrs (_: config: mkFlake config) configurations
+      );
       in pkgs.lib.recursiveUpdate combined-flake {
         apps.develop-page = {
           type = "app";
           program = (import ./lib/develop-page.nix {inherit pkgs;}).outPath;
         };
+        inherit configurations;
         overlays.default = overlay;
         lib.mkFlake = mkFlake;
       });
