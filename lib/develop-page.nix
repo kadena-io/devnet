@@ -17,7 +17,7 @@ let
 in pkgs.writeShellScript "develop-page" ''
   set -euo pipefail
 
-  TMP_DIR="$(${pkgs.coreutils}/bin/mktemp -d -t "$1"_XXXXXX)"
+  TMP_DIR="$(${pkgs.coreutils}/bin/mktemp -d -t "''${1//\//-}"_XXXXXX)"
 
   ${update} "$1" "$TMP_DIR"
 
