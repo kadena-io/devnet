@@ -61,5 +61,7 @@
           type = "app";
           program = (import ./lib/develop-page.nix {inherit pkgs;}).outPath;
         };
+        overlays.default = overlay;
+        lib.mkFlake = mkFlake;
       });
 }
