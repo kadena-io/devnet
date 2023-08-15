@@ -44,10 +44,10 @@
           devenv.root = ".";
         })
       ];
-      mkFlake = extraModules:
+      mkFlake = extraModule:
         import ./mkDevnetFlake.nix {
           inherit pkgs nixpkgs devenv;
-          modules = modules ++ extraModules;
+          modules = modules ++ [extraModule];
         };
       configurations = let
         minimal = {
@@ -60,13 +60,13 @@
           services.chainweb-data.enable = true;
           services.ttyd.enable = true;
         };
-        chainweb-node-l2 = {pkgs, ...}: {
+        use-cwn-l2 = {
           services.chainweb-node.package = chainweb-node-l2;
         };
       in {
-        default = [common];
-        l2 = [common chainweb-node-l2];
-        minimal = [minimal];
+        default = common;
+        l2 = { imports = [common use-cwn-l2]; };
+        minimal = minimal;
       };
       combined-flake = import lib/combine-flakes.nix pkgs.lib (
         builtins.mapAttrs (_: config: mkFlake config) configurations

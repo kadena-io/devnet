@@ -8,7 +8,7 @@ let
   }).defaultNix;
 in defaultNix // rec {
   configurations = defaultNix.configurations.${builtins.currentSystem};
-  mkFlake = module: defaultNix.lib.${builtins.currentSystem}.mkFlake [module];
+  mkFlake = defaultNix.lib.${builtins.currentSystem}.mkFlake;
   mkContainer = module: (mkFlake module).packages.container;
   mkRunner = module: (mkFlake module).packages.default;
 }
