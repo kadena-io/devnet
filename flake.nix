@@ -39,7 +39,6 @@
         modules/ttyd.nix
         modules/landing-page/module.nix
         ({config, ...}: {
-          services.ttyd.enable = true;
           # https://devenv.sh/reference/options/
           process.implementation = "process-compose";
           devenv.root = ".";
@@ -50,11 +49,24 @@
           inherit pkgs nixpkgs devenv;
           modules = modules ++ extraModules;
         };
-      combined-flake = import lib/combine-flakes.nix pkgs.lib {
-        default = mkFlake [];
-        l2 = mkFlake [({pkgs, ...}: {
+      combined-flake = let
+        minimal = {
+          services.chainweb-node.enable = true;
+          services.chainweb-mining-client.enable = true;
+          services.http-server.enable = true;
+        };
+        common = {
+          imports = [minimal];
+          services.chainweb-data.enable = true;
+          services.ttyd.enable = true;
+        };
+        chainweb-node-l2 = {pkgs, ...}: {
           services.chainweb-node.package = pkgs.chainweb-node-l2;
-        })];
+        };
+      in import lib/combine-flakes.nix pkgs.lib {
+        default = mkFlake [common];
+        l2 = mkFlake [common chainweb-node-l2];
+        minimal = mkFlake [minimal];
       };
       in pkgs.lib.recursiveUpdate combined-flake {
         apps.develop-page = {

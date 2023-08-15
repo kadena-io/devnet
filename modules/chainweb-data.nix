@@ -1,23 +1,40 @@
-{ pkgs, config, ...}:
+{ pkgs, lib, config, ...}:
+with lib;
 let
+  cfg = config.services.chainweb-data;
   absolutePgData = "$(${pkgs.coreutils}/bin/realpath ${config.env.PGDATA})";
-  dbString = "postgresql:///$USER?host=${absolutePgData}";
+  dbstring = "postgresql:///$USER?host=${absolutePgData}";
   chainweb-data-with-conn-params = pkgs.writeShellScript "cwd-with-conn-params" ''
     ${pkgs.chainweb-data}/bin/chainweb-data \
-      --dbstring "${dbString}" --service-host localhost "$@"
+      --dbstring "${cfg.dbstring}" --service-host localhost "$@"
   '' ;
   start-chainweb-data = pkgs.writeShellScript "start-chainweb-data" ''
     ${chainweb-data-with-conn-params} --migrate server --port 1849 --serve-swagger-ui
   '';
   psql-cwd = pkgs.writeShellScriptBin "psql-cwd" ''
-    ${pkgs.postgresql}/bin/psql "${dbString}"
+    ${pkgs.postgresql}/bin/psql "${cfg.dbstring}"
   '';
   chainweb-data-fill = pkgs.writeShellScriptBin "chainweb-data-fill" ''
     ${chainweb-data-with-conn-params} fill --level debug
   '';
+  links = flatten [
+    "[Open API Spec](/cwd-spec/)"
+    (optionals (config.services.ttyd.enable or false) [
+      "[DB Access](/ttyd/psql-cwd/)"
+      "[Run `fill` operation](/ttyd/chainweb-data-fill/)"
+    ])
+  ];
 in
 {
-  config = {
+  options.services.chainweb-data = {
+    enable = mkEnableOption "chainweb-data";
+    dbstring = mkOption {
+      type = types.str;
+      default = dbstring;
+      description = "The database connection string for chainweb-data";
+    };
+  };
+  config = mkIf cfg.enable {
     packages = [ pkgs.chainweb-data psql-cwd chainweb-data-fill ];
 
     processes.chainweb-data = {
@@ -44,9 +61,13 @@ in
       markdown = ''
         ### Chainweb Data
 
-        - [Open API Spec](/cwd-spec/)
-        - [DB Access](/ttyd/psql-cwd/)
-        - [Run `fill` operation](/ttyd/chainweb-data-fill/)
+        ${concatStringsSep "\n" (flatten [
+          "- [Open API Spec](/cwd-spec/)"
+          (optionals (config.services.ttyd.enable or false) [
+            "- [DB Access](/ttyd/psql-cwd/)"
+            "- [Run `fill` operation](/ttyd/chainweb-data-fill/)"
+          ])
+        ])}
       '';
     };
     sites.landing-page.commands.chainweb-data.markdown = ''

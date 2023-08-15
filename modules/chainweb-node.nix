@@ -24,6 +24,7 @@ let
 in
 {
   options.services.chainweb-node = {
+    enable = lib.mkEnableOption "Enable the chainweb-node service.";
     package = lib.mkOption {
       type = lib.types.package;
       default = pkgs.chainweb-node;
@@ -31,7 +32,7 @@ in
       description = "The chainweb-node package to use.";
     };
   };
-  config = {
+  config = lib.mkIf cfg.enable {
     packages = [ cfg.package ];
     processes.chainweb-node = {
       exec = "${start-chainweb-node config.env.DEVENV_STATE}";

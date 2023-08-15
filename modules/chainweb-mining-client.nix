@@ -1,5 +1,7 @@
-{ pkgs, ...}:
+{ pkgs, lib, config, ...}:
+with lib;
 let
+  cfg = config.services.chainweb-mining-client;
   start-chainweb-mining-client = pkgs.writeShellScript "start-chainweb-mining-client" ''
     ${pkgs.chainweb-mining-client}/bin/chainweb-mining-client \
     --public-key=f90ef46927f506c70b6a58fd322450a936311dc6ac91f4ec3d8ef949608dbf1f \
@@ -12,7 +14,10 @@ let
   '';
 in
 {
-  config = {
+  options.services.chainweb-mining-client = {
+    enable = mkEnableOption "Enable the chainweb-mining-client service";
+  };
+  config = mkIf cfg.enable {
     packages = [ pkgs.chainweb-mining-client ];
     processes.chainweb-mining-client = {
       exec = "${start-chainweb-mining-client}";

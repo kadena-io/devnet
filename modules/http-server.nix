@@ -7,6 +7,7 @@ let
 in
 {
   options.services.http-server = {
+    enable = mkEnableOption "HTTP server";
     upstreams = mkOption {
       default = {};
       type = types.attrsOf types.str;
@@ -42,7 +43,7 @@ in
     };
   };
 
-  config = {
+  config = mkIf cfg.enable {
     services.nginx.enable = true;
     services.nginx.httpConfig = let
       indentString = s: builtins.replaceStrings ["\n"] ["\n  "] s;
