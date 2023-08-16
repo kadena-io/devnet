@@ -2,17 +2,25 @@
 , nixpkgs
 , devenv
 , modules
+, containerExtras
 }:
 let
-  devnet = devenv.lib.mkShell {
-    inherit pkgs modules;
+  mkDevnet = devnetModules: (devenv.lib.mkShell {
+    inherit pkgs;
+    modules = devnetModules;
     inputs = { inherit nixpkgs;};
-  };
-  config = devnet.config;
-  runner = pkgs.writeShellScript "start-devnet" ''
-    export $(${pkgs.findutils}/bin/xargs < ${config.procfileEnv})
-    ${config.procfileScript}
+  });
+  mkRunner = devnet: pkgs.writeShellScript "start-devnet" ''
+    export $(${pkgs.findutils}/bin/xargs < ${devnet.config.procfileEnv})
+    ${devnet.config.procfileScript}
   '';
+  packageDevnet = mkDevnet modules;
+  packageConfig = packageDevnet.config;
+  packageRunner = mkRunner packageDevnet;
+
+  containerDevnet = mkDevnet (modules ++ [containerExtras]);
+  containerConfig = containerDevnet.config;
+  containerRunner = mkRunner containerDevnet;
   nixConf = pkgs.writeTextDir "/etc/nix/nix.conf" ''
     experimental-features = nix-command flakes
   '';
@@ -21,7 +29,7 @@ let
     copyToRoot = pkgs.buildEnv {
       name = "devnet-base-root";
       paths = [
-        config.services.nginx.package
+        containerConfig.services.nginx.package
         pkgs.chainweb-node
         pkgs.chainweb-mining-client
         pkgs.coreutils
@@ -48,6 +56,8 @@ let
       useradd -r -g devnet -d /devnet devnet
       mkdir -p /devnet/.devenv
       chown -R devnet:devnet /devnet
+
+      mkdir /cwd-extra-migrations
     '';
   };
   packagesImage = pkgs.dockerTools.buildImage {
@@ -55,7 +65,7 @@ let
     fromImage = baseImage;
     copyToRoot = pkgs.buildEnv {
       name = "devnet-base-root";
-      paths = config.packages;
+      paths = containerConfig.packages;
     };
   };
   container = pkgs.dockerTools.buildImage {
@@ -63,7 +73,7 @@ let
     fromImage = packagesImage;
     copyToRoot = pkgs.runCommand "start-devnet-bin" {} ''
       mkdir -p $out/bin
-      ln -s ${runner.outPath} $out/bin/start-devnet
+      ln -s ${containerRunner.outPath} $out/bin/start-devnet
     '';
     config = {
       WorkingDir = "/devnet";
@@ -74,17 +84,17 @@ let
 in
 {
   packages = {
-    default = runner;
+    default = packageRunner;
     container = container;
-    landing-page = config.sites.landing-page.root.overrideAttrs (_:_:{
+    landing-page = packageConfig.sites.landing-page.root.overrideAttrs (_:_:{
       allowSubstitutes = false;
     });
   };
   apps = {
     default = {
       type = "app";
-      program = runner.outPath;
+      program = packageRunner.outPath;
     };
   };
-  devShells.default = devnet;
+  devShells.default = packageDevnet;
 }

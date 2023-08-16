@@ -44,9 +44,12 @@
           devenv.root = ".";
         })
       ];
+      containerExtras = {
+        services.chainweb-data.extra-migrations-folder = "/cwd-extra-migrations";
+      };
       mkFlake = extraModule:
         import ./mkDevnetFlake.nix {
-          inherit pkgs nixpkgs devenv;
+          inherit pkgs nixpkgs devenv containerExtras;
           modules = modules ++ [extraModule];
         };
       configurations = let
