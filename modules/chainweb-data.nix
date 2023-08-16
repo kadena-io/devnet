@@ -47,6 +47,7 @@ in
     services.ttyd.commands.psql-cwd = "${psql-cwd}/bin/psql-cwd";
     services.ttyd.commands.chainweb-data-fill = "${chainweb-data-fill}/bin/chainweb-data-fill";
 
+    processes.socat.exec = "${pkgs.socat}/bin/socat TCP-LISTEN:5432,reuseaddr,fork UNIX-CONNECT:${absolutePgData}/.s.PGSQL.5432";
     services.postgres.enable = true;
     services.http-server = {
       upstreams.chainweb-data = "server localhost:1849;";
