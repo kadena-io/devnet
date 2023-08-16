@@ -5,7 +5,7 @@ let
   absolutePgData = "$(${pkgs.coreutils}/bin/realpath ${config.env.PGDATA})";
   dbstring = "postgresql:///$USER?host=${absolutePgData}";
   chainweb-data-with-conn-params = pkgs.writeShellScript "cwd-with-conn-params" ''
-    ${pkgs.chainweb-data}/bin/chainweb-data \
+    ${cfg.package}/bin/chainweb-data \
       --dbstring "${cfg.dbstring}" --service-host localhost "$@"
   '' ;
   start-chainweb-data = pkgs.writeShellScript "start-chainweb-data" ''
@@ -28,6 +28,12 @@ in
 {
   options.services.chainweb-data = {
     enable = mkEnableOption "chainweb-data";
+    package = lib.mkOption {
+      type = lib.types.package;
+      default = pkgs.chainweb-data;
+      defaultText = lib.literalExpression "pkgs.chainweb-data";
+      description = "The chainweb-data package to use.";
+    };
     dbstring = mkOption {
       type = types.str;
       default = dbstring;
@@ -35,7 +41,7 @@ in
     };
   };
   config = mkIf cfg.enable {
-    packages = [ pkgs.chainweb-data psql-cwd chainweb-data-fill ];
+    packages = [ cfg.package psql-cwd chainweb-data-fill ];
 
     processes.chainweb-data = {
       exec = "${pkgs.expect}/bin/unbuffer ${start-chainweb-data}";
