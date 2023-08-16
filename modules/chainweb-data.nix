@@ -9,7 +9,14 @@ let
       --dbstring "${cfg.dbstring}" --service-host localhost "$@"
   '' ;
   start-chainweb-data = pkgs.writeShellScript "start-chainweb-data" ''
-    ${chainweb-data-with-conn-params} --migrate server --port 1849 --serve-swagger-ui
+    ${chainweb-data-with-conn-params} --migrate \
+      ${optionalString (cfg.migrations-folder != null)
+        "--migrations-folder ${cfg.migrations-folder}"
+      } \
+      ${optionalString (cfg.extra-migrations-folder != null)
+        "--extra-migrations-folder ${cfg.extra-migrations-folder}"
+      } \
+      server --port 1849 --serve-swagger-ui
   '';
   psql-cwd = pkgs.writeShellScriptBin "psql-cwd" ''
     ${pkgs.postgresql}/bin/psql "${cfg.dbstring}"
@@ -38,6 +45,22 @@ in
       type = types.str;
       default = dbstring;
       description = "The database connection string for chainweb-data";
+    };
+    migrations-folder = mkOption {
+      type = types.nullOr types.path;
+      default = null;
+      description = ''
+        The folder containing the chainweb-data migrations. If not set, the
+        migrations shipped with the chainweb-data package will be used.
+      '';
+    };
+    extra-migrations-folder = mkOption {
+      type = types.nullOr types.path;
+      default = null;
+      description = ''
+        The folder containing additional chainweb-data migrations. If not set,
+        no additional migrations will be used.
+      '';
     };
   };
   config = mkIf cfg.enable {

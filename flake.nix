@@ -6,7 +6,7 @@
     chainweb-node.url = "github:kadena-io/chainweb-node/edmund/fast-devnet";
     chainweb-node-l2.url = "github:kadena-io/chainweb-node/edmund/l2-spv-poc";
     chainweb-data = {
-      url = "github:kadena-io/chainweb-data/enis/avoid-p2p-dependency";
+      url = "github:kadena-io/chainweb-data/enis/extra-migrations-folder";
       inputs.nixpkgs.follows = "chainweb-node/nixpkgs";
       inputs.haskellNix.follows = "chainweb-node/haskellNix";
     };
