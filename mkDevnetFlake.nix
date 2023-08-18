@@ -86,7 +86,7 @@ in
   packages = {
     default = packageRunner;
     container = container;
-    landing-page = packageConfig.sites.landing-page.root.overrideAttrs (_:_:{
+    landing-page = containerConfig.sites.landing-page.root.overrideAttrs (_:_:{
       allowSubstitutes = false;
     });
   };
