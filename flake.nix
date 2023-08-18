@@ -44,9 +44,17 @@
           devenv.root = ".";
         })
       ];
-      containerExtras = {
+      containerExtras = with pkgs.lib; {config, ...}:{
         services.chainweb-data.extra-migrations-folder = "/cwd-extra-migrations";
         sites.landing-page.container-api.enable = true;
+        sites.landing-page.container-api.ports = concatStringsSep "\n" (flatten [
+          "- `8080`: Public HTTP API"
+        ]);
+        sites.landing-page.container-api.folders = concatStringsSep "\n" (flatten [
+          (optional config.services.chainweb-data.enable
+            "- `/cwd-extra-migrations`: `chainweb-data`'s extra migrations folder"
+          )
+        ]);
       };
       mkFlake = extraModule:
         import ./mkDevnetFlake.nix {
