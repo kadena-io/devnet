@@ -46,6 +46,7 @@
       ];
       containerExtras = with pkgs.lib; {config, ...}:{
         services.chainweb-data.extra-migrations-folder = "/cwd-extra-migrations";
+        sites.landing-page.container-api.enable = true;
         imports = [
           (mkIf config.services.postgres.enable {
             processes.socat.exec = ''
@@ -55,22 +56,18 @@
             sites.landing-page.container-api.ports =
               "- `5432`: Postgresql";
           })
+          (mkIf config.services.chainweb-data.enable {
+            sites.landing-page.container-api.ports =
+              "- `${toString config.services.chainweb-data.port}`: Chainweb data API port";
+            sites.landing-page.container-api.folders =
+              "- `/cwd-extra-migrations`: `chainweb-data`'s extra migrations folder";
+          })
+          (mkIf config.services.chainweb-node.enable {
+            sites.landing-page.container-api.ports =
+              "- `${toString config.services.chainweb-node.service-port}`: Chainweb node's service port";
+          })
         ];
-        sites.landing-page.container-api.enable = true;
-        sites.landing-page.container-api.ports = concatStringsSep "\n" (flatten [
-          "- `8080`: Public HTTP API"
-          (optional config.services.chainweb-node.enable
-            "- `${toString config.services.chainweb-node.service-port}`: Chainweb node's service port"
-          )
-          (optional config.services.chainweb-data.enable
-            "- `${toString config.services.chainweb-data.port}`: Chainweb data API port"
-          )
-        ]);
-        sites.landing-page.container-api.folders = concatStringsSep "\n" (flatten [
-          (optional config.services.chainweb-data.enable
-            "- `/cwd-extra-migrations`: `chainweb-data`'s extra migrations folder"
-          )
-        ]);
+        sites.landing-page.container-api.ports = mkBefore "- `8080`: Public HTTP API";
       };
       mkFlake = extraModule:
         import ./mkDevnetFlake.nix {
