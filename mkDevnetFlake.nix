@@ -3,6 +3,7 @@
 , devenv
 , modules
 , containerExtras
+, packageExtras
 }:
 let
   mkDevnet = devnetModules: (devenv.lib.mkShell {
@@ -14,7 +15,7 @@ let
     export $(${pkgs.findutils}/bin/xargs < ${devnet.config.procfileEnv})
     ${devnet.config.procfileScript}
   '';
-  packageDevnet = mkDevnet modules;
+  packageDevnet = mkDevnet (modules ++ [packageExtras]);
   packageConfig = packageDevnet.config;
   packageRunner = mkRunner packageDevnet;
 
@@ -54,7 +55,12 @@ let
 
       groupadd -r devnet
       useradd -r -g devnet -d /devnet devnet
+
+      mkdir /data
+      chown devnet:devnet /data
+
       mkdir -p /devnet/.devenv
+      ln -s /data /devnet/.devenv
       chown -R devnet:devnet /devnet
 
       mkdir /cwd-extra-migrations

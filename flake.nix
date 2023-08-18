@@ -41,17 +41,20 @@
         ({config, ...}: {
           # https://devenv.sh/reference/options/
           process.implementation = "process-compose";
-          devenv.root = ".";
         })
       ];
+      packageExtras = {
+        devenv.root = ".";
+      };
       containerExtras = with pkgs.lib; {config, ...}:{
+        devenv.root = "/devnet";
         services.chainweb-data.extra-migrations-folder = "/cwd-extra-migrations";
         sites.landing-page.container-api.enable = true;
         imports = [
           (mkIf config.services.postgres.enable {
             processes.socat.exec = ''
               ${pkgs.socat}/bin/socat TCP-LISTEN:5432,reuseaddr,fork \
-                UNIX-CONNECT:${absolutePgData}/.s.PGSQL.5432
+                UNIX-CONNECT:${config.env.PGDATA}/.s.PGSQL.5432
             '';
             sites.landing-page.container-api.ports =
               "- `5432`: Postgresql";
@@ -68,10 +71,11 @@
           })
         ];
         sites.landing-page.container-api.ports = mkBefore "- `8080`: Public HTTP API";
+        sites.landing-page.container-api.folders = mkBefore "- `/data`: Persistent data folder";
       };
       mkFlake = extraModule:
         import ./mkDevnetFlake.nix {
-          inherit pkgs nixpkgs devenv containerExtras;
+          inherit pkgs nixpkgs devenv containerExtras packageExtras;
           modules = modules ++ [extraModule];
         };
       configurations = let
