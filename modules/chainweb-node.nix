@@ -61,6 +61,11 @@ in
       order = 0;
       markdown = ''
         ### Chainweb Node
+
+        The Chainweb Node service is running on this node. Its service endpoint is
+        available at port `${toString cfg.service-port}`, however the public HTTP API
+        is configured to proxy requests to this port.
+
       '';
     };
 

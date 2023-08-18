@@ -110,6 +110,9 @@ in
           The `chainweb-data` service is configured to use additional migrations
           from the folder `${cfg.extra-migrations-folder}`.
         ''}
+
+        The `chainweb-data` service is configured to listen to port `${toString cfg.port}`,
+        however, the public HTTP API is configured to proxy requests to this port.
       '';
     };
     sites.landing-page.commands.chainweb-data.markdown = ''
