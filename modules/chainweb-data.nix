@@ -16,7 +16,7 @@ let
       ${optionalString (cfg.extra-migrations-folder != null)
         "--extra-migrations-folder ${cfg.extra-migrations-folder}"
       } \
-      server --port 1849 --serve-swagger-ui
+      server --port ${toString cfg.port} --serve-swagger-ui
   '';
   psql-cwd = pkgs.writeShellScriptBin "psql-cwd" ''
     ${pkgs.postgresql}/bin/psql "${cfg.dbstring}"
@@ -40,6 +40,11 @@ in
       default = pkgs.chainweb-data;
       defaultText = lib.literalExpression "pkgs.chainweb-data";
       description = "The chainweb-data package to use.";
+    };
+    port = mkOption {
+      type = types.int;
+      default = 1849;
+      description = "The port to serve the chainweb-data service on.";
     };
     dbstring = mkOption {
       type = types.str;
@@ -79,7 +84,7 @@ in
     processes.socat.exec = "${pkgs.socat}/bin/socat TCP-LISTEN:5432,reuseaddr,fork UNIX-CONNECT:${absolutePgData}/.s.PGSQL.5432";
     services.postgres.enable = true;
     services.http-server = {
-      upstreams.chainweb-data = "server localhost:1849;";
+      upstreams.chainweb-data = "server localhost:${toString cfg.port};";
       servers.devnet.extraConfig = ''
         location ~ /(stats$|coins$|cwd-spec|txs|richlist.csv$) {
           proxy_pass http://chainweb-data;

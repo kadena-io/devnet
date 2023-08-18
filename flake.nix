@@ -52,6 +52,9 @@
           (optional config.services.chainweb-node.enable
             "- `${toString config.services.chainweb-node.service-port}`: Chainweb node's service port"
           )
+          (optional config.services.chainweb-data.enable
+            "- `${toString config.services.chainweb-data.port}`: Chainweb data API port"
+          )
         ]);
         sites.landing-page.container-api.folders = concatStringsSep "\n" (flatten [
           (optional config.services.chainweb-data.enable
