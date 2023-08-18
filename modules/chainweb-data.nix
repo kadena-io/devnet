@@ -91,6 +91,8 @@ in
       markdown = ''
         ### Chainweb Data
 
+        Useful pages for interacting with the `chainweb-data` service.
+
         ${concatStringsSep "\n" (flatten [
           "- [Open API Spec](/cwd-spec/)"
           (optionals (config.services.ttyd.enable or false) [
@@ -98,6 +100,11 @@ in
             "- [Run `fill` operation](/ttyd/chainweb-data-fill/)"
           ])
         ])}
+
+        ${optionalString (cfg.extra-migrations-folder != null) ''
+          The `chainweb-data` service is configured to use additional migrations
+          from the folder `${cfg.extra-migrations-folder}`.
+        ''}
       '';
     };
     sites.landing-page.commands.chainweb-data.markdown = ''
