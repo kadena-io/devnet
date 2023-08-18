@@ -8,13 +8,23 @@ let
         (builtins.attrValues subsections)
     )
   );
+  indexArgs = {
+    services = mkSection cfg.services;
+    commands = mkSection cfg.commands;
+    containerApi = optionalString (cfg.container-api.enable) ''
+      ## Container API
+
+      ### Ports
+      ${cfg.container-api.ports}
+
+      ### Folders
+      ${cfg.container-api.folders}
+    '';
+  };
   landing-page-root = pkgs.runCommand "landing-page" {} ''
     mkdir -p $out
     ${pkgs.mustache-go}/bin/mustache \
-      ${builtins.toFile "index-md-input.json" (builtins.toJSON {
-        services = mkSection cfg.services;
-        commands = mkSection cfg.commands;
-      })} \
+      ${builtins.toFile "index-md-input.json" (builtins.toJSON indexArgs)} \
       ${./index.md.mustache} \
       > index.md
 
@@ -57,6 +67,19 @@ in
       default = {};
       type = sectionsType;
       description = ''Subsections of the "Available Commands" section.'';
+    };
+    container-api = {
+      enable = mkEnableOption "container-api-docs";
+      ports = mkOption {
+        type = types.lines;
+        description = "Ports exposed by the container";
+        default = "";
+      };
+      folders = mkOption {
+        type = types.lines;
+        description = "Special folders for interfacing with the container";
+        default = "";
+      };
     };
   };
 

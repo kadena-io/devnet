@@ -46,6 +46,7 @@
       ];
       containerExtras = {
         services.chainweb-data.extra-migrations-folder = "/cwd-extra-migrations";
+        sites.landing-page.container-api.enable = true;
       };
       mkFlake = extraModule:
         import ./mkDevnetFlake.nix {
