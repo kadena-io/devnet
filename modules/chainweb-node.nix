@@ -20,6 +20,7 @@ let
     --allowReadsInLocal \
     --database-directory=${stateDir}/chainweb/db \
     --disable-pow
+    --service-port=${toString cfg.service-port}
   '';
 in
 {
@@ -31,6 +32,11 @@ in
       defaultText = lib.literalExpression "pkgs.chainweb-node";
       description = "The chainweb-node package to use.";
     };
+    service-port = lib.mkOption {
+      type = lib.types.port;
+      default = 1848;
+      description = "The port on which the chainweb-node service listens.";
+    };
   };
   config = lib.mkIf cfg.enable {
     packages = [ cfg.package ];
@@ -40,7 +46,7 @@ in
           http_get = {
           host = "127.0.0.1";
           scheme = "http";
-          port = 1848;
+          port = cfg.service-port;
           path = "/health-check";
           };
           initial_delay_seconds = 5;
@@ -60,10 +66,10 @@ in
 
     services.http-server = {
       upstreams = {
-        service-api = "server localhost:1848;";
+        service-api = "server localhost:${toString cfg.service-port};";
         mining-api = ''
           ip_hash; # for work and solve we need sticky connections
-          server localhost:1848;
+          server localhost:${toString cfg.service-port};
         '';
         peer-api = "server localhost:1789;";
       };

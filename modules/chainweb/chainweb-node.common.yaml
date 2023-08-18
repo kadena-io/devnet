@@ -10,7 +10,6 @@ chainweb:
   serviceApi:
     payloadBatchLimit: 1000
     interface: '*'
-    port: 1848
   p2p:
     peer:
       hostaddress:
