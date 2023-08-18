@@ -46,6 +46,16 @@
       ];
       containerExtras = with pkgs.lib; {config, ...}:{
         services.chainweb-data.extra-migrations-folder = "/cwd-extra-migrations";
+        imports = [
+          (mkIf config.services.postgres.enable {
+            processes.socat.exec = ''
+              ${pkgs.socat}/bin/socat TCP-LISTEN:5432,reuseaddr,fork \
+                UNIX-CONNECT:${absolutePgData}/.s.PGSQL.5432
+            '';
+            sites.landing-page.container-api.ports =
+              "- `5432`: Postgresql";
+          })
+        ];
         sites.landing-page.container-api.enable = true;
         sites.landing-page.container-api.ports = concatStringsSep "\n" (flatten [
           "- `8080`: Public HTTP API"
