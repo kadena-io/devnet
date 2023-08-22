@@ -7,6 +7,7 @@ in
     enable = mkEnableOption "pact-cli";
   };
   config = mkIf cfg.enable {
+    packages = [ pkgs.pact ];
     services.http-server.servers.devnet.extraConfig = ''
       location /pact-cli/uploads {
         alias /tmp/uploads;
@@ -28,6 +29,9 @@ in
         - [Pact CLI](/ttyd/pact-cli/)
       '';
     };
+    sites.landing-page.commands.chainweb-data.markdown = ''
+      * `pact`: Run the Pact interpreter.
+    '';
     processes.init-pact-cli.exec = (pkgs.writeShellScript "init-pact-cli" ''
       set -euxo pipefail
 
