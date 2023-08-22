@@ -84,17 +84,21 @@
           services.chainweb-mining-client.enable = true;
           services.http-server.enable = true;
         };
-        common = {
+        local = {
           imports = [minimal];
           services.chainweb-data.enable = true;
+        };
+        container-common = {
+          imports = [local];
           services.ttyd.enable = true;
         };
         use-cwn-l2 = {
           services.chainweb-node.package = chainweb-node-l2;
         };
       in {
-        default = common;
-        l2 = { imports = [common use-cwn-l2]; };
+        default = local;
+        container-default = container-common;
+        l2 = { imports = [container-common use-cwn-l2]; };
         minimal = minimal;
       };
       combined-flake = import lib/combine-flakes.nix pkgs.lib (
