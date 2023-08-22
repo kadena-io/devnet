@@ -15,6 +15,7 @@
       inputs.haskellNix.follows = "chainweb-node/haskellNix";
       inputs.nixpkgs.follows = "chainweb-node/nixpkgs";
     };
+    pact.url = "github:kadena-io/pact";
     nix-exe-bundle = { url = "github:3noch/nix-bundle-exe"; flake = false; };
   };
 
@@ -27,6 +28,7 @@
         chainweb-data = bundle inputs.chainweb-data.packages.${system}.default;
         chainweb-mining-client = bundle inputs.chainweb-mining-client.packages.${system}.default;
         chainweb-node = bundle inputs.chainweb-node.packages.${system}.default;
+        pact = bundle inputs.pact.packages.${system}.default;
       });
       chainweb-node-l2 = bundle inputs.chainweb-node-l2.packages.${system}.default;
       pkgs = import nixpkgs { inherit system; overlays = [ overlay ]; };
@@ -38,6 +40,7 @@
         modules/http-server.nix
         modules/ttyd.nix
         modules/landing-page/module.nix
+        modules/pact-cli.nix
         ({config, ...}: {
           # https://devenv.sh/reference/options/
           process.implementation = "process-compose";
@@ -91,6 +94,7 @@
         container-common = {
           imports = [local];
           services.ttyd.enable = true;
+          services.pact-cli.enable = true;
         };
         use-cwn-l2 = {
           services.chainweb-node.package = chainweb-node-l2;
