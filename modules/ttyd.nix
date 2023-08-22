@@ -7,8 +7,7 @@ let
 
   # Generate the bash script for ttyd to use.
   # It will check the `arg` URL parameter and use its value to execute the appropriate command.
-  generatedScript = pkgs.writeScript "ttyd-wrapper.sh" ''
-    #!/bin/sh
+  generatedScript = pkgs.writeShellScript "ttyd-wrapper.sh" ''
     case "$1" in
     ${concatStringsSep "\n"
       (attrsets.mapAttrsToList
