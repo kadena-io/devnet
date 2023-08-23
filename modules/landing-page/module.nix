@@ -23,6 +23,7 @@ let
   };
   landing-page-root = pkgs.runCommand "landing-page" {} ''
     mkdir -p $out
+    hash=$(basename $out | cut -d'-' -f1)
     ${pkgs.mustache-go}/bin/mustache \
       ${builtins.toFile "index-md-input.json" (builtins.toJSON indexArgs)} \
       ${./index.md.mustache} \
@@ -31,6 +32,7 @@ let
     ${pkgs.pandoc}/bin/pandoc \
       --template=${./index.html} \
       -s index.md \
+      --variable store-hash=$hash \
       -o $out/index.html
 
     mkdir -p $out/static
