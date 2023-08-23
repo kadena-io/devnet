@@ -98,6 +98,28 @@ in
     services.http-server.servers.devnet.extraConfig = ''
       location / {
         alias ${cfg.root}/;
+
+        types {
+          text/html html htm shtml;
+          text/css css;
+          text/javascript js;
+          image/jpeg jpg jpeg;
+          image/png png;
+          image/gif gif;
+          image/svg+xml svg svgz;
+          image/webp webp;
+          image/x-icon ico;
+          text/plain txt;
+          text/xml xml;
+          application/xml rss atom;
+          application/json json;
+          application/font-woff woff;
+          application/font-woff2 woff2;
+          application/vnd.ms-fontobject eot;
+          application/x-font-ttf ttf;
+          font/opentype otf;
+          application/octet-stream bin;
+        }
       }
     '';
   };
