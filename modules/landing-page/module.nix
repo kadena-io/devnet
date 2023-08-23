@@ -28,8 +28,19 @@ let
       ${./index.md.mustache} \
       > index.md
 
-    ${pkgs.pandoc}/bin/pandoc --template=${./index.html} -s index.md -o $out/index.html
-    ln -s ${./static} $out/static
+    ${pkgs.pandoc}/bin/pandoc \
+      --template=${./index.html} \
+      -s index.md \
+      -o $out/index.html
+
+    mkdir -p $out/static
+
+    ${pkgs.xorg.lndir}/bin/lndir ${./static} $out/static
+
+    mkdir -p $out/static/fonts
+    for font in KodeMono-SemiBold; do
+      cp ${pkgs.kode-mono}/share/fonts/truetype/$font.ttf $out/static/fonts
+    done
   '';
   sectionsType = types.attrsOf (types.submodule {
     options = {

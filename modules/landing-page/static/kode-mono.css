@@ -1,0 +1,13 @@
+@font-face {
+    font-family: 'KodeMono';
+    src: url('/static/fonts/KodeMono-SemiBold.ttf') format('truetype');
+    font-weight: normal;
+    font-style: normal;
+}
+
+code, pre {
+    font-family: 'KodeMono', Menlo, Monaco, 'Lucida Console', Consolas, monospace;
+    background-color: #f0f0f0; /* A light gray background */
+    padding: 0em 0.4em; /* Optional: Add a little padding for better visual effect */
+    border-radius: 5px; /* Optional: Rounded corners */
+}
