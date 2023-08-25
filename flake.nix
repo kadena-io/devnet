@@ -34,13 +34,13 @@
       pkgs = import nixpkgs { inherit system; overlays = [ overlay ]; };
       bundle = pkgs.callPackage inputs.nix-exe-bundle {};
       modules = [
-        modules/chainweb-data.nix
-        modules/chainweb-node.nix
-        modules/chainweb-mining-client.nix
-        modules/http-server.nix
-        modules/ttyd.nix
-        modules/landing-page/module.nix
-        modules/pact-cli.nix
+        nix/modules/chainweb-data.nix
+        nix/modules/chainweb-node.nix
+        nix/modules/chainweb-mining-client.nix
+        nix/modules/http-server.nix
+        nix/modules/ttyd.nix
+        nix/modules/landing-page/module.nix
+        nix/modules/pact-cli.nix
         ({config, ...}: {
           # https://devenv.sh/reference/options/
           process.implementation = "process-compose";
@@ -77,7 +77,7 @@
         sites.landing-page.container-api.folders = mkBefore "- `/data`: Persistent data folder";
       };
       mkFlake = extraModule:
-        import ./mkDevnetFlake.nix {
+        import nix/mkDevnetFlake.nix {
           inherit pkgs nixpkgs devenv containerExtras packageExtras;
           modules = modules ++ [extraModule];
         };
@@ -105,13 +105,13 @@
         l2 = { imports = [container-common use-cwn-l2]; };
         minimal = minimal;
       };
-      combined-flake = import lib/combine-flakes.nix pkgs.lib (
+      combined-flake = import nix/lib/combine-flakes.nix pkgs.lib (
         builtins.mapAttrs (_: config: mkFlake config) configurations
       );
       in pkgs.lib.recursiveUpdate combined-flake {
         apps.develop-page = {
           type = "app";
-          program = (import ./lib/develop-page.nix {inherit pkgs;}).outPath;
+          program = (import nix/lib/develop-page.nix {inherit pkgs;}).outPath;
         };
         inherit configurations;
         overlays.default = overlay;
