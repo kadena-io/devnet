@@ -1,0 +1,19 @@
+chainweb:
+  chainwebVersion: fast-development
+  throttling:
+    local: 10000
+    mining: 10000
+    global: 10000
+    putPeer: 10000
+  serviceApi:
+    interface: '*'
+    port: 1849
+  p2p:
+    peer:
+      hostaddress:
+        port: 1790
+    ignoreBootstrapNodes: true
+    maxSessionCount: 2
+  mempoolP2p:
+    configuration:
+      maxSessionCount: 2

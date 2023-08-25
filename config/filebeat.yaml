@@ -1,0 +1,45 @@
+filebeat.config:
+  modules:
+    path: ${path.config}/modules.d/*.yml
+    reload.enabled: false
+
+processors:
+  - add_cloud_metadata: ~
+  - add_docker_metadata: ~
+  - add_host_metadata: ~
+
+output.elasticsearch:
+  hosts: 'elasticsearch:9200'
+  # username: '${ELASTICSEARCH_USERNAME:}'
+  # password: '${ELASTICSEARCH_PASSWORD:}'
+
+# uploads all dashboards that ship with filebeat
+setup.dashboards.enabled: false
+setup.kibana:
+  host: 'http://kibana:5601'
+
+filebeat.autodiscover:
+  providers:
+  - type: docker
+    hints.enabled: true
+    templates:
+    - condition:
+        contains:
+          docker.container.image: nginx
+      config:
+      - module: nginx
+        enabled: true
+        access:
+          input:
+            type: container
+            stream: "stdout"
+            paths:
+            - "/var/lib/docker/containers/${data.docker.container.id}/*.log"
+        error:
+          enabled: true
+          input:
+            type: container
+            stream: "stderr"
+            paths:
+            - "/var/lib/docker/containers/${data.docker.container.id}/*.log"
+

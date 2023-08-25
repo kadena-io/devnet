@@ -1,2 +1,8 @@
-.devenv
+# default db folder
+db/
+
+# Nix build result symlink
 result
+
+# Devenv state folder
+.devenv
