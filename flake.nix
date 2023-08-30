@@ -2,7 +2,7 @@
   inputs = {
     nixpkgs.url = "github:NixOS/nixpkgs/nixpkgs-unstable";
     flake-utils.url = "github:numtide/flake-utils";
-    devenv.url = "github:kadena-io/devenv/devnet-setup";
+    devenv.url = "github:cachix/devenv";
     chainweb-node.url = "github:kadena-io/chainweb-node/edmund/fast-devnet";
     chainweb-node-l2.url = "github:kadena-io/chainweb-node/edmund/l2-spv-poc";
     chainweb-data = {
@@ -47,7 +47,6 @@
         })
       ];
       packageExtras = {
-        devenv.root = ".";
       };
       containerExtras = with pkgs.lib; {config, ...}:{
         devenv.root = "/devnet";
