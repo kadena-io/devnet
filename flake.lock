@@ -179,16 +179,15 @@
         ]
       },
       "locked": {
-        "lastModified": 1692209493,
-        "narHash": "sha256-cXynQeeGW0qyEoCW3ROZx8VdXyyV4xhzA8wgso09BWs=",
+        "lastModified": 1692348717,
+        "narHash": "sha256-bytiSb6BexyLpLRdV0Z6i32d+2lhNB3jx6Xcgw52X24=",
         "owner": "kadena-io",
         "repo": "chainweb-data",
-        "rev": "b103b651e2f9e2130a5b40b08f3b31a41d34654e",
+        "rev": "663d635f55142abe2765ecf11b8a75e5420005b7",
         "type": "github"
       },
       "original": {
         "owner": "kadena-io",
-        "ref": "enis/extra-migrations-folder",
         "repo": "chainweb-data",
         "type": "github"
       }
