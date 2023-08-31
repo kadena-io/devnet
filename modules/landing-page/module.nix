@@ -2,19 +2,19 @@
 with pkgs.lib;
 let
   cfg = config.sites.landing-page;
-  concatWithSingleLine = strings: builtins.concatStringsSep "" (map
+  concatAsLinesSep = sep: strings: builtins.concatStringsSep sep (map
     (str: if hasSuffix "\n" str then str else str + "\n")
     strings
   );
-  mkSection = subsections: concatWithSingleLine (
+  mkSection = sep: subsections: concatAsLinesSep sep (
     map (section: section.markdown) (
       builtins.sort (a: b: a.order < b.order)
         (builtins.attrValues subsections)
     )
   );
   indexArgs = {
-    services = mkSection cfg.services;
-    commands = mkSection cfg.commands;
+    services = mkSection "\n" cfg.services;
+    commands = mkSection "" cfg.commands;
     containerApi = optionalString (cfg.container-api.enable) ''
       ## Container API
 
