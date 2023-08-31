@@ -2,7 +2,11 @@
 with pkgs.lib;
 let
   cfg = config.sites.landing-page;
-  mkSection = subsections: concatStringsSep "\n" (
+  concatWithSingleLine = strings: builtins.concatStringsSep "" (map
+    (str: if hasSuffix "\n" str then str else str + "\n")
+    strings
+  );
+  mkSection = subsections: concatWithSingleLine (
     map (section: section.markdown) (
       builtins.sort (a: b: a.order < b.order)
         (builtins.attrValues subsections)
@@ -28,6 +32,8 @@ let
       ${builtins.toFile "index-md-input.json" (builtins.toJSON indexArgs)} \
       ${./index.md.mustache} \
       > index.md
+
+    cp index.md $out/index.md
 
     ${pkgs.pandoc}/bin/pandoc \
       --template=${./index.html} \

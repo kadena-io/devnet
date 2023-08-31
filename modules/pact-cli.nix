@@ -29,7 +29,7 @@ in
         - [Pact CLI](/ttyd/pact-cli/)
       '';
     };
-    sites.landing-page.commands.chainweb-data.markdown = ''
+    sites.landing-page.commands.pact-cli.markdown = ''
       * `pact`: Run the Pact interpreter.
     '';
     processes.init-pact-cli.exec = (pkgs.writeShellScript "init-pact-cli" ''
