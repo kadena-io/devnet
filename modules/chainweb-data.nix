@@ -118,5 +118,9 @@ in
       * `psql-cwd`: Start a `psql` session as the `chainweb-data` service.
       * `chainweb-data-fill`: Run the `fill` operation of `chainweb-data`.
     '';
+    sites.landing-page.container-api.ports =
+      "- `${toString config.services.chainweb-data.port}`: Chainweb data API port";
+    sites.landing-page.container-api.folders =
+      "- `/cwd-extra-migrations`: `chainweb-data`'s extra migrations folder";
   };
 }

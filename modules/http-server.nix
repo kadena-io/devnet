@@ -60,10 +60,11 @@ in
         }
       '') cfg.servers);
 
-    in indentString ''
-      ${upstreamConfig}
+      in indentString ''
+        ${upstreamConfig}
 
-      ${serverConfig}
-    '';
+        ${serverConfig}
+      '';
+    sites.landing-page.container-api.ports = mkBefore "- `8080`: Public HTTP API";
   };
 }

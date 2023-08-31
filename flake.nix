@@ -38,6 +38,7 @@
       pkgs = import nixpkgs { inherit system; overlays = [ overlay ]; };
       bundle = pkgs.callPackage inputs.nix-exe-bundle {};
       modules = [
+        # https://devenv.sh/reference/options/
         modules/chainweb-data.nix
         modules/chainweb-node.nix
         modules/chainweb-mining-client.nix
@@ -45,10 +46,7 @@
         modules/ttyd.nix
         modules/landing-page/module.nix
         modules/pact-cli.nix
-        ({config, ...}: {
-          # https://devenv.sh/reference/options/
-          process.implementation = "process-compose";
-        })
+        modules/process-compose.nix
       ];
       packageExtras = {
       };
@@ -62,21 +60,10 @@
               ${pkgs.socat}/bin/socat TCP-LISTEN:5432,reuseaddr,fork \
                 UNIX-CONNECT:${config.env.PGDATA}/.s.PGSQL.5432
             '';
-            sites.landing-page.container-api.ports =
+            sites.landing-page.container-api.ports = mkAfter
               "- `5432`: Postgresql";
           })
-          (mkIf config.services.chainweb-data.enable {
-            sites.landing-page.container-api.ports =
-              "- `${toString config.services.chainweb-data.port}`: Chainweb data API port";
-            sites.landing-page.container-api.folders =
-              "- `/cwd-extra-migrations`: `chainweb-data`'s extra migrations folder";
-          })
-          (mkIf config.services.chainweb-node.enable {
-            sites.landing-page.container-api.ports =
-              "- `${toString config.services.chainweb-node.service-port}`: Chainweb node's service port";
-          })
         ];
-        sites.landing-page.container-api.ports = mkBefore "- `8080`: Public HTTP API";
         sites.landing-page.container-api.folders = mkBefore "- `/data`: Persistent data folder";
       };
       mkFlake = extraModule:

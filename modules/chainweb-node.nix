@@ -67,6 +67,8 @@ in
         is configured to proxy requests to this port.
       '';
     };
+    sites.landing-page.container-api.ports =
+      "- `${toString config.services.chainweb-node.service-port}`: Chainweb node's service port";
 
     services.http-server = {
       upstreams = {
