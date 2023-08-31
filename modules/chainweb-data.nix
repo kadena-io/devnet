@@ -93,7 +93,7 @@ in
     sites.landing-page.services.chainweb-data = {
       order = 10;
       markdown = ''
-        ### Chainweb Data
+        ### Chainweb Data ${config.lib.packageVersionInfoMd cfg.package}
 
         Useful pages for interacting with the `chainweb-data` service.
 

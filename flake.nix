@@ -28,15 +28,25 @@
             , devenv
             , ... } @ inputs:
     inputs.flake-utils.lib.eachDefaultSystem (system: let
-      overlay = (self: super: {
-        chainweb-data = bundle inputs.chainweb-data.packages.${system}.default;
-        chainweb-mining-client = bundle inputs.chainweb-mining-client.packages.${system}.default;
-        chainweb-node = bundle inputs.chainweb-node.packages.${system}.default;
-        pact = bundle inputs.pact.packages.${system}.default;
-      });
-      chainweb-node-l2 = bundle inputs.chainweb-node-l2.packages.${system}.default;
-      pkgs = import nixpkgs { inherit system; overlays = [ overlay ]; };
       bundle = pkgs.callPackage inputs.nix-exe-bundle {};
+      bundleWithInfo = inputs: let
+        get-flake-info = import lib/get-flake-info.nix inputs;
+        in flakeName: let
+          flakeInfo = get-flake-info flakeName;
+          default = inputs.${flakeName}.packages.${system}.default;
+        in bundle default // {
+          inherit flakeInfo;
+          version = default.version or default.meta.version or null;
+        };
+      bundleWithInfo' = bundleWithInfo inputs;
+      overlay = (self: super: {
+        chainweb-data = bundleWithInfo' "chainweb-data";
+        chainweb-mining-client = bundleWithInfo' "chainweb-mining-client";
+        chainweb-node = bundleWithInfo' "chainweb-node";
+        pact = bundleWithInfo' "pact";
+      });
+      chainweb-node-l2 = bundleWithInfo' "chainweb-node-l2";
+      pkgs = import nixpkgs { inherit system; overlays = [ overlay ]; };
       modules = [
         # https://devenv.sh/reference/options/
         modules/chainweb-data.nix
@@ -47,6 +57,7 @@
         modules/landing-page/module.nix
         modules/pact-cli.nix
         modules/process-compose.nix
+        modules/devnet-mode.nix
       ];
       packageExtras = {
       };
@@ -105,6 +116,6 @@
         };
         inherit configurations;
         overlays.default = overlay;
-        lib.mkFlake = mkFlake;
+        lib = { inherit mkFlake bundleWithInfo; };
       });
 }

@@ -60,7 +60,7 @@ in
     sites.landing-page.services.chainweb-node = {
       order = 0;
       markdown = ''
-        ### Chainweb Node
+        ### Chainweb Node ${config.lib.packageVersionInfoMd cfg.package}
 
         The Chainweb Node service is running on this node. Its service endpoint is
         available at port `${toString cfg.service-port}`, however the public HTTP API

@@ -87,12 +87,16 @@ let
       User = "devnet";
     };
   };
+  devConfig = (mkDevnet (modules ++ [
+    containerExtras
+    ({ devnet.mode = "dev"; })
+  ])).config;
 in
 {
   packages = {
     default = packageRunner;
     container = container;
-    landing-page = containerConfig.sites.landing-page.root.overrideAttrs (_:_:{
+    landing-page = devConfig.sites.landing-page.root.overrideAttrs (_:_:{
       allowSubstitutes = false;
     });
   };
