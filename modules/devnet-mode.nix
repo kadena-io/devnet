@@ -2,7 +2,7 @@
 with lib;
 let
   renderInfo = package: let
-    versionInfo = if package ? version
+    versionInfo = if package.version or null != null
       then "v${package.version}"
       else null;
     commitInfo = let
