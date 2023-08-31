@@ -69,6 +69,9 @@ in
     };
     sites.landing-page.container-api.ports =
       "- `${toString config.services.chainweb-node.service-port}`: Chainweb node's service port";
+    sites.landing-page.commands.chainweb-node.markdown = ''
+      * `cwtool`: A collection of tools that are helpful for maintaining, testing, and debugging Chainweb
+    '';
 
     services.http-server = {
       upstreams = {
