@@ -1,10 +1,9 @@
 chainweb:
   chainwebVersion: development
   throttling:
-    local: 10000
-    mining: 10000
-    global: 10000
-    putPeer: 10000
+    global: 50
+    mempool: 20
+    putPeer: 11
   serviceApi:
     interface: '*'
     port: 1848
