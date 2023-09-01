@@ -69,7 +69,11 @@ in
     };
   };
   config = mkIf cfg.enable {
-    packages = [ cfg.package psql-cwd chainweb-data-fill ];
+    packages = [
+      cfg.package
+      psql-cwd pkgs.less # psql needs less
+      chainweb-data-fill
+    ];
 
     processes.chainweb-data = {
       exec = "${pkgs.expect}/bin/unbuffer ${start-chainweb-data}";
