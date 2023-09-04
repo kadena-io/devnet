@@ -49,11 +49,11 @@ in
           port = cfg.service-port;
           path = "/health-check";
           };
-          initial_delay_seconds = 5;
-          period_seconds = 10;
-          timeout_seconds = 30;
+          initial_delay_seconds = 1;
+          period_seconds = 1;
+          timeout_seconds = 5;
           success_threshold = 1;
-          failure_threshold = 10;
+          failure_threshold = 20;
       };
     };
 
