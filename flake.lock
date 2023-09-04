@@ -32,6 +32,25 @@
         "type": "github"
       }
     },
+    "block-explorer": {
+      "inputs": {
+        "nixpkgs": "nixpkgs"
+      },
+      "locked": {
+        "lastModified": 1693846716,
+        "narHash": "sha256-YbLvR5ANpR7c9M7WXbsqrCEXfuQ7l4KYwh9yrQjRYwA=",
+        "owner": "kadena-io",
+        "repo": "block-explorer",
+        "rev": "c6ab444682b6485487da265e7b81f743b9816500",
+        "type": "github"
+      },
+      "original": {
+        "owner": "kadena-io",
+        "ref": "enis/devnet-support",
+        "repo": "block-explorer",
+        "type": "github"
+      }
+    },
     "cabal-32": {
       "flake": false,
       "locked": {
@@ -225,7 +244,7 @@
         "hackage": "hackage",
         "haskellNix": "haskellNix",
         "nix-filter": "nix-filter",
-        "nixpkgs": "nixpkgs_2"
+        "nixpkgs": "nixpkgs_3"
       },
       "locked": {
         "lastModified": 1693077954,
@@ -247,7 +266,7 @@
         "hackage": "hackage_2",
         "haskellNix": "haskellNix_2",
         "nix-filter": "nix-filter_2",
-        "nixpkgs": "nixpkgs_4"
+        "nixpkgs": "nixpkgs_5"
       },
       "locked": {
         "lastModified": 1693492557,
@@ -268,7 +287,7 @@
       "inputs": {
         "flake-compat": "flake-compat_3",
         "nix": "nix_3",
-        "nixpkgs": "nixpkgs_5",
+        "nixpkgs": "nixpkgs_6",
         "pre-commit-hooks": "pre-commit-hooks"
       },
       "locked": {
@@ -904,7 +923,7 @@
     "nix": {
       "inputs": {
         "lowdown-src": "lowdown-src",
-        "nixpkgs": "nixpkgs",
+        "nixpkgs": "nixpkgs_2",
         "nixpkgs-regression": "nixpkgs-regression"
       },
       "locked": {
@@ -971,7 +990,7 @@
     "nix_2": {
       "inputs": {
         "lowdown-src": "lowdown-src_2",
-        "nixpkgs": "nixpkgs_3",
+        "nixpkgs": "nixpkgs_4",
         "nixpkgs-regression": "nixpkgs-regression_2"
       },
       "locked": {
@@ -1015,16 +1034,15 @@
     },
     "nixpkgs": {
       "locked": {
-        "lastModified": 1657693803,
-        "narHash": "sha256-G++2CJ9u0E7NNTAi9n5G8TdDmGJXcIjkJ3NF8cetQB8=",
+        "lastModified": 1693553268,
+        "narHash": "sha256-WLeTs7XzqRKCR8kAkiMAHJG0Ftvn2fsAMCPvkZ9oWAk=",
         "owner": "NixOS",
         "repo": "nixpkgs",
-        "rev": "365e1b3a859281cf11b94f87231adeabbdd878a2",
+        "rev": "0edab9b485884d6e287e76f303f4201992ea3ff5",
         "type": "github"
       },
       "original": {
         "owner": "NixOS",
-        "ref": "nixos-22.05-small",
         "repo": "nixpkgs",
         "type": "github"
       }
@@ -1319,6 +1337,22 @@
     },
     "nixpkgs_2": {
       "locked": {
+        "lastModified": 1657693803,
+        "narHash": "sha256-G++2CJ9u0E7NNTAi9n5G8TdDmGJXcIjkJ3NF8cetQB8=",
+        "owner": "NixOS",
+        "repo": "nixpkgs",
+        "rev": "365e1b3a859281cf11b94f87231adeabbdd878a2",
+        "type": "github"
+      },
+      "original": {
+        "owner": "NixOS",
+        "ref": "nixos-22.05-small",
+        "repo": "nixpkgs",
+        "type": "github"
+      }
+    },
+    "nixpkgs_3": {
+      "locked": {
         "lastModified": 1669833724,
         "narHash": "sha256-/HEZNyGbnQecrgJnfE8d0WC5c1xuPSD2LUpB6YXlg4c=",
         "owner": "NixOS",
@@ -1333,7 +1367,7 @@
         "type": "github"
       }
     },
-    "nixpkgs_3": {
+    "nixpkgs_4": {
       "locked": {
         "lastModified": 1657693803,
         "narHash": "sha256-G++2CJ9u0E7NNTAi9n5G8TdDmGJXcIjkJ3NF8cetQB8=",
@@ -1349,7 +1383,7 @@
         "type": "github"
       }
     },
-    "nixpkgs_4": {
+    "nixpkgs_5": {
       "locked": {
         "lastModified": 1669833724,
         "narHash": "sha256-/HEZNyGbnQecrgJnfE8d0WC5c1xuPSD2LUpB6YXlg4c=",
@@ -1365,7 +1399,7 @@
         "type": "github"
       }
     },
-    "nixpkgs_5": {
+    "nixpkgs_6": {
       "locked": {
         "lastModified": 1678875422,
         "narHash": "sha256-T3o6NcQPwXjxJMn2shz86Chch4ljXgZn746c2caGxd8=",
@@ -1381,7 +1415,7 @@
         "type": "github"
       }
     },
-    "nixpkgs_6": {
+    "nixpkgs_7": {
       "locked": {
         "lastModified": 1690952720,
         "narHash": "sha256-fPsiQHARfhVxXpWgcuSKvkYwSco8K13K7XevBpdIfPg=",
@@ -1487,6 +1521,7 @@
     },
     "root": {
       "inputs": {
+        "block-explorer": "block-explorer",
         "chainweb-data": "chainweb-data",
         "chainweb-mining-client": "chainweb-mining-client",
         "chainweb-node": "chainweb-node",
@@ -1494,7 +1529,7 @@
         "devenv": "devenv",
         "flake-utils": "flake-utils_8",
         "nix-exe-bundle": "nix-exe-bundle",
-        "nixpkgs": "nixpkgs_6",
+        "nixpkgs": "nixpkgs_7",
         "pact": "pact"
       }
     },

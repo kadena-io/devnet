@@ -20,6 +20,7 @@
       inputs.haskellNix.follows = "chainweb-node/haskellNix";
       inputs.nixpkgs.follows = "chainweb-node/nixpkgs";
     };
+    block-explorer.url = "github:kadena-io/block-explorer/enis/devnet-support";
     nix-exe-bundle = { url = "github:3noch/nix-bundle-exe"; flake = false; };
   };
 
@@ -29,6 +30,7 @@
             , ... } @ inputs:
     inputs.flake-utils.lib.eachDefaultSystem (system: let
       bundle = pkgs.callPackage inputs.nix-exe-bundle {};
+      get-flake-info = import lib/get-flake-info.nix inputs;
       bundleWithInfo = inputs: let
         get-flake-info = import lib/get-flake-info.nix inputs;
         in flakeName: let
@@ -44,6 +46,9 @@
         chainweb-mining-client = bundleWithInfo' "chainweb-mining-client";
         chainweb-node = bundleWithInfo' "chainweb-node";
         pact = bundleWithInfo' "pact";
+        block-explorer = inputs.block-explorer.packages.x86_64-linux.static // {
+          flakeInfo = get-flake-info "block-explorer";
+        };
       });
       chainweb-node-l2 = bundleWithInfo' "chainweb-node-l2";
       pkgs = import nixpkgs { inherit system; overlays = [ overlay ]; };
@@ -58,6 +63,7 @@
         modules/pact-cli.nix
         modules/process-compose.nix
         modules/devnet-mode.nix
+        modules/explorer.nix
       ];
       packageExtras = {
       };
@@ -91,6 +97,7 @@
         local = {
           imports = [minimal];
           services.chainweb-data.enable = true;
+          sites.explorer.enable = true;
         };
         container-common = {
           imports = [local];
@@ -105,6 +112,10 @@
         container-default = container-common;
         l2 = { imports = [container-common use-cwn-l2]; };
         minimal = minimal;
+        # Useful for iterating on nginx locations
+        http-only = {
+          services.http-server.enable = true;
+        };
       };
       combined-flake = import lib/combine-flakes.nix pkgs.lib (
         builtins.mapAttrs (_: config: mkFlake config) configurations

@@ -8,6 +8,10 @@ in
 {
   options.services.http-server = {
     enable = mkEnableOption "HTTP server";
+    nginx-modules = mkOption {
+      type = types.listOf types.anything;
+      description = "The Nginx modules to enable.";
+    };
     upstreams = mkOption {
       default = {};
       type = types.attrsOf types.str;
@@ -41,10 +45,21 @@ in
       });
       description = "Server blocks configurations.";
     };
+    extraHttpConfig = mkOption {
+      type = types.lines;
+      description = "Additional HTTP configurations.";
+      default = "";
+    };
   };
 
   config = mkIf cfg.enable {
     services.nginx.enable = true;
+    services.nginx.package = pkgs.nginx.override {
+      modules = cfg.nginx-modules;
+    };
+
+    services.http-server.nginx-modules = pkgs.nginx.modules;
+
     services.nginx.httpConfig = let
       indentString = s: builtins.replaceStrings ["\n"] ["\n  "] s;
       upstreamConfig = concatStringsSep "\n" (mapAttrsToList (name: value: ''
@@ -61,6 +76,9 @@ in
       '') cfg.servers);
 
       in indentString ''
+
+        ${indentString cfg.extraHttpConfig}
+
         ${upstreamConfig}
 
         ${serverConfig}
