@@ -67,7 +67,7 @@
       ];
       packageExtras = {
       };
-      containerExtras = with pkgs.lib; {config, ...}:{
+      containerExtras = with pkgs.lib; {config, ...}:  {
         devenv.root = "/devnet";
         services.chainweb-data.extra-migrations-folder = "/cwd-extra-migrations";
         sites.landing-page.container-api.enable = true;
@@ -83,9 +83,9 @@
         ];
         sites.landing-page.container-api.folders = mkBefore "- `/data`: Persistent data folder";
       };
-      mkFlake = extraModule:
+      mkFlake = containerTag: extraModule:
         import ./mkDevnetFlake.nix {
-          inherit pkgs nixpkgs devenv containerExtras packageExtras;
+          inherit pkgs nixpkgs devenv containerExtras packageExtras containerTag;
           modules = modules ++ [extraModule];
         };
       configurations = let
@@ -118,7 +118,7 @@
         };
       };
       combined-flake = import lib/combine-flakes.nix pkgs.lib (
-        builtins.mapAttrs (_: config: mkFlake config) configurations
+        builtins.mapAttrs (cfgName: config: mkFlake cfgName config) configurations
       );
       in pkgs.lib.recursiveUpdate combined-flake {
         apps.develop-page = {

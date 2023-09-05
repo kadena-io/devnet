@@ -4,6 +4,7 @@
 , modules
 , containerExtras
 , packageExtras
+, containerTag
 }:
 let
   mkDevnet = devnetModules: (devenv.lib.mkShell {
@@ -76,6 +77,7 @@ let
   };
   container = pkgs.dockerTools.buildImage {
     name = "devnet";
+    tag = containerTag;
     fromImage = packagesImage;
     copyToRoot = pkgs.runCommand "start-devnet-bin" {} ''
       mkdir -p $out/bin
