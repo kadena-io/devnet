@@ -107,15 +107,19 @@
         use-cwn-l2 = {
           services.chainweb-node.package = chainweb-node-l2;
         };
+        # Useful for iterating on nginx configurations
+        http-only = {
+          services.http-server.enable = true;
+          # Keep process-compose alive even if nginx dies
+          processes.sleep.exec = "sleep 100";
+          sites.explorer.enable = true;
+        };
       in {
         default = local;
         container-default = container-common;
         l2 = { imports = [container-common use-cwn-l2]; };
         minimal = minimal;
-        # Useful for iterating on nginx locations
-        http-only = {
-          services.http-server.enable = true;
-        };
+        inherit http-only;
       };
       combined-flake = import lib/combine-flakes.nix pkgs.lib (
         builtins.mapAttrs (cfgName: config: mkFlake cfgName config) configurations
