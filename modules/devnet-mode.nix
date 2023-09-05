@@ -14,9 +14,10 @@ let
         else null
       ;
     packageInfo = concatStringsSep ", " (builtins.filter (s: s!=null) [versionInfo commitInfo]);
+    grayOut = str: "<span style=\"color: gray;\">${str}</span>";
     withRevLink = str: if package.flakeInfo.revLink or null != null
-      then "[${str}](${package.flakeInfo.revLink})"
-      else str;
+      then "[${grayOut str}](${package.flakeInfo.revLink})"
+      else grayOut str;
   in if packageInfo != ""
       then "<sup><small><small>${withRevLink packageInfo}</small></small></sup>"
       else "";
