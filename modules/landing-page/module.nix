@@ -104,6 +104,12 @@ in
 
   config = {
     services.http-server.servers.devnet.extraConfig = ''
+      location = / {
+        root ${cfg.root}/;
+        try_files /index.html =404;
+        # Make sure the browser checks the ETag every time
+        add_header Cache-Control "no-cache, must-revalidate";
+      }
       location / {
         alias ${cfg.root}/;
 
