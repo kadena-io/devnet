@@ -5,6 +5,16 @@ let
   lua_core_path = "${pkgs.luajitPackages.lua-resty-core}/lib/lua/5.1/?.lua";
   lua_lrucache_path = "${pkgs.luajitPackages.lua-resty-lrucache}/lib/lua/5.1/?.lua";
   lua_path = "${lua_core_path};${lua_lrucache_path};;";
+  processedIndex = pkgs.runCommand "processed-index.html.mustache" {} ''
+    abspath=$(basename ${cfg.package}/ghcjs/*-all.js)
+
+    mkdir -p $out
+
+    sed \
+      -e "s|/ghcjs/all.js|ghcjs/$abspath|g" \
+      -e 's|<base data-ssr="" href="/" />|<base data-ssr="" href="/explorer/"/>|g' \
+        ${cfg.package}/index.html.mustache > $out/index.html.mustache
+  '';
 in {
   options.sites.explorer = {
     enable = mkEnableOption "Block Explorer";
@@ -50,7 +60,7 @@ in {
         }
       }
       location @rewrite_index {
-        root ${cfg.package};
+        root ${processedIndex};
         rewrite ^ /index.html.mustache break;
         set $route ''';
         set $databackends ''';
@@ -81,10 +91,12 @@ in {
         default_type text/html;
         sub_filter '{{route}}' $route;
         sub_filter '{{dataBackends}}' $databackends;
-        sub_filter '/ghcjs/all.js' 'ghcjs/all.js';
-        sub_filter '<base data-ssr="" href="/" />' '<base data-ssr="" href="/explorer/"/>';
         sub_filter_once off;
         sub_filter_types *;
+
+        # Disable caching
+        add_header Cache-Control "no-cache, no-store, must-revalidate";
+        add_header Pragma "no-cache";
       }
     '';
     sites.landing-page.services.block-explorer = {
