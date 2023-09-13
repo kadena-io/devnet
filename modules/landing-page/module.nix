@@ -12,6 +12,18 @@ let
         (builtins.attrValues subsections)
     )
   );
+  configDoc = optionalString (cfg.devnetConfig != null) ''
+    This is the `${cfg.devnetConfig}` configuration of the Kadena Devnet.
+  '';
+  devnetPseudoPackage = {
+    version = cfg.devnetVersion;
+    flakeInfo = optionalAttrs (cfg.devnetRevision != null) {
+       revLink = if (cfg.devnetRepo != null)
+         then cfg.devnetRepo + "/tree/" + cfg.devnetRevision
+         else null;
+       shortRev = builtins.substring 0 7 cfg.devnetRevision;
+    };
+  };
   indexArgs = {
     services = mkSection "\n" cfg.services;
     commands = mkSection "" cfg.commands;
@@ -24,6 +36,10 @@ let
       ### Folders
       ${cfg.container-api.folders}
     '';
+    mainSection = ''
+      ${configDoc}
+    '';
+    devnetSource = config.lib.packageVersionInfoMd devnetPseudoPackage;
   };
   landing-page-root = pkgs.runCommand "landing-page" {} ''
     mkdir -p $out
@@ -99,6 +115,26 @@ in
         description = "Special folders for interfacing with the container";
         default = "";
       };
+    };
+    devnetVersion = lib.mkOption {
+      type = types.nullOr types.str;
+      default = null;
+      description = "The optional devnet version to state in the main section.";
+    };
+    devnetConfig = lib.mkOption {
+      type = types.nullOr types.str;
+      default = null;
+      description = "The optional devnet variant to state in the main section.";
+    };
+    devnetRepo = lib.mkOption {
+      type = types.nullOr types.str;
+      default = null;
+      description = "The optional devnet repo.";
+    };
+    devnetRevision = lib.mkOption {
+      type = types.nullOr types.str;
+      default = null;
+      description = "The optional devnet revision.";
     };
   };
 

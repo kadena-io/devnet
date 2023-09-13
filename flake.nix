@@ -52,6 +52,11 @@
       });
       chainweb-node-l2 = bundleWithInfo' "chainweb-node-l2";
       pkgs = import nixpkgs { inherit system; overlays = [ overlay ]; };
+      devnetInfo = {
+        devnetVersion = "0.1.0";
+        devnetRepo = "https://github.com/kadena-community/nix-kda-cli";
+        devnetRevision = self.rev or null;
+      };
       modules = [
         # https://devenv.sh/reference/options/
         modules/chainweb-data.nix
@@ -64,6 +69,7 @@
         modules/process-compose.nix
         modules/devnet-mode.nix
         modules/explorer.nix
+        { sites.landing-page = devnetInfo; }
       ];
       packageExtras = {
       };
@@ -83,10 +89,14 @@
         ];
         sites.landing-page.container-api.folders = mkBefore "- `/data`: Persistent data folder";
       };
-      mkFlake = containerTag: extraModule:
+      mkFlake = cfgName: extraModule:
         import ./mkDevnetFlake.nix {
-          inherit pkgs nixpkgs devenv containerExtras packageExtras containerTag;
-          modules = modules ++ [extraModule];
+          inherit pkgs nixpkgs devenv containerExtras packageExtras;
+          containerTag = cfgName;
+          modules = modules ++ [
+            extraModule
+            { sites.landing-page.devnetConfig = cfgName; }
+          ];
         };
       configurations = let
         minimal = {
