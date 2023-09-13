@@ -38,6 +38,8 @@ let
     '';
     mainSection = ''
       ${configDoc}
+
+      ${cfg.main-links}
     '';
     devnetSource = config.lib.packageVersionInfoMd devnetPseudoPackage;
   };
@@ -115,6 +117,11 @@ in
         description = "Special folders for interfacing with the container";
         default = "";
       };
+    };
+    main-links = mkOption {
+      type = types.lines;
+      default = "";
+      description = "The links in the main section of the landing page.";
     };
     devnetVersion = lib.mkOption {
       type = types.nullOr types.str;
