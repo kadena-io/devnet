@@ -13,6 +13,16 @@ let
     inputs = { inherit nixpkgs;};
   });
   mkRunner = devnet: pkgs.writeShellScript "start-devnet" ''
+    # Check for TTY
+    if [ -t 1 ]; then
+        # Terminal is present, default to TUI for process-compose
+        PC_TUI_ENABLED=''${PC_TUI_ENABLED:-1}
+    else
+        # Terminal is not present, default to no-TUI for process-compose
+        PC_TUI_ENABLED=''${PC_TUI_ENABLED:-0}
+    fi
+    export PC_TUI_ENABLED
+
     export $(${pkgs.findutils}/bin/xargs < ${devnet.config.procfileEnv})
     ${devnet.config.procfileScript}
   '';
