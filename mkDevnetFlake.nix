@@ -70,7 +70,7 @@ let
       mkdir /data
       chown devnet:devnet /data
 
-      mkdir -p /devnet/.devenv
+      mkdir -p /devnet
       ln -s /data /devnet/.devenv
       chown -R devnet:devnet /devnet
 
