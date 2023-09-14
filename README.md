@@ -1,4 +1,10 @@
-# Docker Compose Deployment of Kadena Devnet
+# Kadena Devnet
+
+This repository contains the definition of the Kadena Devnet using two alternative technologies.
+See below for running the devnet using Docker Compose.
+For running it with Nix or using Nix to generate a single container with all the devnet services see [nix/README.md](nix/README.md) or [the Docker Hub page of the devnet image](https://hub.docker.com/r/kadena/devnet).
+
+## Docker Compose Deployment of Kadena Devnet
 
 Before you begin, check your docker settings to make sure that docker has access
 to at least 8GB of RAM and 4 CPUs.

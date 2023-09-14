@@ -1,0 +1,24 @@
+chainweb:
+  chainwebVersion: fast-development
+  allowReadsInLocal: true
+  headerStream: true
+  throttling:
+    local: 10000
+    mining: 10000
+    global: 10000
+    putPeer: 10000
+  serviceApi:
+    payloadBatchLimit: 1000
+    interface: '*'
+  p2p:
+    peer:
+      hostaddress:
+        port: 1789
+    ignoreBootstrapNodes: true
+    maxSessionCount: 2
+  mempoolP2p:
+    configuration:
+      maxSessionCount: 2
+logging:
+  backend:
+    color: "True"
