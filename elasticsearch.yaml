@@ -1,0 +1,188 @@
+# ############################################################################ #
+# Overwrite file for logging to Elasticsearch
+#
+# Usage:
+#
+# docker compose -f docker-compose.yaml -f elasticsearch.yaml up -d
+#
+
+configs:
+  chainweb-node.logging:
+    file: ./config/chainweb-node.elastic.yaml
+  metricbeat:
+    file: ./config/metricbeat.yaml
+  filebeat:
+    file: ./config/filebeat.yaml
+
+services:
+
+  # ########################################################################## #
+  # Configure Nodes Logging for Elasticsearch
+
+  bootstrap-node:
+    depends_on:
+      elasticsearch:
+        condition: service_healthy
+
+  common-node:
+    depends_on:
+      elasticsearch:
+        condition: service_healthy
+
+  mining-node:
+    depends_on:
+      elasticsearch:
+        condition: service_healthy
+
+  mining-api-node:
+    depends_on:
+      elasticsearch:
+        condition: service_healthy
+
+  api-node:
+    depends_on:
+      elasticsearch:
+        condition: service_healthy
+
+  api-proxy:
+    labels:
+      co.elastic.metrics/module: nginx
+      co.elastic.metrics/metricsets: stubstatus
+      co.elastic.metrics/hosts: '$${data.host}:80'
+      co.elastic.metrics/period: 10s
+
+  # ########################################################################## #
+  # Elastic Search
+
+  elasticsearch:
+    container_name: elasticsearch
+    image: docker.elastic.co/elasticsearch/elasticsearch:8.4.2
+    environment:
+      - xpack.security.enabled=false
+      - xpack.security.http.ssl.enabled=false
+      - xpack.security.transport.ssl.enabled=false
+      - discovery.type=single-node
+      - bootstrap.memory_lock=true
+      - "ES_JAVA_OPTS=-Xms512m -Xmx512m"
+    mem_limit: 2147483648
+    ulimits:
+      memlock:
+        soft: -1
+        hard: -1
+      nofile:
+        soft: 65536
+        hard: 65536
+    cap_add:
+      - IPC_LOCK
+    healthcheck:
+      test: "curl --fail -s http://elasticsearch:9200"
+      interval: 5s
+      timeout: 5s
+      retries: 120
+
+  # ########################################################################## #
+  # Kibana
+
+  kibana:
+    container_name: kibana
+    depends_on:
+      elasticsearch:
+        condition: service_healthy
+    image: docker.elastic.co/kibana/kibana:8.4.2
+    ports:
+    - 5601:5601
+    environment:
+      ELASTICSEARCH_URL: http://elasticsearch:9200
+      ELASTICSEARCH_HOSTS: http://elasticsearch:9200
+      KIBANA_FLEET_SETUP: false
+    healthcheck:
+      test: "curl --fail -s http://kibana:5601/api/status"
+      interval: 5s
+      timeout: 5s
+      retries: 120
+
+  # Upload saved objects
+  kibana-objects:
+    container_name: kibana-objects
+    depends_on:
+      kibana:
+        condition: service_healthy
+    image: curlimages/curl:latest
+    volumes:
+    - ./config/kibana:/chainweb/config/kibana:ro
+    entrypoint: ["/bin/sh"]
+    command:
+    - -c
+    - |
+      for FILE in chainweb/config/kibana/*.ndjson ; do
+        echo "uploading $$FILE"
+        RESULT=1
+        COUNT=0
+        while [ ! $$RESULT -eq 0 -a $$COUNT -lt 6 ] ; do
+          sleep 3
+          echo "attempt to upload kibana saved objects $$FILE"
+          curl --fail -s 'http://kibana:5601/api/saved_objects/_import?overwrite=true' \
+            -X POST \
+            -H 'kbn-xsrf: true' \
+            --form "file=@$$FILE"
+          RESULT=$$?
+          COUNT=$$((COUNT + 1))
+          echo
+          echo "result: $$RESULT"
+        done
+      done
+      echo "done"
+
+  # ########################################################################## #
+  # Metricbeat
+
+  metricbeat:
+    container_name: metricbeat
+    depends_on:
+      elasticsearch:
+        condition: service_healthy
+      kibana:
+        condition: service_healthy
+    image: docker.elastic.co/beats/metricbeat:8.4.2
+    command:
+      - -e
+      - --strict.perms=false
+      - -e
+      - -system.hostfs=/hostfs
+    environment:
+      setup.kibana.host: kibana:5601
+      output.elasticsearch.hosts: '["elasticsearch:9200"]'
+    user: root
+    cap_add:
+    - sys_ptrace
+    - dac_read_search
+    volumes:
+    - ./config/metricbeat.yaml:/usr/share/metricbeat/metricbeat.yml:ro
+    - /var/run/docker.sock:/var/run/docker.sock:ro
+    - /proc:/hostfs/proc:ro
+    - /sys/fs/cgroup:/hostfs/sys/fs/cgroup:ro
+    - /:/hostfs:ro
+
+  # ########################################################################## #
+  # Filebeat
+
+  filebeat:
+    container_name: filebeat
+    depends_on:
+      elasticsearch:
+        condition: service_healthy
+      kibana:
+        condition: service_healthy
+    image: docker.elastic.co/beats/filebeat:8.4.2
+    command:
+      - -e
+      - --strict.perms=false
+    environment:
+      setup.kibana.host: kibana:5601
+      output.elasticsearch.hosts: '["elasticsearch:9200"]'
+    user: root
+    volumes:
+    - ./config/filebeat.yaml:/usr/share/filebeat/filebeat.yml:ro
+    - /var/lib/docker/containers:/var/lib/docker/containers:ro
+    - /var/run/docker.sock:/var/run/docker.sock:ro
+

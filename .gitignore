@@ -1,2 +1,6 @@
-.devenv
+# default db folder
+db/
+
+# Nix-related
 result
+.devenv
