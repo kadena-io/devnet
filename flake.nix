@@ -30,9 +30,9 @@
             , ... } @ inputs:
     inputs.flake-utils.lib.eachDefaultSystem (system: let
       bundle = pkgs.callPackage inputs.nix-exe-bundle {};
-      get-flake-info = import lib/get-flake-info.nix inputs;
+      get-flake-info = import nix/lib/get-flake-info.nix inputs;
       bundleWithInfo = inputs: let
-        get-flake-info = import lib/get-flake-info.nix inputs;
+        get-flake-info = import nix/lib/get-flake-info.nix inputs;
         in flakeName: let
           flakeInfo = get-flake-info flakeName;
           default = inputs.${flakeName}.packages.${system}.default;
@@ -59,16 +59,16 @@
       };
       modules = [
         # https://devenv.sh/reference/options/
-        modules/chainweb-data.nix
-        modules/chainweb-node.nix
-        modules/chainweb-mining-client.nix
-        modules/http-server.nix
-        modules/ttyd.nix
-        modules/landing-page/module.nix
-        modules/pact-cli.nix
-        modules/process-compose.nix
-        modules/devnet-mode.nix
-        modules/explorer.nix
+        nix/modules/chainweb-data.nix
+        nix/modules/chainweb-node.nix
+        nix/modules/chainweb-mining-client.nix
+        nix/modules/http-server.nix
+        nix/modules/ttyd.nix
+        nix/modules/landing-page/module.nix
+        nix/modules/pact-cli.nix
+        nix/modules/process-compose.nix
+        nix/modules/devnet-mode.nix
+        nix/modules/explorer.nix
         { sites.landing-page = devnetInfo; }
       ];
       packageExtras = {
@@ -90,7 +90,7 @@
         sites.landing-page.container-api.folders = mkBefore "- `/data`: Persistent data folder";
       };
       mkFlake = cfgName: extraModule:
-        import ./mkDevnetFlake.nix {
+        import nix/mkDevnetFlake.nix {
           inherit pkgs nixpkgs devenv containerExtras packageExtras;
           containerTag = cfgName;
           modules = modules ++ [
@@ -131,13 +131,13 @@
         minimal = minimal;
         inherit http-only;
       };
-      combined-flake = import lib/combine-flakes.nix pkgs.lib (
+      combined-flake = import nix/lib/combine-flakes.nix pkgs.lib (
         builtins.mapAttrs (cfgName: config: mkFlake cfgName config) configurations
       );
       in pkgs.lib.recursiveUpdate combined-flake {
         apps.develop-page = {
           type = "app";
-          program = (import ./lib/develop-page.nix {inherit pkgs;}).outPath;
+          program = (import nix/lib/develop-page.nix {inherit pkgs;}).outPath;
         };
         inherit configurations;
         overlays.default = overlay;
