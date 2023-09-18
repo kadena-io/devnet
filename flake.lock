@@ -37,16 +37,16 @@
         "nixpkgs": "nixpkgs"
       },
       "locked": {
-        "lastModified": 1694709235,
-        "narHash": "sha256-1ucnOXU7RUj3oJhjTW24j/5qxfRz2S9zBwWqF4fRW0Q=",
+        "lastModified": 1695050669,
+        "narHash": "sha256-j3jcYpdFKZjR+nrR7EA6H37xggQ1r6byRPjwF0fq77A=",
         "owner": "kadena-io",
         "repo": "block-explorer",
-        "rev": "5ef0b5610474283263dc21be2181167038e62e0c",
+        "rev": "3968458e42b9cf63a273e4cf5afb8a53ee2d8549",
         "type": "github"
       },
       "original": {
         "owner": "kadena-io",
-        "ref": "enis/devnet-support",
+        "ref": "devnet",
         "repo": "block-explorer",
         "type": "github"
       }
