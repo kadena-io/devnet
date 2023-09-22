@@ -91,7 +91,7 @@ services:
     depends_on:
       bootstrap-node:
         condition: service_healthy
-    image: nginx:latest
+    image: amd64/nginx:latest
     platform: linux/amd64
     volumes:
     - ${PWD}/config/nginx.api.minimal.conf:/etc/nginx/conf.d/default.conf
