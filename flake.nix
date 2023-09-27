@@ -86,6 +86,11 @@
             sites.landing-page.container-api.ports = mkAfter
               "- `5432`: Postgresql";
           })
+          (mkIf (config.services.pact-cli.enable && config.services.ttyd.enable) {
+            services.pact-cli.working-directory = "/pact-cli";
+            sites.landing-page.container-api.folders = mkAfter
+              "- `/pact-cli`: The working directory of the `pact-cli` terminal";
+          })
         ];
         sites.landing-page.container-api.folders = mkBefore "- `/data`: Persistent data folder";
       };

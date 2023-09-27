@@ -75,6 +75,7 @@ let
       chown -R devnet:devnet /devnet
 
       mkdir /cwd-extra-migrations
+      mkdir /pact-cli
     '';
   };
   packagesImage = pkgs.dockerTools.buildImage {

@@ -11,18 +11,16 @@ in
       defaultText = lib.literalExpression "pkgs.pact";
       description = "The pact package to use.";
     };
+    working-directory = mkOption {
+      type = types.nullOr types.path;
+      default = null;
+      description = "The directory to use as working directory.";
+    };
   };
   config = mkIf cfg.enable {
     packages = [ cfg.package ];
-    services.http-server.servers.devnet.extraConfig = ''
-      location /pact-cli/uploads {
-        alias /tmp/uploads;
-        dav_methods PUT DELETE MKCOL COPY MOVE;
-        dav_access user:rw group:rw all:rw;
-      }
-    '';
     services.ttyd.commands.pact-cli = (pkgs.writeShellScript "pact-cli-wrapper" ''
-      cd /tmp/uploads
+      ${optionalString (cfg.working-directory != null) "cd ${cfg.working-directory}"}
       ${cfg.package}/bin/pact
     '').outPath;
     sites.landing-page.services.pact-cli = {
@@ -38,10 +36,5 @@ in
     sites.landing-page.commands.pact-cli.markdown = ''
       * `pact`: Run the Pact interpreter.
     '';
-    processes.init-pact-cli.exec = (pkgs.writeShellScript "init-pact-cli" ''
-      set -euxo pipefail
-
-      mkdir -p /tmp/uploads
-    '').outPath;
   };
 }
