@@ -13,6 +13,8 @@ let
     inputs = { inherit nixpkgs;};
   });
   mkRunner = devnet: pkgs.writeShellScript "start-devnet" ''
+    set -euo pipefail
+
     # Check for TTY
     if [ -t 1 ]; then
         # Terminal is present, default to TUI for process-compose

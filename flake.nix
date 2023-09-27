@@ -98,6 +98,19 @@
           mkdir /cwd-extra-migrations
           mkdir /pact-cli
         '';
+        init.devnet-init = ''
+          # Assert that these folders are mounted as read-only
+          for dir in /cwd-extra-migrations /pact-cli; do
+            dir_mount="^[^\S]+ $dir"
+            (${pkgs.gnugrep}/bin/grep -E "$dir_mount" /proc/mounts || true) | while read -r mount; do
+              is_readonly="$dir_mount [^\S]+ ro"
+              if ! [[ $mount =~ $is_readonly ]]; then
+                echo "Error: $dir should be mounted as read-only."
+                exit 1
+              fi
+            done
+          done
+        '';
       };
       mkFlake = cfgName: extraModule:
         import nix/mkDevnetFlake.nix {
