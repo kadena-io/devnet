@@ -59,6 +59,7 @@
       };
       modules = [
         # https://devenv.sh/reference/options/
+        nix/modules/init.nix
         nix/modules/chainweb-data.nix
         nix/modules/chainweb-node.nix
         nix/modules/chainweb-mining-client.nix
@@ -93,6 +94,10 @@
           })
         ];
         sites.landing-page.container-api.folders = mkBefore "- `/data`: Persistent data folder";
+        init.container-init = ''
+          mkdir /cwd-extra-migrations
+          mkdir /pact-cli
+        '';
       };
       mkFlake = cfgName: extraModule:
         import nix/mkDevnetFlake.nix {

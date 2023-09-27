@@ -24,6 +24,9 @@ let
     export PC_TUI_ENABLED
 
     export $(${pkgs.findutils}/bin/xargs < ${devnet.config.procfileEnv})
+
+    ${devnet.config.init.devnet-init}
+
     ${devnet.config.procfileScript}
   '';
   packageDevnet = mkDevnet (modules ++ [packageExtras]);
@@ -74,8 +77,7 @@ let
       ln -s /data /devnet/.devenv
       chown -R devnet:devnet /devnet
 
-      mkdir /cwd-extra-migrations
-      mkdir /pact-cli
+      ${containerConfig.init.container-init}
     '';
   };
   packagesImage = pkgs.dockerTools.buildImage {
