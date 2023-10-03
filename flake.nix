@@ -70,6 +70,7 @@
         nix/modules/process-compose.nix
         nix/modules/devnet-mode.nix
         nix/modules/explorer.nix
+        nix/modules/utils.nix
         { sites.landing-page = devnetInfo; }
       ];
       packageExtras = {
