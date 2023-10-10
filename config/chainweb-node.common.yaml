@@ -1,5 +1,5 @@
 chainweb:
-  chainwebVersion: development
+  chainwebVersion: fast-development
   throttling:
     global: 50
     mempool: 20
