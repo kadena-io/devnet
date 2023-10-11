@@ -65,3 +65,8 @@ Once the image is running, visit http://localhost:8080 in your browser for more 
 docker volume create l1
 docker run -it -p 8080:8080 -v l1:/data <devnet-image-name>
 ```
+
+# Known Issues
+
+## High CPU usage
+When the container consumes a lot of cpu it can usually be solved by restarting the container. This can happen when you leave the container(s) running while suspending the laptop/pc. 
