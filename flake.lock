@@ -37,16 +37,16 @@
         "nixpkgs": "nixpkgs"
       },
       "locked": {
-        "lastModified": 1695050669,
-        "narHash": "sha256-j3jcYpdFKZjR+nrR7EA6H37xggQ1r6byRPjwF0fq77A=",
+        "lastModified": 1697124608,
+        "narHash": "sha256-Kx15uzDxCj8ZQ2M3nADlOMUYfiaWNQOlR+uDaeggUqU=",
         "owner": "kadena-io",
         "repo": "block-explorer",
-        "rev": "3968458e42b9cf63a273e4cf5afb8a53ee2d8549",
+        "rev": "6c2d119e9a6f66a276a4bef7d732031b07ef44a4",
         "type": "github"
       },
       "original": {
         "owner": "kadena-io",
-        "ref": "devnet",
+        "ref": "enis/merge-netconfig-fix-to-devnet",
         "repo": "block-explorer",
         "type": "github"
       }

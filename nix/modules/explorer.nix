@@ -31,7 +31,10 @@ in {
       lua_package_path "${lua_path}";
     '';
     services.http-server.servers.devnet.extraConfig = ''
-      location ~ ^/explorer/?$ { return 301 /explorer/fast-development; }
+      location ~ ^/explorer/?$ {
+          add_header Content-Type text/html;
+          return 200 '<html><head><meta http-equiv="refresh" content="0;url=/explorer/fast-development" /></head></html>';
+      }
 
       location /explorer/ {
         alias ${cfg.package}/;
@@ -66,10 +69,7 @@ in {
         set $databackends ''';
         rewrite_by_lua_block {
           -- Derive the route from the request
-          local route = ngx.var.scheme .. "://" .. ngx.var.host
-          if ngx.var.server_port then
-              route = route .. ":" .. ngx.var.server_port
-          end
+          local route = ngx.var.scheme .. "://" .. ngx.req.get_headers()["Host"]
 
           -- Base64 encode the route
           local encoded = ngx.encode_base64(route)
