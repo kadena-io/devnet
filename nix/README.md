@@ -52,6 +52,38 @@ docker load < $(nix build github:kadena-community/nix-kda-cli#container --no-lin
 
 Note that the `--impure` option is not needed for building docker images, because that operation doesn't need to know the current directory.
 
+## Docker manifest
+
+To create a `latest` image that serves both ARM and AMD images without requiring the user to specify the version, a docker manifest can be used.
+
+If you had created a manifest before, make sure to remove that manifest from your system before proceeding:
+
+```bash
+docker manifest rm kadena/devnet:latest
+```
+
+Then we can proceed to tag the docker images serving ARM and AMD systems specifically:
+
+```bash
+docker image tag devnet:somehashthatwasprovidedwiththeabovementioneddockerloadcommand kadena/latest-amd64
+docker image tag devnet:otherhashfromabuildfromm2system kadena/latest-arm64
+```
+
+Now that we have these two images we can create a manifest:
+
+```bash
+docker manifest create \
+kadena/devnet:latest \
+--amend kadena/devnet:latest-arm64 \
+--amend kadena/devnet:latest-amd64
+```
+
+Now your manifest is primed for pushing:
+
+```bash
+docker manifest push kadena/devnet:latest
+```
+
 # Running the devnet Docker image
 
 The docker image serves an HTTP API at port 8080. This API serves as a convenient entry-point into the system. You can start the devnet with local access to the HTTP API as follows:
