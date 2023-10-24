@@ -5,21 +5,9 @@
     devenv.url = "github:cachix/devenv";
     chainweb-node.url = "github:kadena-io/chainweb-node";
     chainweb-node-l2.url = "github:kadena-io/chainweb-node/edmund/l2-spv-poc";
-    chainweb-data = {
-      url = "github:kadena-io/chainweb-data";
-      inputs.nixpkgs.follows = "chainweb-node/nixpkgs";
-      inputs.haskellNix.follows = "chainweb-node/haskellNix";
-    };
-    chainweb-mining-client = {
-      url = "github:kadena-io/chainweb-mining-client/enis/update-to-flakes-and-haskellNix";
-      inputs.haskellNix.follows = "chainweb-node/haskellNix";
-      inputs.nixpkgs.follows = "chainweb-node/nixpkgs";
-    };
-    pact = {
-      url = "github:kadena-io/pact";
-      inputs.haskellNix.follows = "chainweb-node/haskellNix";
-      inputs.nixpkgs.follows = "chainweb-node/nixpkgs";
-    };
+    chainweb-data.url = "github:kadena-io/chainweb-data";
+    chainweb-mining-client.url = "github:kadena-io/chainweb-mining-client/enis/update-to-flakes-and-haskellNix";
+    pact.url = "github:kadena-io/pact";
     block-explorer.url = "github:kadena-io/block-explorer/enis/merge-netconfig-fix-to-devnet";
     nix-exe-bundle = { url = "github:3noch/nix-bundle-exe"; flake = false; };
   };
