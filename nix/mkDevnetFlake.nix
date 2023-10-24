@@ -47,7 +47,7 @@ let
       name = "devnet-base-root";
       paths = [
         containerConfig.services.nginx.package
-        pkgs.chainweb-node
+        containerConfig.services.chainweb-node.package
         pkgs.chainweb-mining-client
         pkgs.coreutils
         pkgs.findutils

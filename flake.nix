@@ -17,7 +17,15 @@
             , devenv
             , ... } @ inputs:
     inputs.flake-utils.lib.eachDefaultSystem (system: let
-      bundle = pkgs.callPackage inputs.nix-exe-bundle {};
+      bundle = drv:
+        let bundled = pkgs.callPackage inputs.nix-exe-bundle {} drv;
+        # We're exposing the bin contents in a new derivation because the bundling produces
+        # a /lib folder with duplicate files across different bundles, which causes problems
+        # while preparing the docker image root
+        in pkgs.runCommand "${bundled.name}-bin" {} ''
+          mkdir -p $out/bin
+          ln -s ${bundled}/bin/* $out/bin
+        '';
       get-flake-info = import nix/lib/get-flake-info.nix inputs;
       bundleWithInfo = inputs: let
         get-flake-info = import nix/lib/get-flake-info.nix inputs;
