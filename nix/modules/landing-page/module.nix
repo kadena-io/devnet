@@ -14,7 +14,7 @@ let
   );
   configDocLink = let
     pos = cfg.devnetConfigPos;
-    configUrl = "${cfg.devnetRepo}/blob/${cfg.devnetRevision}/${pos.file}#${toString pos.line}";
+    configUrl = "${cfg.devnetRepo}/blob/${cfg.devnetRevision}/${pos.file}#L${toString pos.line}";
     in if all (x: x!=null) [ pos.file pos.line cfg.devnetRepo cfg.devnetRevision ]
       then "[the `${cfg.devnetConfig}` configuration](${configUrl})"
       else "the `${cfg.devnetConfig}` configuration";
