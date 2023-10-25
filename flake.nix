@@ -115,10 +115,11 @@
           containerTag = cfgName;
           modules = modules ++ [
             extraModule
-            { sites.landing-page = {
-              devnetConfig = cfgName;
-              devnetConfigPos = cfgPos;
-            };}
+            {
+              sites.landing-page = {
+                devnetConfig = cfgName;
+              } // pkgs.lib.optionalAttrs (cfgPos != null) {devnetConfigPos = cfgPos;};
+            }
           ];
         };
       configurations = let
