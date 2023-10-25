@@ -12,8 +12,15 @@ let
         (builtins.attrValues subsections)
     )
   );
+  configDocLink = let
+    pos = cfg.devnetConfigPos;
+    configUrl = "${cfg.devnetRepo}/blob/${cfg.devnetRevision}/${pos.file}#${toString pos.line}";
+    in if all (x: x!=null) [ pos.file pos.line cfg.devnetRepo cfg.devnetRevision ]
+      then "[the `${cfg.devnetConfig}` configuration](${configUrl})"
+      else "the `${cfg.devnetConfig}` configuration";
+
   configDoc = optionalString (cfg.devnetConfig != null) ''
-    This is the `${cfg.devnetConfig}` configuration of the Kadena Devnet.
+    This is ${configDocLink} of the Kadena Devnet.
   '';
   devnetPseudoPackage = {
     version = cfg.devnetVersion;
@@ -132,6 +139,16 @@ in
       type = types.nullOr types.str;
       default = null;
       description = "The optional devnet variant to state in the main section.";
+    };
+    devnetConfigPos.file = lib.mkOption {
+      type = types.nullOr types.str;
+      default = null;
+      description = "The optional file name containing the devnet configuration.";
+    };
+    devnetConfigPos.line = lib.mkOption {
+      type = types.nullOr types.int;
+      default = null;
+      description = "The optional line number of the devnet configuration.";
     };
     devnetRepo = lib.mkOption {
       type = types.nullOr types.str;

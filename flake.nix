@@ -50,7 +50,7 @@
       pkgs = import nixpkgs { inherit system; overlays = [ overlay ]; };
       devnetInfo = {
         devnetVersion = "0.1.0";
-        devnetRepo = "https://github.com/kadena-community/nix-kda-cli";
+        devnetRepo = "https://github.com/kadena-io/devnet";
         devnetRevision = self.rev or null;
       };
       modules = [
@@ -109,13 +109,16 @@
           done
         '';
       };
-      mkFlake = cfgName: extraModule:
+      mkFlake = cfgName: cfgPos: extraModule:
         import nix/mkDevnetFlake.nix {
           inherit pkgs nixpkgs devenv containerExtras packageExtras;
           containerTag = cfgName;
           modules = modules ++ [
             extraModule
-            { sites.landing-page.devnetConfig = cfgName; }
+            { sites.landing-page = {
+              devnetConfig = cfgName;
+              devnetConfigPos = cfgPos;
+            };}
           ];
         };
       configurations = let
@@ -151,8 +154,11 @@
         minimal = minimal;
         inherit http-only;
       };
+      mkCfgPos = cfgName:
+        let pos = builtins.unsafeGetAttrPos cfgName configurations;
+        in { file = pkgs.lib.strings.removePrefix "${self}/" pos.file; line = pos.line; };
       combined-flake = import nix/lib/combine-flakes.nix pkgs.lib (
-        builtins.mapAttrs (cfgName: config: mkFlake cfgName config) configurations
+        builtins.mapAttrs (cfgName: config: mkFlake cfgName (mkCfgPos cfgName) config) configurations
       );
       in pkgs.lib.recursiveUpdate combined-flake {
         apps.develop-page = {
