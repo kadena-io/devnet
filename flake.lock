@@ -507,11 +507,11 @@
         "nixpkgs": "nixpkgs_8"
       },
       "locked": {
-        "lastModified": 1699535942,
-        "narHash": "sha256-sb72+juYMOSUMhfsoNOTTiNsEPv43wOOXE8iOHL2hO4=",
+        "lastModified": 1699546460,
+        "narHash": "sha256-wtEmR8HJZquwE1RBaljsREb6M/WIePOu6LHx9G0uNaI=",
         "owner": "kadena-io",
         "repo": "chainweb-node",
-        "rev": "0b63ce6bed56b9b0a4fcfded1d331081f54a5505",
+        "rev": "9dcd24f5628e8287a54208b08067356c827f3464",
         "type": "github"
       },
       "original": {
