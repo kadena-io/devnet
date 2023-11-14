@@ -31,7 +31,7 @@
         get-flake-info = import nix/lib/get-flake-info.nix inputs;
         in flakeName: let
           flakeInfo = get-flake-info flakeName;
-          default = inputs.${flakeName}.packages.${system}.default;
+          default = inputs.${flakeName}.packages.${system}.recursive;
         in bundle default // {
           inherit flakeInfo;
           version = default.version or default.meta.version or null;
