@@ -3,11 +3,11 @@
     nixpkgs.url = "github:NixOS/nixpkgs/nixpkgs-unstable";
     flake-utils.url = "github:numtide/flake-utils";
     devenv.url = "github:cachix/devenv";
-    chainweb-node.url = "github:kadena-io/chainweb-node";
-    chainweb-node-l2.url = "github:kadena-io/chainweb-node/edmund/l2-spv-poc";
-    chainweb-data.url = "github:kadena-io/chainweb-data";
+    chainweb-node.url = "github:kadena-io/chainweb-node/enis/use-hs-nix-infra";
+    chainweb-node-l2.url = "github:kadena-io/chainweb-node/enis/use-hs-nix-infra";
+    chainweb-data.url = "github:kadena-io/chainweb-data/enis/use-hs-nix-infra";
     chainweb-mining-client.url = "github:kadena-io/chainweb-mining-client/enis/update-to-flakes-and-haskellNix";
-    pact.url = "github:kadena-io/pact";
+    pact.url = "github:kadena-io/pact/enis/use-hs-nix-infra";
     block-explorer.url = "github:kadena-io/block-explorer/enis/merge-netconfig-fix-to-devnet";
     nix-exe-bundle = { url = "github:3noch/nix-bundle-exe"; flake = false; };
   };
