@@ -8,6 +8,8 @@
     chainweb-data.url = "github:kadena-io/chainweb-data";
     chainweb-mining-client.url = "github:kadena-io/chainweb-mining-client/enis/update-to-flakes-and-haskellNix";
     pact.url = "github:kadena-io/pact";
+    chainweb-peers.url = "git+ssh://git@github.com/kadena-io/chainweb-peers";
+    txg.url = "github:kadena-io/txg";
     block-explorer.url = "github:kadena-io/block-explorer/enis/merge-netconfig-fix-to-devnet";
     nix-exe-bundle = { url = "github:3noch/nix-bundle-exe"; flake = false; };
   };
@@ -41,6 +43,12 @@
         chainweb-data = bundleWithInfo' "chainweb-data";
         chainweb-mining-client = bundleWithInfo' "chainweb-mining-client";
         chainweb-node = bundleWithInfo' "chainweb-node";
+        chainweb-peers = bundleWithInfo' "chainweb-peers";
+        tx-traces = bundle inputs.chainweb-peers.packages.${system}.tx-traces //
+          { flakeInfo = get-flake-info "chainweb-peers";
+            version = inputs.chainweb-peers.packages.${system}.tx-traces.version;
+          };
+        txg = bundleWithInfo' "txg";
         pact = bundleWithInfo' "pact";
         block-explorer = inputs.block-explorer.packages.x86_64-linux.static // {
           flakeInfo = get-flake-info "block-explorer";
@@ -59,6 +67,9 @@
         nix/modules/chainweb-data.nix
         nix/modules/chainweb-node.nix
         nix/modules/chainweb-mining-client.nix
+        nix/modules/chainweb-peers.nix
+        nix/modules/cut-checker.nix
+        nix/modules/txg.nix
         nix/modules/http-server.nix
         nix/modules/ttyd.nix
         nix/modules/landing-page/module.nix
@@ -128,6 +139,13 @@
           services.chainweb-mining-client.enable = true;
           services.http-server.enable = true;
         };
+        chainweb-peers = {
+          imports = [minimal];
+          services.elasticsearch.enable = true;
+          services.chainweb-peers.enable = true;
+          services.cut-checker.enable = true;
+          services.txg.enable = true;
+        };
         local = {
           imports = [minimal];
           services.chainweb-data.enable = true;
@@ -154,6 +172,7 @@
         l2 = { imports = [container-common use-cwn-l2]; };
         minimal = minimal;
         inherit http-only;
+        inherit chainweb-peers;
       };
       mkCfgPos = cfgName:
         let pos = builtins.unsafeGetAttrPos cfgName configurations;
