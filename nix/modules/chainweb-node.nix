@@ -14,7 +14,7 @@ let
     --known-peer-info=YNo8pXthYQ9RQKv1bbpQf2R5LcLYA3ppx2BL2Hf8fIM@bootstrap-node:1789 \
     --log-level=info \
     --enable-mining-coordination \
-    --mining-public-key=f90ef46927f506c70b6a58fd322450a936311dc6ac91f4ec3d8ef949608dbf1f \
+    --mining-public-key=f89ef46927f506c70b6a58fd322450a936311dc6ac91f4ec3d8ef949608dbf1f \
     --header-stream \
     --rosetta \
     --allowReadsInLocal \
