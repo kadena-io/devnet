@@ -69,7 +69,9 @@ in {
         set $databackends ''';
         rewrite_by_lua_block {
           -- Derive the route from the request
-          local route = ngx.var.scheme .. "://" .. ngx.req.get_headers()["Host"]
+          -- If the request is coming from a proxy, use the X-Forwarded-Proto header to determine the scheme
+          local scheme = ngx.req.get_headers()["X-Forwarded-Proto"] or ngx.var.scheme
+          local route = scheme .. "://" .. ngx.req.get_headers()["Host"]
 
           -- Base64 encode the route
           local encoded = ngx.encode_base64(route)
