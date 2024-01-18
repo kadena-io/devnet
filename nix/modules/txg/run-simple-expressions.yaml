@@ -5,6 +5,11 @@ chainwebHosts:
   servicePort: 1848
 chainwebVersion: fast-development
 confirmationDepth: 6
+elasticSearchConfig:
+  esApiKey: null
+  esHost: localhost
+  esIndex: txg
+  esPort: 9200
 gasLimit: 600
 gasPrice: 1.0e-3
 isChainweb: true

@@ -108,11 +108,11 @@
         "hs-nix-infra": "hs-nix-infra"
       },
       "locked": {
-        "lastModified": 1700210972,
-        "narHash": "sha256-H03SIP4mIAeRdtkp5jE+cerPekjbnsB4zRJltoPeM/s=",
+        "lastModified": 1703156551,
+        "narHash": "sha256-I+Vjl+gX25su4akQ8k0VU8w/g2Kh748Yv2GXhr0yNwU=",
         "owner": "kadena-io",
         "repo": "chainweb-data",
-        "rev": "2d89a0167b2c8e0e8c91ba10e89aa23feec1c2db",
+        "rev": "6339a5adcf5973ea7a145ef33692517c72094183",
         "type": "github"
       },
       "original": {
@@ -154,11 +154,11 @@
         ]
       },
       "locked": {
-        "lastModified": 1701709833,
-        "narHash": "sha256-ctM9axAfyuI5Rbl+2E0fRJFv2jSr85GcgbeJ3M+SzJs=",
+        "lastModified": 1704835284,
+        "narHash": "sha256-tlqk/B3KZ9IOL2Egk68lvhGXtKuyTJUBtUgPq53+v0E=",
         "owner": "kadena-io",
         "repo": "chainweb-node",
-        "rev": "28764eb2dae323608ee2d4f17e984948455f04a1",
+        "rev": "e7f0ec1bf93f204b545d92e1d511e2f7058d5e60",
         "type": "github"
       },
       "original": {
@@ -217,11 +217,11 @@
         "pre-commit-hooks": "pre-commit-hooks"
       },
       "locked": {
-        "lastModified": 1702045862,
-        "narHash": "sha256-Cfey2TztpW9zCzW9OI/xTWQw+tkZjRZ0K9iRM2bNALk=",
+        "lastModified": 1704835383,
+        "narHash": "sha256-SoC0rYR9iHW0dVOEmxNEfa8vk9dTK86P5iXTgHafmwM=",
         "owner": "cachix",
         "repo": "devenv",
-        "rev": "2ff5c8bda714a0a78c11e4402bfb6dabeeddc582",
+        "rev": "18ef9849d1ecac7a9a7920eb4f2e4adcf67a8c3a",
         "type": "github"
       },
       "original": {
@@ -2814,11 +2814,11 @@
     },
     "nixpkgs_9": {
       "locked": {
-        "lastModified": 1701693815,
-        "narHash": "sha256-7BkrXykVWfkn6+c1EhFA3ko4MLi3gVG0p9G96PNnKTM=",
+        "lastModified": 1704842529,
+        "narHash": "sha256-OTeQA+F8d/Evad33JMfuXC89VMetQbsU4qcaePchGr4=",
         "owner": "NixOS",
         "repo": "nixpkgs",
-        "rev": "09ec6a0881e1a36c29d67497693a67a16f4da573",
+        "rev": "eabe8d3eface69f5bb16c18f8662a702f50c20d5",
         "type": "github"
       },
       "original": {
@@ -2851,11 +2851,11 @@
         "hs-nix-infra": "hs-nix-infra_5"
       },
       "locked": {
-        "lastModified": 1700861340,
-        "narHash": "sha256-8wgOaCaolhN1Qu149LXJ1k7V0mz/jDiHXYP0WqoQw7Y=",
+        "lastModified": 1704396303,
+        "narHash": "sha256-YX1QPo1+FdENcEchbh8NHGhI4mYedu2sr2LtaOvSeCk=",
         "owner": "kadena-io",
         "repo": "pact",
-        "rev": "495c8738acaa0157958ab23a06cd94abbc99d2d5",
+        "rev": "75ed61c8a0da3759af0eddacbd7d455defb6acea",
         "type": "github"
       },
       "original": {
@@ -2879,11 +2879,11 @@
         "nixpkgs-stable": "nixpkgs-stable"
       },
       "locked": {
-        "lastModified": 1688056373,
-        "narHash": "sha256-2+SDlNRTKsgo3LBRiMUcoEUb6sDViRNQhzJquZ4koOI=",
+        "lastModified": 1704725188,
+        "narHash": "sha256-qq8NbkhRZF1vVYQFt1s8Mbgo8knj+83+QlL5LBnYGpI=",
         "owner": "cachix",
         "repo": "pre-commit-hooks.nix",
-        "rev": "5843cf069272d92b60c3ed9e55b7a8989c01d4c7",
+        "rev": "ea96f0c05924341c551a797aaba8126334c505d2",
         "type": "github"
       },
       "original": {
@@ -3065,11 +3065,11 @@
         "hs-nix-infra": "hs-nix-infra_6"
       },
       "locked": {
-        "lastModified": 1701898637,
-        "narHash": "sha256-gPY6FVWlcFWnutBVm9OxtHXNQCtF901+3t4DWvlzhjM=",
+        "lastModified": 1704905402,
+        "narHash": "sha256-964j6gNLKMSJCEOrMHbsJucTIgEThhCsU8gXbYyBo0A=",
         "owner": "kadena-io",
         "repo": "txg",
-        "rev": "eb4592e2caca58aae7b048bb263afd84a8691b8a",
+        "rev": "8149fd28f8adc4b442c236668299202c40d096d7",
         "type": "github"
       },
       "original": {
