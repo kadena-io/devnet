@@ -49,6 +49,6 @@ in
       '';
 
     processes.ttyd.exec =
-      "${pkgs.ttyd}/bin/ttyd --interface 0.0.0.0 --url-arg --port 7681 ${generatedScript}";
+      "${pkgs.ttyd}/bin/ttyd --writable --interface 0.0.0.0 --url-arg --port 7681 ${generatedScript}";
   };
 }
