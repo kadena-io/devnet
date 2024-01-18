@@ -18,7 +18,11 @@ let
       } \
       server --port ${toString cfg.port} --serve-swagger-ui
   '';
+  psqlrc = pkgs.writeText ".psqlrc" ''
+    \x auto
+  '';
   psql-cwd = pkgs.writeShellScriptBin "psql-cwd" ''
+    export PSQLRC="${psqlrc}"
     ${pkgs.postgresql}/bin/psql "${cfg.dbstring}"
   '';
   chainweb-data-fill = pkgs.writeShellScriptBin "chainweb-data-fill" ''
