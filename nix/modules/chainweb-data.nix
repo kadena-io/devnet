@@ -91,6 +91,10 @@ in
         plv8
       ];
     };
+    init.devnet-init = ''
+      rm -f ${config.env.DEVENV_STATE}/postgres/postmaster.pid
+      rm -f ${config.env.DEVENV_STATE}/postgres/.s.PGSQL.5432.lock
+    '';
 
     services.http-server = {
       upstreams.chainweb-data = "server localhost:${toString cfg.port};";
