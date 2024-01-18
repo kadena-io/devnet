@@ -8,7 +8,7 @@
     chainweb-data.url = "github:kadena-io/chainweb-data";
     chainweb-mining-client.url = "github:kadena-io/chainweb-mining-client/enis/update-to-flakes-and-haskellNix";
     pact.url = "github:kadena-io/pact";
-    block-explorer.url = "github:kadena-io/block-explorer/enis/merge-netconfig-fix-to-devnet";
+    block-explorer.url = "github:kadena-io/block-explorer/devnet";
     nix-exe-bundle = { url = "github:3noch/nix-bundle-exe"; flake = false; };
   };
 
