@@ -85,7 +85,13 @@ in
     services.ttyd.commands.psql-cwd = "${psql-cwd}/bin/psql-cwd";
     services.ttyd.commands.chainweb-data-fill = "${chainweb-data-fill}/bin/chainweb-data-fill";
 
-    services.postgres.enable = true;
+    services.postgres = {
+      enable = true;
+      extensions = extensions: with extensions; [
+        plv8
+      ];
+    };
+
     services.http-server = {
       upstreams.chainweb-data = "server localhost:${toString cfg.port};";
       servers.devnet.extraConfig = ''
