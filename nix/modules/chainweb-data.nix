@@ -87,6 +87,7 @@ in
 
     services.postgres = {
       enable = true;
+      package = pkgs.postgresql_14;
       extensions = extensions: with extensions; [
         plv8
       ];
