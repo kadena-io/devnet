@@ -88,8 +88,8 @@ in
     services.postgres = {
       enable = true;
       package = pkgs.postgresql_14;
-      extensions = extensions: with extensions; [
-        plv8
+      extensions = extensions: with extensions; lists.flatten [
+        (optional pkgs.stdenv.isLinux plv8)
       ];
     };
     init.devnet-init = ''
