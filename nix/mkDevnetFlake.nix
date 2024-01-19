@@ -62,7 +62,6 @@ let
       #!${pkgs.runtimeShell}
       ${pkgs.dockerTools.shadowSetup}
 
-      mkdir /tmp
       chmod 777 /tmp
 
       # Nginx needs a nobody:nogroup
