@@ -10,7 +10,7 @@
     pact.url = "github:kadena-io/pact";
     chainweb-peers.url = "git+ssh://git@github.com/kadena-io/chainweb-peers";
     txg.url = "github:kadena-io/txg";
-    block-explorer.url = "github:kadena-io/block-explorer/enis/merge-netconfig-fix-to-devnet";
+    block-explorer.url = "github:kadena-io/block-explorer/devnet";
     nix-exe-bundle = { url = "github:3noch/nix-bundle-exe"; flake = false; };
   };
 

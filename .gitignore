@@ -4,3 +4,4 @@ db/
 # Nix-related
 result
 .devenv
+.envrc
