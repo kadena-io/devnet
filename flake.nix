@@ -167,6 +167,15 @@
           type = "app";
           program = (import nix/lib/develop-page.nix {inherit pkgs;}).outPath;
         };
+        apps.develop-sqlpage = {
+          type = "app";
+          program = (pkgs.writeShellScript "develop-sqlpage" ''
+            DEVNET_VARIANT="''${1:-container-default}"
+            export SQLPAGE_PORT_OVERRIDE=8091
+            ${pkgs.watchexec}/bin/watchexec --on-busy-update restart -- \
+              nix run --impure ".#$DEVNET_VARIANT/runSqlpage"
+          '').outPath;
+        };
         inherit configurations;
         overlays.default = overlay;
         lib = { inherit mkFlake bundleWithInfo; };

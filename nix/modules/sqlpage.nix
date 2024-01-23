@@ -4,7 +4,7 @@ with lib;
 
 let
   cfg = config.services.sqlpage;
-  workingDirectory = pkgs.runCommand "sqlpage-working-directory" {} ''
+  workingDirectory = pkgs.runCommand "sqlpage-working-directory" { allowSubstitutes = false; } ''
     mkdir -p $out
 
     # Assemble web_root from the options.services.sqlpage.pages configuration
@@ -29,6 +29,13 @@ let
     }
   '';
   port = toString cfg.port;
+  runSqlpage = pkgs.writeShellScript "run-sqlpage" ''
+    #!/usr/bin/env bash
+    export PORT=''${SQLPAGE_PORT_OVERRIDE:-${port}}
+    export DATABASE_URL=postgresql:///$USER?host=${config.env.PGDATA}
+    cd ${workingDirectory}
+    exec ${pkgs.sqlpage}/bin/sqlpage
+  '';
 in {
   options.services.sqlpage = with types; {
     enable = lib.mkEnableOption "SQLPage";
@@ -87,14 +94,6 @@ in {
       ;
     '';
 
-    processes.sqlpage = {
-      exec = "DATABASE_URL=postgresql:///$USER?host=${config.env.PGDATA} ${pkgs.sqlpage}/bin/sqlpage";
-      process-compose = {
-        working_dir = workingDirectory;
-        environment = [
-          "PORT=${port}"
-        ];
-      };
-    };
+    processes.sqlpage.exec = runSqlpage.outPath;
   };
 }
