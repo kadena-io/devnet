@@ -61,6 +61,7 @@
         nix/modules/chainweb-mining-client.nix
         nix/modules/http-server.nix
         nix/modules/ttyd.nix
+        nix/modules/sqlpage.nix
         nix/modules/landing-page/module.nix
         nix/modules/pact-cli.nix
         nix/modules/process-compose.nix
