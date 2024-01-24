@@ -77,6 +77,7 @@
         nix/modules/process-compose.nix
         nix/modules/devnet-mode.nix
         nix/modules/explorer.nix
+        nix/modules/show-es-output.nix
         nix/modules/utils.nix
         { sites.landing-page = devnetInfo; }
       ];
@@ -145,6 +146,7 @@
           services.chainweb-peers.enable = true;
           services.cut-checker.enable = true;
           services.txg.enable = true;
+          services.show-es-output.enable = true;
         };
         local = {
           imports = [minimal];
