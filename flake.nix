@@ -2,11 +2,11 @@
   inputs = {
     nixpkgs.url = "github:NixOS/nixpkgs/nixpkgs-unstable";
     flake-utils.url = "github:numtide/flake-utils";
+    flake-compat.url = "github:kadena-io/flake-compat";
     devenv.url = "github:cachix/devenv";
     chainweb-node.url = "github:kadena-io/chainweb-node";
     chainweb-data.url = "github:kadena-io/chainweb-data";
     chainweb-mining-client.url = "github:kadena-io/chainweb-mining-client/enis/update-to-flakes-and-haskellNix";
-    pact.url = "github:kadena-io/pact";
     block-explorer.url = "github:kadena-io/block-explorer/devnet";
     nix-exe-bundle = { url = "github:3noch/nix-bundle-exe"; flake = false; };
   };
@@ -18,29 +18,40 @@
     inputs.flake-utils.lib.eachDefaultSystem (system: let
       bundle = drv:
         let bundled = pkgs.callPackage inputs.nix-exe-bundle {} drv;
-        # We're exposing the bin contents in a new derivation because the bundling produces
-        # a /lib folder with duplicate files across different bundles, which causes problems
-        # while preparing the docker image root
-        in pkgs.runCommand "${bundled.name}-bin" {} ''
-          mkdir -p $out/bin
-          ln -s ${bundled}/bin/* $out/bin
-        '';
+            # We're exposing the bin contents in a new derivation because the bundling produces
+            # a /lib folder with duplicate files across different bundles, which causes problems
+            # while preparing the docker image root
+            bundledBin = pkgs.runCommand "${bundled.name}-bin" {} ''
+              mkdir -p $out/bin
+              ln -s ${bundled}/bin/* $out/bin
+            '';
+        in bundledBin // {
+          version = drv.version or drv.meta.version or null;
+        };
+      pact = let
+        cwnDefault = inputs.chainweb-node.packages.${system}.default;
+        pactMeta = cwnDefault.cached.meta.pact;
+        pactSrc = builtins.fetchGit { inherit (pactMeta.src) rev url; name = "source";};
+        pactFlake = (import inputs.flake-compat { src = pactSrc; }).defaultNix;
+        meta = {
+          flakeInfo.rev = pactMeta.src.rev;
+          flakeInfo.shortRev = builtins.substring 0 7 pactMeta.src.rev;
+          version = pactMeta.version;
+        };
+      in bundle pactFlake.packages.${system}.default // meta;
       get-flake-info = import nix/lib/get-flake-info.nix inputs;
       bundleWithInfo = inputs: let
         get-flake-info = import nix/lib/get-flake-info.nix inputs;
         in flakeName: let
           flakeInfo = get-flake-info flakeName;
           default = inputs.${flakeName}.packages.${system}.default;
-        in bundle default // {
-          inherit flakeInfo;
-          version = default.version or default.meta.version or null;
-        };
+        in bundle default // { inherit flakeInfo; };
       bundleWithInfo' = bundleWithInfo inputs;
       overlay = (self: super: {
         chainweb-data = bundleWithInfo' "chainweb-data";
         chainweb-mining-client = bundleWithInfo' "chainweb-mining-client";
         chainweb-node = bundleWithInfo' "chainweb-node";
-        pact = bundleWithInfo' "pact";
+        pact = pact;
         block-explorer = inputs.block-explorer.packages.x86_64-linux.static // {
           flakeInfo = get-flake-info "block-explorer";
         };
