@@ -4,7 +4,6 @@
     flake-utils.url = "github:numtide/flake-utils";
     devenv.url = "github:cachix/devenv";
     chainweb-node.url = "github:kadena-io/chainweb-node";
-    chainweb-node-l2.url = "github:kadena-io/chainweb-node/edmund/l2-spv-poc";
     chainweb-data.url = "github:kadena-io/chainweb-data";
     chainweb-mining-client.url = "github:kadena-io/chainweb-mining-client/enis/update-to-flakes-and-haskellNix";
     pact.url = "github:kadena-io/pact";
@@ -46,7 +45,6 @@
           flakeInfo = get-flake-info "block-explorer";
         };
       });
-      chainweb-node-l2 = bundleWithInfo' "chainweb-node-l2";
       pkgs = import nixpkgs { inherit system; overlays = [ overlay ]; };
       devnetInfo = {
         devnetVersion = "0.1.0";
@@ -139,9 +137,6 @@
           services.ttyd.enable = true;
           services.pact-cli.enable = true;
         };
-        use-cwn-l2 = {
-          services.chainweb-node.package = chainweb-node-l2;
-        };
         # Useful for iterating on nginx configurations
         http-only = {
           services.http-server.enable = true;
@@ -152,7 +147,6 @@
       in {
         default = local;
         container-default = container-common;
-        l2 = { imports = [container-common use-cwn-l2]; };
         minimal = minimal;
         inherit http-only;
       };
