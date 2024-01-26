@@ -36,5 +36,8 @@ in
     sites.landing-page.commands.pact-cli.markdown = ''
       * `pact`: Run the Pact interpreter.
     '';
+    sites.landing-page.container-api.
+      ${if cfg.working-directory == null then null else "folders"} = mkAfter
+        "- `${cfg.working-directory}`: The working directory of the `pact-cli` terminal";
   };
 }

@@ -18,7 +18,6 @@ in
       description = "Upstream configurations for the HTTP server.";
       example = { someapi = "server localhost:1848"; };
     };
-
     servers = mkOption {
       default = {};
       type = types.attrsOf (types.submodule {
@@ -44,6 +43,11 @@ in
         };
       });
       description = "Server blocks configurations.";
+    };
+    retry-after-duration = mkOption {
+      type = types.nullOr types.int;
+      default = null;
+      description = "Duration set to $retry-after when response status is 429.";
     };
     extraHttpConfig = mkOption {
       type = types.lines;
@@ -75,7 +79,15 @@ in
         }
       '') cfg.servers);
 
+      mapRetryAfter = optionalString (cfg.retry-after-duration != null) ''
+        map $status $retry_after {
+            default ''';
+            429 '${toString cfg.retry-after-duration}';
+        }
+      '';
+
       in indentString ''
+        ${mapRetryAfter}
 
         ${indentString cfg.extraHttpConfig}
 

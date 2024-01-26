@@ -71,6 +71,14 @@ in
         no additional migrations will be used.
       '';
     };
+    throttle = mkOption {
+      type = lib.types.bool;
+      default = false;
+      description = ''
+        Whether to throttle the chainweb-data endpoints. This is useful for
+        public deployments.
+      '';
+    };
   };
   config = mkIf cfg.enable {
     packages = [
@@ -89,23 +97,23 @@ in
     services.ttyd.commands.psql-cwd = "${psql-cwd}/bin/psql-cwd";
     services.ttyd.commands.chainweb-data-fill = "${chainweb-data-fill}/bin/chainweb-data-fill";
 
-    services.postgres = {
-      enable = true;
-      package = pkgs.postgresql_14;
-      extensions = extensions: with extensions; lists.flatten [
-        (optional pkgs.stdenv.isLinux plv8)
-      ];
-    };
-    init.devnet-init = ''
-      rm -f ${config.env.DEVENV_STATE}/postgres/postmaster.pid
-      rm -f ${config.env.DEVENV_STATE}/postgres/.s.PGSQL.5432.lock
-    '';
+    services.postgres.enable= true;
 
     services.http-server = {
       upstreams.chainweb-data = "server localhost:${toString cfg.port};";
+      extraHttpConfig = optionalString cfg.throttle ''
+        limit_req_zone $binary_remote_addr zone=cwd:10m rate=10r/s;
+      '';
+      retry-after-duration = 1;
       servers.devnet.extraConfig = ''
         location ~ /(stats$|coins$|cwd-spec|txs|richlist.csv$) {
           proxy_pass http://chainweb-data;
+          add_header Retry-After $retry_after always;
+
+          ${optionalString cfg.throttle ''
+            proxy_set_header Chainweb-Execution-Strategy Bounded;
+            limit_req zone=cwd burst=2;
+          ''}
         }
       '';
     };

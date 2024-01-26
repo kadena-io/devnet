@@ -2,12 +2,11 @@
   inputs = {
     nixpkgs.url = "github:NixOS/nixpkgs/nixpkgs-unstable";
     flake-utils.url = "github:numtide/flake-utils";
+    flake-compat.url = "github:kadena-io/flake-compat";
     devenv.url = "github:cachix/devenv";
     chainweb-node.url = "github:kadena-io/chainweb-node/hyperlane-spv";
-    chainweb-node-l2.url = "github:kadena-io/chainweb-node/edmund/l2-spv-poc";
     chainweb-data.url = "github:kadena-io/chainweb-data";
     chainweb-mining-client.url = "github:kadena-io/chainweb-mining-client/enis/update-to-flakes-and-haskellNix";
-    pact.url = "github:kadena-io/pact";
     block-explorer.url = "github:kadena-io/block-explorer/devnet";
     nix-exe-bundle = { url = "github:3noch/nix-bundle-exe"; flake = false; };
   };
@@ -19,34 +18,44 @@
     inputs.flake-utils.lib.eachDefaultSystem (system: let
       bundle = drv:
         let bundled = pkgs.callPackage inputs.nix-exe-bundle {} drv;
-        # We're exposing the bin contents in a new derivation because the bundling produces
-        # a /lib folder with duplicate files across different bundles, which causes problems
-        # while preparing the docker image root
-        in pkgs.runCommand "${bundled.name}-bin" {} ''
-          mkdir -p $out/bin
-          ln -s ${bundled}/bin/* $out/bin
-        '';
+            # We're exposing the bin contents in a new derivation because the bundling produces
+            # a /lib folder with duplicate files across different bundles, which causes problems
+            # while preparing the docker image root
+            bundledBin = pkgs.runCommand "${bundled.name}-bin" {} ''
+              mkdir -p $out/bin
+              ln -s ${bundled}/bin/* $out/bin
+            '';
+        in bundledBin // {
+          version = drv.version or drv.meta.version or null;
+        };
+      pact = let
+        cwnDefault = inputs.chainweb-node.packages.${system}.default;
+        pactMeta = cwnDefault.cached.meta.pact;
+        pactSrc = builtins.fetchGit { inherit (pactMeta.src) rev url; name = "source";};
+        pactFlake = (import inputs.flake-compat { src = pactSrc; }).defaultNix;
+        meta = {
+          flakeInfo.rev = pactMeta.src.rev;
+          flakeInfo.shortRev = builtins.substring 0 7 pactMeta.src.rev;
+          version = pactMeta.version;
+        };
+      in bundle pactFlake.packages.${system}.default // meta;
       get-flake-info = import nix/lib/get-flake-info.nix inputs;
       bundleWithInfo = inputs: let
         get-flake-info = import nix/lib/get-flake-info.nix inputs;
         in flakeName: let
           flakeInfo = get-flake-info flakeName;
           default = inputs.${flakeName}.packages.${system}.default;
-        in bundle default // {
-          inherit flakeInfo;
-          version = default.version or default.meta.version or null;
-        };
+        in bundle default // { inherit flakeInfo; };
       bundleWithInfo' = bundleWithInfo inputs;
       overlay = (self: super: {
         chainweb-data = bundleWithInfo' "chainweb-data";
         chainweb-mining-client = bundleWithInfo' "chainweb-mining-client";
         chainweb-node = bundleWithInfo' "chainweb-node";
-        pact = bundleWithInfo' "pact";
+        pact = pact;
         block-explorer = inputs.block-explorer.packages.x86_64-linux.static // {
           flakeInfo = get-flake-info "block-explorer";
         };
       });
-      chainweb-node-l2 = bundleWithInfo' "chainweb-node-l2";
       pkgs = import nixpkgs { inherit system; overlays = [ overlay ]; };
       devnetInfo = {
         devnetVersion = "0.1.0";
@@ -56,11 +65,13 @@
       modules = [
         # https://devenv.sh/reference/options/
         nix/modules/init.nix
+        nix/modules/postgres.nix
         nix/modules/chainweb-data.nix
         nix/modules/chainweb-node.nix
         nix/modules/chainweb-mining-client.nix
         nix/modules/http-server.nix
         nix/modules/ttyd.nix
+        nix/modules/sqlpage.nix
         nix/modules/landing-page/module.nix
         nix/modules/pact-cli.nix
         nix/modules/process-compose.nix
@@ -73,23 +84,11 @@
       };
       containerExtras = with pkgs.lib; {config, ...}:  {
         devenv.root = "/devnet";
-        services.chainweb-data.extra-migrations-folder = "/cwd-extra-migrations";
-        sites.landing-page.container-api.enable = true;
-        imports = [
-          (mkIf config.services.postgres.enable {
-            processes.socat.exec = ''
-              ${pkgs.socat}/bin/socat TCP-LISTEN:5432,reuseaddr,fork \
-                UNIX-CONNECT:${config.env.PGDATA}/.s.PGSQL.5432
-            '';
-            sites.landing-page.container-api.ports = mkAfter
-              "- `5432`: Postgresql";
-          })
-          (mkIf (config.services.pact-cli.enable && config.services.ttyd.enable) {
-            services.pact-cli.working-directory = "/pact-cli";
-            sites.landing-page.container-api.folders = mkAfter
-              "- `/pact-cli`: The working directory of the `pact-cli` terminal";
-          })
-        ];
+        services.chainweb-data.extra-migrations-folder = mkDefault "/cwd-extra-migrations";
+        sites.landing-page.container-api.enable = mkDefault true;
+        services.postgres.forward-socket-port = mkDefault 5432;
+        services.postgres.remove-lock-files = true;
+        services.pact-cli.working-directory = mkDefault "/pact-cli";
         sites.landing-page.container-api.folders = mkBefore "- `/data`: Persistent data folder";
         init.container-init = ''
           mkdir /cwd-extra-migrations
@@ -133,13 +132,16 @@
           services.chainweb-data.enable = true;
           sites.explorer.enable = true;
         };
+        crashnet = {
+          imports = [local];
+          services.postgres.forward-socket-port = null;
+          services.chainweb-node.throttle = true;
+          services.chainweb-data.throttle = true;
+        };
         container-common = {
           imports = [local];
           services.ttyd.enable = true;
           services.pact-cli.enable = true;
-        };
-        use-cwn-l2 = {
-          services.chainweb-node.package = chainweb-node-l2;
         };
         # Useful for iterating on nginx configurations
         http-only = {
@@ -150,8 +152,8 @@
         };
       in {
         default = local;
+        crashnet = crashnet;
         container-default = container-common;
-        l2 = { imports = [container-common use-cwn-l2]; };
         minimal = minimal;
         inherit http-only;
       };
@@ -165,6 +167,15 @@
         apps.develop-page = {
           type = "app";
           program = (import nix/lib/develop-page.nix {inherit pkgs;}).outPath;
+        };
+        apps.develop-sqlpage = {
+          type = "app";
+          program = (pkgs.writeShellScript "develop-sqlpage" ''
+            DEVNET_VARIANT="''${1:-container-default}"
+            export SQLPAGE_PORT_OVERRIDE=8091
+            ${pkgs.watchexec}/bin/watchexec --on-busy-update restart -- \
+              nix run --impure ".#$DEVNET_VARIANT/runSqlpage"
+          '').outPath;
         };
         inherit configurations;
         overlays.default = overlay;

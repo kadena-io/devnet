@@ -105,7 +105,13 @@ let
   };
   devConfig = (mkDevnet (modules ++ [
     containerExtras
-    ({ devnet.mode = "dev"; })
+    ({
+      devnet.mode = "dev";
+      services.sqlpage.enable = true;
+    })
+  ])).config;
+  sqlpageConfig = (mkDevnet (modules ++ [
+    ({ services.sqlpage.enable = true; })
   ])).config;
 in
 {
@@ -120,6 +126,10 @@ in
     default = {
       type = "app";
       program = packageRunner.outPath;
+    };
+    runSqlpage = {
+      type = "app";
+      program = sqlpageConfig.processes.sqlpage.exec;
     };
   };
   devShells.default = packageDevnet;
