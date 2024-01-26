@@ -157,6 +157,7 @@
         };
       in {
         default = local;
+        crashnet = local;
         container-default = container-common;
         minimal = minimal;
         inherit http-only;
