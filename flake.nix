@@ -132,6 +132,10 @@
           services.chainweb-data.enable = true;
           sites.explorer.enable = true;
         };
+        crashnet = {
+          imports = [local];
+          services.postgres.forward-socket-port = null;
+        };
         container-common = {
           imports = [local];
           services.ttyd.enable = true;
@@ -146,7 +150,7 @@
         };
       in {
         default = local;
-        crashnet = local;
+        crashnet = crashnet;
         container-default = container-common;
         minimal = minimal;
         inherit http-only;
