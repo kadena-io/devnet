@@ -65,6 +65,7 @@
       modules = [
         # https://devenv.sh/reference/options/
         nix/modules/init.nix
+        nix/modules/postgres.nix
         nix/modules/chainweb-data.nix
         nix/modules/chainweb-node.nix
         nix/modules/chainweb-mining-client.nix
@@ -83,23 +84,11 @@
       };
       containerExtras = with pkgs.lib; {config, ...}:  {
         devenv.root = "/devnet";
-        services.chainweb-data.extra-migrations-folder = "/cwd-extra-migrations";
-        sites.landing-page.container-api.enable = true;
-        imports = [
-          (mkIf config.services.postgres.enable {
-            processes.socat.exec = ''
-              ${pkgs.socat}/bin/socat TCP-LISTEN:5432,reuseaddr,fork \
-                UNIX-CONNECT:${config.env.PGDATA}/.s.PGSQL.5432
-            '';
-            sites.landing-page.container-api.ports = mkAfter
-              "- `5432`: Postgresql";
-          })
-          (mkIf (config.services.pact-cli.enable && config.services.ttyd.enable) {
-            services.pact-cli.working-directory = "/pact-cli";
-            sites.landing-page.container-api.folders = mkAfter
-              "- `/pact-cli`: The working directory of the `pact-cli` terminal";
-          })
-        ];
+        services.chainweb-data.extra-migrations-folder = mkDefault "/cwd-extra-migrations";
+        sites.landing-page.container-api.enable = mkDefault true;
+        services.postgres.forward-socket-port = mkDefault 5432;
+        services.postgres.remove-lock-files = true;
+        services.pact-cli.working-directory = mkDefault "/pact-cli";
         sites.landing-page.container-api.folders = mkBefore "- `/data`: Persistent data folder";
         init.container-init = ''
           mkdir /cwd-extra-migrations

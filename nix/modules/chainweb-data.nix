@@ -89,17 +89,7 @@ in
     services.ttyd.commands.psql-cwd = "${psql-cwd}/bin/psql-cwd";
     services.ttyd.commands.chainweb-data-fill = "${chainweb-data-fill}/bin/chainweb-data-fill";
 
-    services.postgres = {
-      enable = true;
-      package = pkgs.postgresql_14;
-      extensions = extensions: with extensions; lists.flatten [
-        (optional pkgs.stdenv.isLinux plv8)
-      ];
-    };
-    init.devnet-init = ''
-      rm -f ${config.env.DEVENV_STATE}/postgres/postmaster.pid
-      rm -f ${config.env.DEVENV_STATE}/postgres/.s.PGSQL.5432.lock
-    '';
+    services.postgres.enable= true;
 
     services.http-server = {
       upstreams.chainweb-data = "server localhost:${toString cfg.port};";
