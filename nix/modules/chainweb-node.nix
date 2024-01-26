@@ -22,6 +22,10 @@ let
     --disable-pow
     --service-port=${toString cfg.service-port}
   '';
+  throttleDirectives = lib.optionalString cfg.throttle ''
+    limit_req zone=cwn burst=2;
+    add_header Retry-After $retry_after always;
+  '';
 in
 {
   options.services.chainweb-node = {
@@ -36,6 +40,14 @@ in
       type = lib.types.port;
       default = 1848;
       description = "The port on which the chainweb-node service listens.";
+    };
+    throttle = lib.mkOption {
+      type = lib.types.bool;
+      default = false;
+      description = ''
+        Whether to throttle the chainweb-node endpoints. This is useful for
+        public deployments.
+      '';
     };
   };
   config = lib.mkIf cfg.enable {
@@ -82,16 +94,22 @@ in
         '';
         peer-api = "server localhost:1789;";
       };
+      extraHttpConfig = lib.optionalString cfg.throttle ''
+        limit_req_zone $binary_remote_addr zone=cwn:10m rate=10r/s;
+      '';
+      retry-after-duration = 1;
       servers.devnet = {
         extraConfig = ''
           location = /info {
             proxy_pass http://service-api;
+            ${throttleDirectives}
           }
           location = /health-check {
             proxy_pass http://service-api;
           }
           location ~ ^/chainweb/0.0/[0-9a-zA-Z\-\_]+/chain/[0-9]+/pact/ {
             proxy_pass http://service-api;
+            ${throttleDirectives}
           }
           location ~ ^/chainweb/0.0/[0-9a-zA-Z\-\_]+/chain/[0-9]+/(header|hash|branch|payload) {
             proxy_pass http://service-api;
@@ -107,6 +125,7 @@ in
           location ~ /chainweb/0.0/[0-9a-zA-Z\-\_]+/header/updates {
             proxy_buffering off;
             proxy_pass http://service-api;
+            ${throttleDirectives}
           }
 
           # Mining

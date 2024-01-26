@@ -135,6 +135,8 @@
         crashnet = {
           imports = [local];
           services.postgres.forward-socket-port = null;
+          services.chainweb-node.throttle = true;
+          services.chainweb-data.throttle = true;
         };
         container-common = {
           imports = [local];
