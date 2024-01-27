@@ -121,25 +121,25 @@
             }
           ];
         };
-      configurations = let
+      configurations = rec {
         minimal = {
           services.chainweb-node.enable = true;
           services.chainweb-mining-client.enable = true;
           services.http-server.enable = true;
         };
-        local = {
+        default = {
           imports = [minimal];
           services.chainweb-data.enable = true;
           sites.explorer.enable = true;
         };
         crashnet = {
-          imports = [local];
+          imports = [default];
           services.postgres.forward-socket-port = null;
           services.chainweb-node.throttle = true;
           services.chainweb-data.throttle = true;
         };
-        container-common = {
-          imports = [local];
+        container-default = {
+          imports = [default];
           services.ttyd.enable = true;
           services.pact-cli.enable = true;
         };
@@ -150,12 +150,6 @@
           processes.sleep.exec = "sleep 100";
           sites.explorer.enable = true;
         };
-      in {
-        default = local;
-        crashnet = crashnet;
-        container-default = container-common;
-        minimal = minimal;
-        inherit http-only;
       };
       mkCfgPos = cfgName:
         let pos = builtins.unsafeGetAttrPos cfgName configurations;
