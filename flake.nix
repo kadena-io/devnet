@@ -39,6 +39,9 @@
           version = pactMeta.version;
         };
       in bundle pactFlake.packages.${system}.default // meta;
+      kadena-graph = (import nix/graph {
+        inherit system pkgs;
+      }).kadena-graph;
       get-flake-info = import nix/lib/get-flake-info.nix inputs;
       bundleWithInfo = inputs: let
         get-flake-info = import nix/lib/get-flake-info.nix inputs;
@@ -55,6 +58,7 @@
         block-explorer = inputs.block-explorer.packages.x86_64-linux.static // {
           flakeInfo = get-flake-info "block-explorer";
         };
+        kadena-graph = kadena-graph;
       });
       pkgs = import nixpkgs { inherit system; overlays = [ overlay ]; };
       devnetInfo = {
@@ -78,6 +82,7 @@
         nix/modules/devnet-mode.nix
         nix/modules/explorer.nix
         nix/modules/utils.nix
+        nix/modules/graph.nix
         { sites.landing-page = devnetInfo; }
       ];
       packageExtras = {
