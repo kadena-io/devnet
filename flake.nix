@@ -135,6 +135,7 @@
         default = {
           imports = [minimal];
           services.chainweb-data.enable = true;
+          services.graph.enable = true;
           sites.explorer.enable = true;
         };
         crashnet = {
