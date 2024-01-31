@@ -89,7 +89,7 @@
       };
       containerExtras = with pkgs.lib; {config, ...}:  {
         devenv.root = "/devnet";
-        services.chainweb-data.extra-migrations-folder = mkDefault "/cwd-extra-migrations";
+        services.chainweb-data.extra-migrations-folders = [ "/cwd-extra-migrations" ];
         sites.landing-page.container-api.enable = mkDefault true;
         services.postgres.forward-socket-port = mkDefault 5432;
         services.postgres.remove-lock-files = true;
