@@ -4,18 +4,19 @@ let
   cfg = config.services.chainweb-data;
   absolutePgData = "$(${pkgs.coreutils}/bin/realpath ${config.env.PGDATA})";
   dbstring = "postgresql:///$USER?host=${absolutePgData}";
-  chainweb-data-with-conn-params = pkgs.writeShellScript "cwd-with-conn-params" ''
+  chainweb-data-with-common-params = pkgs.writeShellScript "cwd-with-common-params" ''
     ${cfg.package}/bin/chainweb-data \
-      --dbstring "${cfg.dbstring}" --service-host localhost "$@"
-  '' ;
-  start-chainweb-data = pkgs.writeShellScript "start-chainweb-data" ''
-    ${chainweb-data-with-conn-params} --migrate \
+      --dbstring "${cfg.dbstring}" --service-host localhost \
       ${optionalString (cfg.migrations-folder != null)
         "--migrations-folder ${cfg.migrations-folder}"
       } \
       ${optionalString (cfg.extra-migrations-folder != null)
         "--extra-migrations-folder ${cfg.extra-migrations-folder}"
       } \
+      "$@"
+  '' ;
+  start-chainweb-data = pkgs.writeShellScript "start-chainweb-data" ''
+    ${chainweb-data-with-common-params} --migrate \
       server --port ${toString cfg.port} --serve-swagger-ui
   '';
   psqlrc = pkgs.writeText ".psqlrc" ''
@@ -26,7 +27,7 @@ let
     ${pkgs.postgresql}/bin/psql "${cfg.dbstring}"
   '';
   chainweb-data-fill = pkgs.writeShellScriptBin "chainweb-data-fill" ''
-    ${chainweb-data-with-conn-params} fill --level debug
+    ${chainweb-data-with-common-params} --ignore-schema-diff fill --level debug
   '';
   links = flatten [
     "[Open API Spec](/cwd-spec/)"
