@@ -45,7 +45,7 @@ in {
     sites.landing-page.services.graph = {
       order = 8;
       markdown = ''
-        ### Graph
+        ### Graph ${config.lib.packageVersionInfoMd cfg.package}
         * [GraphQL](/graphql)
       '';
     };
