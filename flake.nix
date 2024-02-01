@@ -72,6 +72,7 @@
         nix/modules/txg.nix
         nix/modules/http-server.nix
         nix/modules/ttyd.nix
+        nix/modules/sqlpage.nix
         nix/modules/landing-page/module.nix
         nix/modules/pact-cli.nix
         nix/modules/process-compose.nix
@@ -186,6 +187,15 @@
         apps.develop-page = {
           type = "app";
           program = (import nix/lib/develop-page.nix {inherit pkgs;}).outPath;
+        };
+        apps.develop-sqlpage = {
+          type = "app";
+          program = (pkgs.writeShellScript "develop-sqlpage" ''
+            DEVNET_VARIANT="''${1:-container-default}"
+            export SQLPAGE_PORT_OVERRIDE=8091
+            ${pkgs.watchexec}/bin/watchexec --on-busy-update restart -- \
+              nix run --impure ".#$DEVNET_VARIANT/runSqlpage"
+          '').outPath;
         };
         inherit configurations;
         overlays.default = overlay;
