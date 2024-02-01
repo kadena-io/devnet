@@ -37,7 +37,7 @@ in {
      };
      index-name = lib.mkOption {
        type = lib.types.str;
-       default = "txg";
+       default = "chainweb-fast-development-txg";
      };
      sleep-interval = lib.mkOption {
        type = lib.types.int;
@@ -50,6 +50,7 @@ in {
        exec = "${pkgs.expect}/bin/unbuffer ${show-es-output}";
        process-compose.depends_on = {
          elasticsearch.condition = "process_healthy";
+         txg.condition = "process_healthy";
        };
      };
    };

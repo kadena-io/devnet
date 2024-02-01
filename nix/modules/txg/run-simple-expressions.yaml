@@ -10,6 +10,7 @@ elasticSearchConfig:
   esHost: localhost
   esIndex: txg
   esPort: 9200
+  esDelay: 10000000
 gasLimit: 600
 gasPrice: 1.0e-3
 isChainweb: true

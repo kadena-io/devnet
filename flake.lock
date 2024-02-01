@@ -275,11 +275,11 @@
         "hs-nix-infra": "hs-nix-infra_3"
       },
       "locked": {
-        "lastModified": 1701898615,
-        "narHash": "sha256-qE0furvy63O+4AN4miZ6GPa2SXC9esQxAXR2/t5R5Is=",
+        "lastModified": 1706802789,
+        "narHash": "sha256-Dssz/O0TLAQFqk0ZfmC3GspFJf9VAEE00F1ZVg1v9hQ=",
         "ref": "refs/heads/master",
-        "rev": "0436495ef497086aa953e15681256cf051684394",
-        "revCount": 65,
+        "rev": "99a286c9d5929403e2e6ebd1b013a347914fd09a",
+        "revCount": 68,
         "type": "git",
         "url": "ssh://git@github.com/kadena-io/chainweb-peers"
       },
@@ -3329,11 +3329,11 @@
         "hs-nix-infra": "hs-nix-infra_5"
       },
       "locked": {
-        "lastModified": 1704905402,
-        "narHash": "sha256-964j6gNLKMSJCEOrMHbsJucTIgEThhCsU8gXbYyBo0A=",
+        "lastModified": 1706823466,
+        "narHash": "sha256-JtN3MkDlT0BUCIbjlDCJ9wwwkf3pTSZ5r/FQVt1ivWk=",
         "owner": "kadena-io",
         "repo": "txg",
-        "rev": "8149fd28f8adc4b442c236668299202c40d096d7",
+        "rev": "39c2c9bd510c4b11d523be3646107c5c01eb34d3",
         "type": "github"
       },
       "original": {

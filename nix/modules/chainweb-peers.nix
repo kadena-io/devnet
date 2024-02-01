@@ -23,7 +23,6 @@ let
     #!/bin/bash
     # RESPONSE=$(curl -sk -XPOST https://localhost:1789/chainweb/0.0/fast-development/chain/0/mempool/getPending)
     # echo $RESPONSE
-    sleep 20s
     ${pkgs.tx-traces}/bin/tx-traces \
       --config-file ${./chainweb-peers/tx-traces.yaml} \
       --peer-registry-connection '${peerRegistryConnection}' \
@@ -35,45 +34,10 @@ let
     while true; do
       echo "Starting chainweb-peers..."
       ${start-chainweb-peers}
-      echo "chainweb-peers exited. Restarting in 10s..."
-      sleep 60s
+      echo "chainweb-peers exited. Restarting in 30s..."
+      sleep 30s
     done
   '';
-  checkSqliteScript = pkgs.writeShellScript "check_sqlite.sh" ''
-    #!/bin/bash
-
-    DB_FILE="${databasePath}"
-    RETRIES=100 Replace with the number of desired retries
-    TOTAL_DURATION_MINS=60  # Replace with the total duration in minutes
-    SLEEP_INTERVAL=$((TOTAL_DURATION_MINS * 60 / RETRIES))
-
-    for ((i=1; i<=RETRIES; i++)); do
-      # Check if the SQLite file exists
-      if [ -f "$DB_FILE" ]; then
-          # Check for the existence of specific tables and their state
-          echo "Checking SQLite file $DB_FILE for tables and rows..."
-          TABLE_CHECK=$(sqlite3 $DB_FILE "SELECT name FROM sqlite_master WHERE type='table' AND name='peers';")
-          if [ -n "$TABLE_CHECK" ]; then
-             # check if number of rows is greater than 0
-             echo "Checking for rows in table peers..."
-             ROW_COUNT=$(sqlite3 $DB_FILE "SELECT COUNT(*) FROM peers;")
-             if [ "$ROW_COUNT" -gt 0 ]; then
-                 echo "Checks passed."
-                 exit 0
-             fi
-          fi
-      fi
-
-      # If not the last retry, sleep for the interval
-      if [ $i -ne $RETRIES ]; then
-          sleep $SLEEP_INTERVAL
-      fi
-    done
-
-    echo "Checks failed after $RETRIES retries."
-    exit 1
-  '';
-
 in
 {
   options.services.chainweb-peers = {
@@ -90,12 +54,12 @@ in
     };
     processes.tx-traces = {
       exec = "${pkgs.expect}/bin/unbuffer ${start-tx-traces}";
-      process-compose.depends_on = {
-        chainweb-node.condition = "process_healthy";
-        # These two options below don't seem to work as expected
-        # This will work so long as the sqlite file is not deleted between runs of the service
-        # chainweb-peers.condition = "service_started";
-        # script.condition = checkSqliteScript;
+      process-compose = {
+        depends_on = {
+          chainweb-node.condition = "process_healthy";
+          chainweb-peers.condition = "service_started";
+          txg.condition = "process_healthy";
+        };
       };
     };
 
