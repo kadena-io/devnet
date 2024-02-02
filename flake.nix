@@ -1,6 +1,13 @@
 {
   inputs = {
     nixpkgs.url = "github:NixOS/nixpkgs/nixpkgs-unstable";
+    kadena-nix = {
+      url = "github:kadena-io/kadena-nix";
+      inputs = {
+        nixpkgs.follows = "nixpkgs";
+        flake-utils.follows = "flake-utils";
+      };
+    };
     flake-utils.url = "github:numtide/flake-utils";
     flake-compat.url = "github:kadena-io/flake-compat";
     devenv.url = "github:cachix/devenv";
@@ -39,9 +46,6 @@
           version = pactMeta.version;
         };
       in bundle pactFlake.packages.${system}.default // meta;
-      kadena-graph = (import nix/graph {
-        inherit system pkgs;
-      }).kadena-graph;
       get-flake-info = import nix/lib/get-flake-info.nix inputs;
       bundleWithInfo = inputs: let
         get-flake-info = import nix/lib/get-flake-info.nix inputs;
@@ -58,7 +62,7 @@
         block-explorer = inputs.block-explorer.packages.x86_64-linux.static // {
           flakeInfo = get-flake-info "block-explorer";
         };
-        kadena-graph = kadena-graph;
+        kadena-graph = inputs.kadena-nix.packages.${system}.kadena-graph;
       });
       pkgs = import nixpkgs { inherit system; overlays = [ overlay ]; };
       devnetInfo = {

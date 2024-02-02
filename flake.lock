@@ -1002,6 +1002,29 @@
         "type": "github"
       }
     },
+    "kadena-nix": {
+      "inputs": {
+        "flake-utils": [
+          "flake-utils"
+        ],
+        "nixpkgs": [
+          "nixpkgs"
+        ]
+      },
+      "locked": {
+        "lastModified": 1706811348,
+        "narHash": "sha256-Ri7yRuKrGddIi3W02m1eh3UYDdYyR3Ar1YbQdmdn/bs=",
+        "owner": "kadena-io",
+        "repo": "kadena-nix",
+        "rev": "5531de1607c77d526efc4f0cdab03508acc2116a",
+        "type": "github"
+      },
+      "original": {
+        "owner": "kadena-io",
+        "repo": "kadena-nix",
+        "type": "github"
+      }
+    },
     "lowdown-src": {
       "flake": false,
       "locked": {
@@ -1333,6 +1356,7 @@
         "devenv": "devenv",
         "flake-compat": "flake-compat_8",
         "flake-utils": "flake-utils_5",
+        "kadena-nix": "kadena-nix",
         "nix-exe-bundle": "nix-exe-bundle",
         "nixpkgs": "nixpkgs_6"
       }
