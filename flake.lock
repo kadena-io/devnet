@@ -3329,11 +3329,11 @@
         "hs-nix-infra": "hs-nix-infra_5"
       },
       "locked": {
-        "lastModified": 1706823466,
-        "narHash": "sha256-JtN3MkDlT0BUCIbjlDCJ9wwwkf3pTSZ5r/FQVt1ivWk=",
+        "lastModified": 1706899983,
+        "narHash": "sha256-Zl724beJhEp5A356pbJQWxRCUkpmZ9g284SerA6K+Q8=",
         "owner": "kadena-io",
         "repo": "txg",
-        "rev": "39c2c9bd510c4b11d523be3646107c5c01eb34d3",
+        "rev": "539ae0e32418c84d4bb62a6024196774c20d5406",
         "type": "github"
       },
       "original": {
