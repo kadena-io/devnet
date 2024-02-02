@@ -139,7 +139,6 @@
         default = {
           imports = [minimal];
           services.chainweb-data.enable = true;
-          services.graph.enable = true;
           sites.explorer.enable = true;
         };
         crashnet = {
@@ -152,6 +151,10 @@
           imports = [default];
           services.ttyd.enable = true;
           services.pact-cli.enable = true;
+        };
+        graph = {
+          imports = [container-default];
+          services.graph.enable = true;
         };
         # Useful for iterating on nginx configurations
         http-only = {
