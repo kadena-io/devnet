@@ -6,8 +6,7 @@ let
     ${pkgs.chainweb-mining-client}/bin/chainweb-mining-client \
     --public-key=f89ef46927f506c70b6a58fd322450a936311dc6ac91f4ec3d8ef949608dbf1f \
     --node=127.0.0.1:1848 \
-    --worker=constant-delay \
-    --constant-delay-block-time=5 \
+    --worker=on-demand \
     --thread-count=1 \
     --log-level=info \
     --no-tls
@@ -25,6 +24,25 @@ in
         depends_on.chainweb-node.condition = "process_healthy";
       };
     };
-
+    services.http-server = {
+      upstreams.chainweb-mining-client = "server localhost:1789;";
+      servers.devnet.extraConfig = ''
+        location = /mining-client {
+          proxy_pass http://chainweb-mining-client;
+          proxy_buffering off;
+        }
+      '';
+    };
+    sites.landing-page.services.chainweb-mining-client = {
+    order = 8;
+    markdown = ''
+      ### Mining Client
+      * [Mining client](/mining-client)
+    '';
   };
+  sites.landing-page.container-api.ports =
+    "- `1789`: Mining Client API port";
+  };
+ 
+  
 }
