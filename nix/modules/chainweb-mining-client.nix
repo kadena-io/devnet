@@ -7,6 +7,7 @@ let
     --public-key=f89ef46927f506c70b6a58fd322450a936311dc6ac91f4ec3d8ef949608dbf1f \
     --node=127.0.0.1:1848 \
     --worker=on-demand \
+    --on-demand-port=1790 \
     --thread-count=1 \
     --log-level=info \
     --no-tls
@@ -25,10 +26,10 @@ in
       };
     };
     services.http-server = {
-      upstreams.chainweb-mining-client = "server localhost:1789;";
+      upstreams.chainweb-mining-client = "server localhost:1790;";
       servers.devnet.extraConfig = ''
-        location = /mining-client {
-          proxy_pass http://chainweb-mining-client;
+        location = /make-blocks {
+          proxy_pass http://chainweb-mining-client/make-blocks;
           proxy_buffering off;
         }
       '';
@@ -36,12 +37,12 @@ in
     sites.landing-page.services.chainweb-mining-client = {
     order = 8;
     markdown = ''
-      ### Mining Client
-      * [Mining client](/mining-client)
+      ### On-Demand Mining
+      * [Make blocks](/make-blocks)
     '';
   };
   sites.landing-page.container-api.ports =
-    "- `1789`: Mining Client API port";
+    "- `1790`: On-Demand Mining API";
   };
  
   
