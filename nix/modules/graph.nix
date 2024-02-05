@@ -46,7 +46,13 @@ in {
       order = 8;
       markdown = ''
         ### Graph ${config.lib.packageVersionInfoMd cfg.package}
-        * [GraphQL](/graphql)
+
+        Kadena GraphQL uses chainweb-data's database and various chainweb-node
+        endpoints to provide a GraphQL interface to the Kadena blockchain data.
+        The service is running at port `${port}`, however the HTTP API is configured
+        to proxy the GraphQL endpoint at the `/graphql` route.
+
+        * Interactive [GraphQL Yoga](/graphql) interface
       '';
     };
     sites.landing-page.container-api.ports =
