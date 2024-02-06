@@ -141,15 +141,19 @@
           services.chainweb-mining-client.enable = true;
           services.http-server.enable = true;
         };
+        on-demand-minimal = {
+          imports = [minimal];
+          services.chainweb-mining-client.worker = "on-demand";
+        };
         default = {
           imports = [minimal];
           services.chainweb-data.enable = true;
-          sites.explorer.enable = 
+          sites.explorer.enable =
             # Enable the explorer only on Linux (which includes all containers)
             # the reason is nginx+lua isn't compiling on darwin as of the current
-            # nixpkgs version we pin. We can remove this once nginx+lua gets fixed 
+            # nixpkgs version we pin. We can remove this once nginx+lua gets fixed
             # on a future nixpkgs update
-            pkgs.lib.mkIf (pkgs.hostPlatform.isLinux) 
+            pkgs.lib.mkIf (pkgs.hostPlatform.isLinux)
               true;
         };
         crashnet = {
