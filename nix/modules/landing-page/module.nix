@@ -54,7 +54,7 @@ let
     mkdir -p $out
     hash=$(basename $out | cut -d'-' -f1)
     ${pkgs.mustache-go}/bin/mustache \
-      ${builtins.toFile "index-md-input.json" (builtins.toJSON indexArgs)} \
+      ${pkgs.writeText "index-md-input.json" (builtins.toJSON indexArgs)} \
       ${./index.md.mustache} \
       > index.md
 
