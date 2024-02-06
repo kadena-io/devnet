@@ -62,10 +62,12 @@
         block-explorer = inputs.block-explorer.packages.x86_64-linux.static // {
           flakeInfo = get-flake-info "block-explorer";
         };
-        kadena-graph = with inputs.kadena-nix.packages.${system}; kadena-graph // {
-          flakeInfo.revLink = with kadena-graph;
-            "https://npmjs.com/package/${packageName}/v/${version}";
-        };
+        kadena-graph = let
+          inherit (inputs.kadena-nix.packages.${system}) kadena-graph;
+          inherit (kadena-graph) packageName version;
+          flakeInfo.revLink = "https://npmjs.com/package/${packageName}/v/${version}";
+          in kadena-graph // { inherit flakeInfo; }
+          ;
       });
       pkgs = import nixpkgs { inherit system; overlays = [ overlay ]; };
       devnetInfo = {
