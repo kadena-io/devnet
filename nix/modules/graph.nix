@@ -31,6 +31,7 @@ in {
       exec = ''DATABASE_URL="${dbstring}"  ${cfg.package}/bin/kadena-graph'';
       process-compose.environment = [
         "PORT=${port}"
+        "PRISMA_LOGGING_ENABLED=true"
       ];
     };
     services.chainweb-data.extra-migrations-folders = [
