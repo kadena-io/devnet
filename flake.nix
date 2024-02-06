@@ -1,6 +1,13 @@
 {
   inputs = {
     nixpkgs.url = "github:NixOS/nixpkgs/nixpkgs-unstable";
+    kadena-nix = {
+      url = "github:kadena-io/kadena-nix";
+      inputs = {
+        nixpkgs.follows = "nixpkgs";
+        flake-utils.follows = "flake-utils";
+      };
+    };
     flake-utils.url = "github:numtide/flake-utils";
     flake-compat.url = "github:kadena-io/flake-compat";
     devenv.url = "github:cachix/devenv";
@@ -64,6 +71,12 @@
         block-explorer = inputs.block-explorer.packages.x86_64-linux.static // {
           flakeInfo = get-flake-info "block-explorer";
         };
+        kadena-graph = let
+          inherit (inputs.kadena-nix.packages.${system}) kadena-graph;
+          inherit (kadena-graph) packageName version;
+          flakeInfo.revLink = "https://npmjs.com/package/${packageName}/v/${version}";
+          in kadena-graph // { inherit flakeInfo; }
+          ;
       });
       pkgs = import nixpkgs { inherit system; overlays = [ overlay ]; };
       devnetInfo = {
@@ -91,13 +104,14 @@
         nix/modules/explorer.nix
         nix/modules/show-es-output.nix
         nix/modules/utils.nix
+        nix/modules/graph.nix
         { sites.landing-page = devnetInfo; }
       ];
       packageExtras = {
       };
       containerExtras = with pkgs.lib; {config, ...}:  {
         devenv.root = "/devnet";
-        services.chainweb-data.extra-migrations-folder = mkDefault "/cwd-extra-migrations";
+        services.chainweb-data.extra-migrations-folders = [ "/cwd-extra-migrations" ];
         sites.landing-page.container-api.enable = mkDefault true;
         services.postgres.forward-socket-port = mkDefault 5432;
         services.postgres.remove-lock-files = true;
@@ -148,6 +162,10 @@
           services.txg.enable = true;
           services.show-es-output.enable = true;
         };
+        on-demand-minimal = {
+          imports = [minimal];
+          services.chainweb-mining-client.worker = "on-demand";
+        };
         default = {
           imports = [minimal];
           services.chainweb-data.enable = true;
@@ -169,6 +187,10 @@
           imports = [default];
           services.ttyd.enable = true;
           services.pact-cli.enable = true;
+        };
+        graph = {
+          imports = [container-default];
+          services.graph.enable = true;
         };
         # Useful for iterating on nginx configurations
         http-only = {
