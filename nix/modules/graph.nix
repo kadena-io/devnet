@@ -23,7 +23,7 @@ in {
       '';
     };
   };
-  config = {
+  config = mkIf cfg.enable {
     packages = [cfg.package pkgs.openssl];
     processes.graph = {
       # DATABASE_URL needs to be a part of the exec, because it interpolates the
