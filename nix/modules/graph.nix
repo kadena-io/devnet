@@ -25,11 +25,14 @@ in {
   };
   config = {
     packages = [cfg.package pkgs.openssl];
-    processes.graph.exec = ''
-      DATABASE_URL="${dbstring}" \
-      PORT=${port} \
-      ${cfg.package}/bin/kadena-graph
-    '';
+    processes.graph = {
+      # DATABASE_URL needs to be a part of the exec, because it interpolates the
+      # username and the absolute path to the PGDATA directory.
+      exec = ''DATABASE_URL="${dbstring}"  ${cfg.package}/bin/kadena-graph'';
+      process-compose.environment = [
+        "PORT=${port}"
+      ];
+    };
     services.chainweb-data.extra-migrations-folders = [
       "${cfg.package}/lib/node_modules/@kadena/graph/cwd-extra-migrations/"
     ];
