@@ -10,10 +10,10 @@ let
     --worker=${cfg.worker} \
     ${optionalString (cfg.on-demand-port != null)
       "--on-demand-port=${on-demand-port}"
-    }\
+    } \
     ${optionalString (cfg.constant-delay-block-time != null)
       "--constant-delay-block-time=${toString cfg.constant-delay-block-time}"
-    }\
+    } \
     --thread-count=1 \
     --log-level=info \
     --no-tls
