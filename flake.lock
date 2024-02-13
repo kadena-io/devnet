@@ -71,11 +71,11 @@
         ]
       },
       "locked": {
-        "lastModified": 1706527705,
-        "narHash": "sha256-CwPGlrSnIgHt2EEZ82s1Pb4tr/4EyzWCsQYRxdejnaM=",
+        "lastModified": 1707818027,
+        "narHash": "sha256-n3kWvZucCflkp1IhTs9UzUJ9RxljxpzPjYwSVFc9Ch4=",
         "owner": "kadena-io",
         "repo": "chainweb-node",
-        "rev": "9daa58437eb244317a2df28b569993ba5ab229fe",
+        "rev": "2937f04b56f4a6dea52fbc0cad7637ae097173ef",
         "type": "github"
       },
       "original": {
@@ -444,11 +444,11 @@
     "hackage_3": {
       "flake": false,
       "locked": {
-        "lastModified": 1696379114,
-        "narHash": "sha256-dtax/ci3JfYvR2lLsvpvC6b3NCoEGZLrDH21/2svTps=",
+        "lastModified": 1707092608,
+        "narHash": "sha256-sN3NqWrAz9nGSQzWnrDALbA6oVgQ3n19zY+6hLXBYko=",
         "owner": "input-output-hk",
         "repo": "hackage.nix",
-        "rev": "21eae6f46c91831741496101e541e628aadecd98",
+        "rev": "5c4bbb4f270e26905f0b9cf0ed8ca7a224dc9c82",
         "type": "github"
       },
       "original": {
