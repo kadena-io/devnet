@@ -1,5 +1,5 @@
 chainweb:
-  chainwebVersion: development
+  chainwebVersion: fast-development
   allowReadsInLocal: true
   headerStream: true
   throttling:
