@@ -171,6 +171,10 @@
           imports = [container-default];
           services.graph.enable = true;
         };
+        crashnet-graph = {
+          imports = [crashnet];
+          services.graph.enable = true;
+        };
         # Useful for iterating on nginx configurations
         http-only = {
           services.http-server.enable = true;
