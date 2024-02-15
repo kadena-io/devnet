@@ -32,7 +32,7 @@ in {
     '';
     services.http-server.servers.devnet.extraConfig = ''
       location ~ ^/explorer/?$ {
-          add_header Content-Type text/html;
+          default_type text/html;
           return 200 '<html><head><meta http-equiv="refresh" content="0;url=/explorer/fast-development" /></head></html>';
       }
 
