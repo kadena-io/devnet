@@ -85,10 +85,10 @@ in
         is configured to proxy requests to this port.
       '';
     };
-    sites.landing-page.container-api.ports = ''
-      - `${toString cfg.service-port}`: Chainweb node's service port
-      - `${toString cfg.p2p-port}`: Chainweb node's p2p API port
-    '';
+    sites.landing-page.container-api.ports = lib.concatStringsSep "\n" [
+      "- `${toString cfg.service-port}`: Chainweb node's service port"
+      "- `${toString cfg.p2p-port}`: Chainweb node's p2p API port"
+    ];
     sites.landing-page.commands.chainweb-node.markdown = ''
       * `cwtool`: A collection of tools that are helpful for maintaining, testing, and debugging Chainweb
     '';
