@@ -1,6 +1,7 @@
 {
   inputs = {
-    nixpkgs.url = "github:NixOS/nixpkgs/nixpkgs-unstable";
+    nixpkgs.url = "github:NixOS/nixpkgs/23.11";
+    nixpkgs-unstable.url = "github:NixOS/nixpkgs/nixos-unstable";
     kadena-nix = {
       url = "github:kadena-io/kadena-nix";
       inputs = {
@@ -70,6 +71,7 @@
           ;
       });
       pkgs = import nixpkgs { inherit system; overlays = [ overlay ]; };
+      pkgs-unstable = inputs.nixpkgs-unstable.legacyPackages.${system};
       devnetInfo = {
         devnetVersion = "0.1.0";
         devnetRepo = "https://github.com/kadena-io/devnet";
@@ -92,7 +94,10 @@
         nix/modules/explorer.nix
         nix/modules/utils.nix
         nix/modules/graph.nix
-        { sites.landing-page = devnetInfo; }
+        {
+          sites.landing-page = devnetInfo;
+          process-managers.process-compose.package = pkgs-unstable.process-compose;
+        }
       ];
       packageExtras = {
       };
