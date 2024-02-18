@@ -1239,22 +1239,6 @@
         "type": "github"
       }
     },
-    "nixpkgs-unstable_4": {
-      "locked": {
-        "lastModified": 1707956935,
-        "narHash": "sha256-ZL2TrjVsiFNKOYwYQozpbvQSwvtV/3Me7Zwhmdsfyu4=",
-        "owner": "NixOS",
-        "repo": "nixpkgs",
-        "rev": "a4d4fe8c5002202493e87ec8dbc91335ff55552c",
-        "type": "github"
-      },
-      "original": {
-        "owner": "NixOS",
-        "ref": "nixos-unstable",
-        "repo": "nixpkgs",
-        "type": "github"
-      }
-    },
     "nixpkgs_2": {
       "locked": {
         "lastModified": 1669833724,
@@ -1363,6 +1347,29 @@
         "type": "github"
       }
     },
+    "process-compose": {
+      "inputs": {
+        "flake-utils": [
+          "flake-utils"
+        ],
+        "nixpkgs": [
+          "nixpkgs"
+        ]
+      },
+      "locked": {
+        "lastModified": 1707499191,
+        "narHash": "sha256-8covZ7lP5poGyKVn5EEAeAYGPttplaXVmKSf0mm6O8U=",
+        "owner": "F1bonacc1",
+        "repo": "process-compose",
+        "rev": "b7989c77b6edb255140e236cc2793856a3808a61",
+        "type": "github"
+      },
+      "original": {
+        "owner": "F1bonacc1",
+        "repo": "process-compose",
+        "type": "github"
+      }
+    },
     "root": {
       "inputs": {
         "block-explorer": "block-explorer",
@@ -1375,7 +1382,7 @@
         "kadena-nix": "kadena-nix",
         "nix-exe-bundle": "nix-exe-bundle",
         "nixpkgs": "nixpkgs_6",
-        "nixpkgs-unstable": "nixpkgs-unstable_4"
+        "process-compose": "process-compose"
       }
     },
     "systems": {

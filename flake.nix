@@ -1,7 +1,6 @@
 {
   inputs = {
     nixpkgs.url = "github:NixOS/nixpkgs/23.11";
-    nixpkgs-unstable.url = "github:NixOS/nixpkgs/nixos-unstable";
     kadena-nix = {
       url = "github:kadena-io/kadena-nix";
       inputs = {
@@ -17,6 +16,10 @@
     chainweb-mining-client.url = "github:kadena-io/chainweb-mining-client/enis/update-to-flakes-and-haskellNix";
     block-explorer.url = "github:kadena-io/block-explorer/devnet";
     nix-exe-bundle = { url = "github:3noch/nix-bundle-exe"; flake = false; };
+    process-compose = {
+      url = "github:F1bonacc1/process-compose";
+      inputs = { nixpkgs.follows = "nixpkgs"; flake-utils.follows = "flake-utils"; };
+    };
   };
 
   outputs = { self
@@ -71,7 +74,6 @@
           ;
       });
       pkgs = import nixpkgs { inherit system; overlays = [ overlay ]; };
-      pkgs-unstable = inputs.nixpkgs-unstable.legacyPackages.${system};
       devnetInfo = {
         devnetVersion = "0.1.0";
         devnetRepo = "https://github.com/kadena-io/devnet";
@@ -96,7 +98,8 @@
         nix/modules/graph.nix
         {
           sites.landing-page = devnetInfo;
-          process-managers.process-compose.package = pkgs-unstable.process-compose;
+          process-managers.process-compose.package =
+            inputs.process-compose.packages.${system}.process-compose;
         }
       ];
       packageExtras = {
