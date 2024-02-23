@@ -33,7 +33,7 @@ in {
     services.http-server.servers.devnet.extraConfig = ''
       location ~ ^/explorer/?$ {
           default_type text/html;
-          return 200 '<html><head><meta http-equiv="refresh" content="0;url=/explorer/fast-development" /></head></html>';
+          return 200 '<html><head><meta http-equiv="refresh" content="0;url=/explorer/development" /></head></html>';
       }
 
       location /explorer/ {
@@ -80,7 +80,7 @@ in {
 
           local databackends = string.format([[
             {
-              "fast-development": {
+              "development": {
                 "p2p": "%s",
                 "service": "%s",
                 "data": "%s"

@@ -1,5 +1,5 @@
 chainweb:
-  chainwebVersion: fast-development
+  chainwebVersion: development
   throttling:
     local: 10000
     mining: 10000
