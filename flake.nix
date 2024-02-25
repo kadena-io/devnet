@@ -72,6 +72,7 @@
           flakeInfo.revLink = "https://npmjs.com/package/${packageName}/v/${version}";
           in kadena-graph // { inherit flakeInfo; }
           ;
+        mining-trigger = pkgs.haskellPackages.callCabal2nix "mining-trigger" nix/pkgs/mining-trigger {};
       });
       pkgs = import nixpkgs { inherit system; overlays = [ overlay ]; };
       devnetInfo = {
@@ -211,6 +212,7 @@
               nix run --impure ".#$DEVNET_VARIANT/runSqlpage"
           '').outPath;
         };
+        packages.mining-trigger = pkgs.mining-trigger;
         inherit configurations;
         overlays.default = overlay;
         lib = { inherit mkFlake bundleWithInfo; };

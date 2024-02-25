@@ -1,0 +1,20 @@
+cabal-version:       2.4
+name:                mining-trigger
+version:             0.1.0.0
+description:         Trigger mining on a Kadena devnet node
+license:             BSD-3-Clause
+author:              Enis Bayramoglu
+maintainer:          enis@kadena.io
+build-type:          Simple
+
+executable mining-trigger
+  main-is:             Main.hs
+  build-depends:       base
+                     , bytestring
+                     , scotty
+                     , aeson
+                     , http-client
+                     , http-types
+                     , transformers
+  default-language:    GHC2021
+  ghc-options:         -Wall
