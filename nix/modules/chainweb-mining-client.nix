@@ -53,12 +53,21 @@ in
       };
     })
     ( mkIf (cfg.enable && cfg.worker == "on-demand") {
+      processes.mining-trigger = {
+        exec = "${pkgs.expect}/bin/unbuffer ${pkgs.mining-trigger}/bin/mining-trigger";
+        process-compose = {
+          depends_on.chainweb-node.condition = "process_healthy";
+        };
+      };
       services.http-server = {
         upstreams.chainweb-mining-client = "server localhost:${on-demand-port};";
-        servers.devnet.extraConfig = ''
+        servers.devnet.extraConfig = mkBefore ''
           location = /make-blocks {
             proxy_pass http://chainweb-mining-client/make-blocks;
             proxy_buffering off;
+          }
+          location ~ ^/chainweb/0.0/[0-9a-zA-Z\-\_]+/chain/[0-9]+/pact/api/v1/send {
+            proxy_pass http://localhost:1791;
           }
         '';
       };

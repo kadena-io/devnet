@@ -11,10 +11,15 @@ executable mining-trigger
   main-is:             Main.hs
   build-depends:       base
                      , bytestring
+                     , case-insensitive
                      , scotty
                      , aeson
                      , http-client
                      , http-types
                      , transformers
+                     , mtl
+                     , text
+                     , wai
+                     , wai-extra
   default-language:    GHC2021
   ghc-options:         -Wall

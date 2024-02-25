@@ -72,7 +72,9 @@
           flakeInfo.revLink = "https://npmjs.com/package/${packageName}/v/${version}";
           in kadena-graph // { inherit flakeInfo; }
           ;
-        mining-trigger = pkgs.haskellPackages.callCabal2nix "mining-trigger" nix/pkgs/mining-trigger {};
+        mining-trigger = pkgs.haskellPackages.callCabal2nix "mining-trigger" nix/pkgs/mining-trigger {
+          scotty = pkgs.haskellPackages.scotty_0_20_1;
+        };
       });
       pkgs = import nixpkgs { inherit system; overlays = [ overlay ]; };
       devnetInfo = {
