@@ -10,6 +10,7 @@ build-type:          Simple
 executable mining-trigger
   main-is:             Main.hs
   build-depends:       base
+                     , async
                      , bytestring
                      , case-insensitive
                      , scotty
@@ -18,6 +19,7 @@ executable mining-trigger
                      , http-types
                      , transformers
                      , mtl
+                     , random
                      , text
                      , wai
                      , wai-extra
