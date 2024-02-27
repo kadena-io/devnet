@@ -24,7 +24,7 @@ in
     enable = mkEnableOption "Enable the chainweb-mining-client service";
     worker = mkOption {
       type = types.enum [ "on-demand" "constant-delay" ];
-      default = "constant-delay";
+      default = "on-demand";
       description = "The type of worker to use.";
     };
     on-demand-port = mkOption {

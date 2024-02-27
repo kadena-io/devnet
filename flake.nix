@@ -152,10 +152,6 @@
           services.chainweb-mining-client.enable = true;
           services.http-server.enable = true;
         };
-        on-demand-minimal = {
-          imports = [minimal];
-          services.chainweb-mining-client.worker = "on-demand";
-        };
         default = {
           imports = [minimal];
           services.chainweb-data.enable = true;
