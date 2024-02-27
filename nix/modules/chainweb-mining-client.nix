@@ -49,14 +49,19 @@ in
         exec = "${start-chainweb-mining-client}";
         process-compose = {
           depends_on.chainweb-node.condition = "process_healthy";
+          readiness_probe.exec.command = ''
+            until curl http://localhost:${on-demand-port}/make-blocks -d '{}'
+              do sleep 0.1; done
+          '';
         };
       };
     })
     ( mkIf (cfg.enable && cfg.worker == "on-demand") {
       processes.mining-trigger = {
         exec = "${pkgs.expect}/bin/unbuffer ${pkgs.mining-trigger}/bin/mining-trigger";
-        process-compose = {
-          depends_on.chainweb-node.condition = "process_healthy";
+        process-compose.depends_on = {
+          chainweb-node.condition = "process_healthy";
+          chainweb-mining-client.condition = "process_healthy";
         };
       };
       services.http-server = {
