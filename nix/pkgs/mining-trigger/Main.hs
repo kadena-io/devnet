@@ -34,7 +34,7 @@ proxySend networkId chainId = do
   S.status $ HTTP.responseStatus response
   forM_ (HTTP.responseHeaders response) $ \(name, value) -> do
     let conv = T.decodeUtf8 . BL.fromStrict
-    unless (name == "Transfer-Encoding") $
+    unless (name `elem` [ "Transfer-Encoding", "Access-Control-Allow-Origin"]) $
       S.setHeader (conv $ CI.original name) (conv value)
   S.raw $ HTTP.responseBody response
 
