@@ -41,7 +41,9 @@ proxySend networkId chainId = do
 transactionBlocks :: IO ()
 transactionBlocks = S.scotty 1791 $ do
   S.middleware Wai.logStdoutDev
-  S.middleware Cors.simpleCors
+  S.middleware $ Cors.cors . const . Just $ Cors.simpleCorsResourcePolicy
+    { Cors.corsRequestHeaders = Cors.simpleHeaders
+    }
   S.post (S.regex "/chainweb/0.0/([0-9a-zA-Z\\-\\_]+)/chain/([0-9]+)/pact/api/v1/send") $ do
     networkId <- S.captureParam "1"
     chainId <- S.captureParam "2"
