@@ -17,7 +17,6 @@ import Network.Wai.Middleware.Cors qualified as Cors
 import System.Random (randomRIO)
 import Text.Printf (printf)
 import Web.Scotty qualified as S
-import qualified Web.Scotty as S
 
 proxySend :: String -> String -> S.ActionM ()
 proxySend networkId chainId = do
