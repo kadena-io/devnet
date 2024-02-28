@@ -13,9 +13,11 @@ import Network.HTTP.Client qualified as HTTP
 import Network.HTTP.Types qualified as HTTP
 import Network.Wai qualified as Wai
 import Network.Wai.Middleware.RequestLogger qualified as Wai
+import Network.Wai.Middleware.Cors qualified as Cors
 import System.Random (randomRIO)
 import Text.Printf (printf)
 import Web.Scotty qualified as S
+import qualified Web.Scotty as S
 
 proxySend :: String -> String -> S.ActionM ()
 proxySend networkId chainId = do
@@ -40,6 +42,7 @@ proxySend networkId chainId = do
 transactionBlocks :: IO ()
 transactionBlocks = S.scotty 1791 $ do
   S.middleware Wai.logStdoutDev
+  S.middleware Cors.simpleCors
   S.post (S.regex "/chainweb/0.0/([0-9a-zA-Z\\-\\_]+)/chain/([0-9]+)/pact/api/v1/send") $ do
     networkId <- S.captureParam "1"
     chainId <- S.captureParam "2"

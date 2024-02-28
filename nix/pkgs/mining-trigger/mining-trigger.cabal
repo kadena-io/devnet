@@ -22,6 +22,7 @@ executable mining-trigger
                      , random
                      , text
                      , wai
+                     , wai-cors
                      , wai-extra
   default-language:    GHC2021
   ghc-options:         -Wall
