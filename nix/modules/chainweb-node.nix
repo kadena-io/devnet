@@ -25,7 +25,7 @@ let
     --service-port=${toString cfg.service-port}
   '';
   throttleDirectives = lib.optionalString cfg.throttle ''
-    limit_req zone=cwn burst=2;
+    limit_req zone=cwn burst=200;
     add_header Retry-After $retry_after always;
   '';
 in
@@ -97,7 +97,7 @@ in
         peer-api = "server localhost:1789;";
       };
       extraHttpConfig = lib.optionalString cfg.throttle ''
-        limit_req_zone $binary_remote_addr zone=cwn:10m rate=30r/s;
+        limit_req_zone $binary_remote_addr zone=cwn:10m rate=20r/s;
         limit_req_status 429;
         limit_conn_status 429;
         map $status $retry_after {
