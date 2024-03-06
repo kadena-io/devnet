@@ -7,6 +7,8 @@ import Data.ByteString.Lazy qualified as BL
 import Data.CaseInsensitive qualified as CI
 import Data.Aeson qualified as A
 import Data.Functor ((<&>))
+import Data.IORef
+import Data.Map.Strict qualified as M
 import Data.String (fromString)
 import Data.Text.Lazy.Encoding qualified as T
 import Network.HTTP.Client qualified as HTTP
@@ -38,8 +40,8 @@ proxySend networkId chainId = do
       S.setHeader (conv $ CI.original name) (conv value)
   S.raw $ HTTP.responseBody response
 
-transactionBlocks :: IO ()
-transactionBlocks = S.scotty 1791 $ do
+transactionProxy :: IORef TransactionTriggerState -> IO ()
+transactionProxy tts = S.scotty 1791 $ do
   S.middleware Wai.logStdoutDev
   S.middleware $ Cors.cors . const . Just $ Cors.simpleCorsResourcePolicy
     { Cors.corsRequestHeaders = Cors.simpleHeaders
@@ -48,13 +50,49 @@ transactionBlocks = S.scotty 1791 $ do
     networkId <- S.captureParam "1"
     chainId <- S.captureParam "2"
     proxySend networkId chainId
-    liftIO $ requestBlock "Transaction Trigger" (read chainId) 5
+    liftIO $ insertTransactionIO tts (read chainId) 5
+
+type PendingConfirmation = Int
+type ChainId = Int
+
+data TransactionTriggerState = TTS
+  { _chainMap :: !(M.Map ChainId PendingConfirmation)
+  }
+
+insertTransaction ::
+  ChainId -> PendingConfirmation ->
+  TransactionTriggerState -> TransactionTriggerState
+insertTransaction chainId pending (TTS m) =
+  TTS $ M.alter (Just . maybe pending (max pending)) chainId m
+
+insertTransactionIO ::
+  IORef TransactionTriggerState -> ChainId -> PendingConfirmation -> IO ()
+insertTransactionIO ref chainId pending = atomicModifyIORef' ref $ \state ->
+  (insertTransaction chainId pending state, ())
+
+popPending :: TransactionTriggerState -> ([ChainId], TransactionTriggerState)
+popPending (TTS m) = fmap TTS $ flip M.traverseMaybeWithKey m $
+  \chainId pending -> do
+    ([chainId], if pending > 1 then Just $! (pending - 1) else Nothing)
+
+popPendingIO :: IORef TransactionTriggerState -> IO [ChainId]
+popPendingIO ref = atomicModifyIORef' ref $ \state ->
+  let (chains, state') = popPending state in (state', chains)
+
+transactionWorker :: IORef TransactionTriggerState -> IO ()
+transactionWorker tts = forever $ do
+  chains <- popPendingIO tts
+  forM_ chains $ \chainId ->
+    requestBlock "Transaction Trigger" chainId 1
+  threadDelay 1_000_000
 
 main :: IO ()
 main = do
+  transactionChan <- newIORef $ TTS M.empty
   requestBlock "Startup Trigger" 0 5
   executeAsync
-    [ "Transaction Trigger" <$ transactionBlocks
+    [ "Transaction Proxy" <$ transactionProxy transactionChan
+    , "Transaction Worker" <$ transactionWorker transactionChan
     , "Periodic Trigger" <$ periodicBlocks 10
     ]
   where

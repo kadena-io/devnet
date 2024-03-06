@@ -13,6 +13,7 @@ executable mining-trigger
                      , async
                      , bytestring
                      , case-insensitive
+                     , containers
                      , scotty
                      , aeson
                      , http-client
