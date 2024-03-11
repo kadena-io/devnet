@@ -3,6 +3,8 @@ with lib;
 let
   cfg = config.services.chainweb-mining-client;
   on-demand-port = toString cfg.on-demand-port;
+  cwn-service-port = toString config.services.chainweb-node.service-port;
+  mining-trigger-port = toString cfg.mining-trigger-port;
   start-chainweb-mining-client = pkgs.writeShellScript "start-chainweb-mining-client" ''
     ${pkgs.chainweb-mining-client}/bin/chainweb-mining-client \
     --public-key=f89ef46927f506c70b6a58fd322450a936311dc6ac91f4ec3d8ef949608dbf1f \
@@ -36,6 +38,11 @@ in
           "The services.chainweb-mining-client.on-demand-port option is mandatory for worker = \"on-demand\""
           port;
     };
+    mining-trigger-port = mkOption {
+      type = types.nullOr types.int;
+      default = 1791;
+      description = "The mining-trigger port";
+    };
     constant-delay-block-time = mkOption {
       type = types.nullOr types.int;
       default = if cfg.worker == "constant-delay" then 5 else null;
@@ -58,7 +65,12 @@ in
     })
     ( mkIf (cfg.enable && cfg.worker == "on-demand") {
       processes.mining-trigger = {
-        exec = "${pkgs.expect}/bin/unbuffer ${pkgs.mining-trigger}/bin/mining-trigger";
+        exec = ''
+          ${pkgs.expect}/bin/unbuffer ${pkgs.mining-trigger}/bin/mining-trigger \
+            --port ${mining-trigger-port} \
+            --mining-client-url http://localhost:${on-demand-port} \
+            --chainweb-service-endpoint http://localhost:${cwn-service-port} \
+        '';
         process-compose.depends_on = {
           chainweb-node.condition = "process_healthy";
           chainweb-mining-client.condition = "process_healthy";
@@ -85,8 +97,10 @@ in
           (see [the relevant section in the chainweb-mining-client README](https://github.com/kadena-io/chainweb-mining-client/tree/master?tab=readme-ov-file#non-pow-mining))
         '';
       };
-      sites.landing-page.container-api.ports =
-        "- `${on-demand-port}`: On-Demand Mining API";
+      sites.landing-page.container-api.ports = lib.concatStringsSep "\n" [
+        "- `${on-demand-port}`: On-Demand Mining API"
+        "- `${mining-trigger-port}`: Mining Trigger API"
+      ];
     })
   ];
 }

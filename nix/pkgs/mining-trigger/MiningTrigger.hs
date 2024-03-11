@@ -44,8 +44,8 @@ proxySend chainwebServiceEndpoint networkId chainId = do
       S.setHeader (conv $ CI.original name) (conv value)
   S.raw $ HTTP.responseBody response
 
-transactionProxy :: String -> Int -> IORef TransactionTriggerState -> IO ()
-transactionProxy chainwebServiceEndpoint defaultConfirmation tts = S.scotty 1791 $ do
+transactionProxy :: String -> Int -> Int -> IORef TransactionTriggerState -> IO ()
+transactionProxy chainwebServiceEndpoint port defaultConfirmation tts = S.scotty port $ do
   S.middleware Wai.logStdoutDev
   S.middleware $ Cors.cors . const . Just $ Cors.simpleCorsResourcePolicy
     { Cors.corsRequestHeaders = Cors.simpleHeaders
@@ -125,12 +125,19 @@ main = run $ do
    <> Opt.metavar "BLOCKS"
    <> Opt.help "Default number of confirmations for transactions"
     )
+  listenPort <- Opt.option Opt.auto
+    ( Opt.long "port"
+   <> Opt.value 1791
+   <> Opt.metavar "PORT"
+   <> Opt.help "Port to listen for transaction requests"
+    )
   return $ do
     transactionChan <- newIORef $ TTS M.empty
     requestBlocks miningClientUrl "Startup Trigger" allChains 2
     executeAsync
       [ "Transaction Proxy" <$ transactionProxy
           chainwebServiceEndpoint
+          listenPort
           defaultConfirmation
           transactionChan
       , "Transaction Worker" <$ transactionWorker
