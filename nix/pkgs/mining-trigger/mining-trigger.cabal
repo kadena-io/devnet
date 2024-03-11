@@ -8,7 +8,7 @@ maintainer:          enis@kadena.io
 build-type:          Simple
 
 executable mining-trigger
-  main-is:             Main.hs
+  main-is:             MiningTrigger.hs
   build-depends:       base
                      , async
                      , bytestring
