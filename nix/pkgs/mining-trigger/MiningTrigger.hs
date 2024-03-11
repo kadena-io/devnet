@@ -8,6 +8,7 @@ import Data.CaseInsensitive qualified as CI
 import Data.Aeson qualified as A
 import Data.Functor ((<&>))
 import Data.IORef
+import Data.List.NonEmpty qualified as NE
 import Data.Map.Strict qualified as M
 import Data.String (fromString)
 import Data.Text.Lazy.Encoding qualified as T
@@ -83,13 +84,16 @@ transactionWorker :: IORef TransactionTriggerState -> IO ()
 transactionWorker tts = forever $ do
   chains <- popPendingIO tts
   forM_ chains $ \chainId ->
-    requestBlock "Transaction Trigger" chainId 1
+    requestBlocks "Transaction Trigger" (NE.singleton chainId) 1
   threadDelay 1_000_000
+
+allChains :: NE.NonEmpty Int
+allChains = NE.fromList [0..19]
 
 main :: IO ()
 main = do
   transactionChan <- newIORef $ TTS M.empty
-  requestBlock "Startup Trigger" 0 5
+  requestBlocks "Startup Trigger" allChains 2
   executeAsync
     [ "Transaction Proxy" <$ transactionProxy transactionChan
     , "Transaction Worker" <$ transactionWorker transactionChan
@@ -103,21 +107,24 @@ main = do
 periodicBlocks :: Int -> IO ()
 periodicBlocks delay = forever $ do
   chainid <- randomRIO (0, 19) :: IO Int
-  requestBlock "Periodic Trigger" chainid 1
+  requestBlocks "Periodic Trigger" (NE.singleton chainid) 1
   threadDelay $ delay * 1_000_000
 
-requestBlock :: String -> Int -> Int -> IO ()
-requestBlock source chainid count = do
+requestBlocks :: String -> NE.NonEmpty Int -> Int -> IO ()
+requestBlocks source chainids count = do
   manager <- HTTP.newManager HTTP.defaultManagerSettings
   request <- HTTP.parseRequest "http://localhost:1790/make-blocks" <&> \r -> r
     { HTTP.method = "POST"
     , HTTP.requestHeaders = [("Content-Type", "application/json")]
     , HTTP.requestBody = HTTP.RequestBodyLBS $ A.encode $
-        A.Object $  fromString (show chainid) A..= count
+        A.Object $ flip foldMap chainids $ \c -> fromString (show c) A..= count
     }
   response <- HTTP.httpLbs request manager
-  let desc = printf "(%s) Requested %s on chain %d" source blocks chainid where
+  let desc = printf "(%s) Requested %s on %s" source blocks chains where
         blocks = show count ++ if count == 1 then " block" else " blocks"
+        chains = case chainids of
+          c NE.:| [] -> "chain " ++ show c
+          cs -> "chains " ++ show (NE.toList cs)
   putStrLn $ if HTTP.responseStatus response == HTTP.status200
     then desc
     else desc ++ ", failed to make blocks: " ++ show (response)
