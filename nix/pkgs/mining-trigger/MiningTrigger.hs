@@ -1,4 +1,6 @@
+{-# LANGUAGE ApplicativeDo #-}
 {-# LANGUAGE OverloadedStrings #-}
+
 import Control.Concurrent (threadDelay)
 import Control.Concurrent.Async qualified as Async
 import Control.Monad
@@ -17,17 +19,18 @@ import Network.HTTP.Types qualified as HTTP
 import Network.Wai qualified as Wai
 import Network.Wai.Middleware.RequestLogger qualified as Wai
 import Network.Wai.Middleware.Cors qualified as Cors
+import Options.Applicative qualified as Opt
 import System.Random (randomRIO)
 import Text.Printf (printf)
 import Web.Scotty qualified as S
 
-proxySend :: String -> String -> S.ActionM ()
-proxySend networkId chainId = do
+proxySend :: String -> String -> String -> S.ActionM ()
+proxySend chainwebServiceEndpoint networkId chainId = do
   let path = "/chainweb/0.0/" ++ networkId ++ "/chain/" ++ chainId ++ "/pact/api/v1/send"
   body <- S.body
   request <- S.request
   manager <- liftIO $ HTTP.newManager HTTP.defaultManagerSettings
-  downstreamRequest <- liftIO $ HTTP.parseRequest $ "http://localhost:1848" ++ path
+  downstreamRequest <- liftIO $ HTTP.parseRequest $ chainwebServiceEndpoint ++ path
   let downstreamRequest' = downstreamRequest
         { HTTP.method = "POST"
         , HTTP.requestBody = HTTP.RequestBodyLBS body
@@ -41,8 +44,8 @@ proxySend networkId chainId = do
       S.setHeader (conv $ CI.original name) (conv value)
   S.raw $ HTTP.responseBody response
 
-transactionProxy :: IORef TransactionTriggerState -> IO ()
-transactionProxy tts = S.scotty 1791 $ do
+transactionProxy :: String -> Int -> IORef TransactionTriggerState -> IO ()
+transactionProxy chainwebServiceEndpoint defaultConfirmation tts = S.scotty 1791 $ do
   S.middleware Wai.logStdoutDev
   S.middleware $ Cors.cors . const . Just $ Cors.simpleCorsResourcePolicy
     { Cors.corsRequestHeaders = Cors.simpleHeaders
@@ -50,8 +53,8 @@ transactionProxy tts = S.scotty 1791 $ do
   S.post (S.regex "/chainweb/0.0/([0-9a-zA-Z\\-\\_]+)/chain/([0-9]+)/pact/api/v1/send") $ do
     networkId <- S.captureParam "1"
     chainId <- S.captureParam "2"
-    proxySend networkId chainId
-    liftIO $ insertTransactionIO tts (read chainId) 5
+    proxySend chainwebServiceEndpoint networkId chainId
+    liftIO $ insertTransactionIO tts (read chainId) defaultConfirmation
 
 type PendingConfirmation = Int
 type ChainId = Int
@@ -80,40 +83,80 @@ popPendingIO :: IORef TransactionTriggerState -> IO [ChainId]
 popPendingIO ref = atomicModifyIORef' ref $ \state ->
   let (chains, state') = popPending state in (state', chains)
 
-transactionWorker :: IORef TransactionTriggerState -> IO ()
-transactionWorker tts = forever $ do
+transactionWorker :: String -> Int -> IORef TransactionTriggerState -> IO ()
+transactionWorker miningClientUrl triggerPeriod tts = forever $ do
   chains <- popPendingIO tts
   forM_ (NE.nonEmpty chains) $ \neChains ->
-    requestBlocks "Transaction Worker" neChains 1
-  threadDelay 1_000_000
+    requestBlocks miningClientUrl "Transaction Worker" neChains 1
+  threadDelay $ triggerPeriod * 1_000_000
 
 allChains :: NE.NonEmpty Int
 allChains = NE.fromList [0..19]
 
 main :: IO ()
-main = do
-  transactionChan <- newIORef $ TTS M.empty
-  requestBlocks "Startup Trigger" allChains 2
-  executeAsync
-    [ "Transaction Proxy" <$ transactionProxy transactionChan
-    , "Transaction Worker" <$ transactionWorker transactionChan
-    , "Periodic Trigger" <$ periodicBlocks 10
-    ]
+main = run $ do
+  miningClientUrl <- Opt.strOption
+    ( Opt.long "mining-client-url"
+   <> Opt.value "http://localhost:1790"
+   <> Opt.metavar "URL"
+   <> Opt.help "URL of the mining client to trigger block production"
+    )
+  chainwebServiceEndpoint <- Opt.strOption
+    ( Opt.long "chainweb-service-endpoint"
+   <> Opt.value "http://localhost:1848"
+   <> Opt.metavar "URL"
+   <> Opt.help "URL of the chainweb service to proxy transactions to"
+    )
+  idleTriggerPeriod <- Opt.option Opt.auto
+    ( Opt.long "idle-trigger-period"
+   <> Opt.value 10
+   <> Opt.metavar "SECONDS"
+   <> Opt.help "Period in seconds to trigger block production"
+    )
+  transactionTriggerPeriod <- Opt.option Opt.auto
+    ( Opt.long "transaction-trigger-period"
+   <> Opt.value 1
+   <> Opt.metavar "SECONDS"
+   <> Opt.help "Period in seconds to trigger consecutive confirmation blocks"
+    )
+  defaultConfirmation <- Opt.option Opt.auto
+    ( Opt.long "default-confirmation"
+   <> Opt.value 5
+   <> Opt.metavar "BLOCKS"
+   <> Opt.help "Default number of confirmations for transactions"
+    )
+  return $ do
+    transactionChan <- newIORef $ TTS M.empty
+    requestBlocks miningClientUrl "Startup Trigger" allChains 2
+    executeAsync
+      [ "Transaction Proxy" <$ transactionProxy
+          chainwebServiceEndpoint
+          defaultConfirmation
+          transactionChan
+      , "Transaction Worker" <$ transactionWorker
+          miningClientUrl
+          transactionTriggerPeriod
+          transactionChan
+      , "Periodic Trigger" <$ periodicBlocks miningClientUrl idleTriggerPeriod
+      ]
   where
+    run m = join $ Opt.execParser $ Opt.info
+      (Opt.helper <*> m)
+      (Opt.fullDesc <> Opt.progDesc "Chainweb Mining Trigger")
     executeAsync threads = do
       (_, name) <- Async.waitAnyCancel =<< mapM Async.async threads
       putStrLn $ "Thread " ++ name ++ " has exited"
 
-periodicBlocks :: Int -> IO ()
-periodicBlocks delay = forever $ do
+periodicBlocks :: String -> Int -> IO ()
+periodicBlocks miningClientUrl delay = forever $ do
   chainid <- randomRIO (0, 19) :: IO Int
-  requestBlocks "Periodic Trigger" (NE.singleton chainid) 1
+  requestBlocks miningClientUrl "Periodic Trigger" (NE.singleton chainid) 1
   threadDelay $ delay * 1_000_000
 
-requestBlocks :: String -> NE.NonEmpty Int -> Int -> IO ()
-requestBlocks source chainids count = do
+requestBlocks :: String -> String -> NE.NonEmpty Int -> Int -> IO ()
+requestBlocks miningClientUrl source chainids count = do
   manager <- HTTP.newManager HTTP.defaultManagerSettings
-  request <- HTTP.parseRequest "http://localhost:1790/make-blocks" <&> \r -> r
+  request <- HTTP.parseRequest (miningClientUrl <> "/make-blocks") <&> \r -> r
     { HTTP.method = "POST"
     , HTTP.requestHeaders = [("Content-Type", "application/json")]
     , HTTP.requestBody = HTTP.RequestBodyLBS $ A.encode $

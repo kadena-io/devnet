@@ -20,6 +20,7 @@ executable mining-trigger
                      , http-types
                      , transformers
                      , mtl
+                     , optparse-applicative
                      , random
                      , text
                      , wai
