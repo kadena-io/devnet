@@ -83,8 +83,8 @@ popPendingIO ref = atomicModifyIORef' ref $ \state ->
 transactionWorker :: IORef TransactionTriggerState -> IO ()
 transactionWorker tts = forever $ do
   chains <- popPendingIO tts
-  forM_ chains $ \chainId ->
-    requestBlocks "Transaction Trigger" (NE.singleton chainId) 1
+  forM_ (NE.nonEmpty chains) $ \neChains ->
+    requestBlocks "Transaction Worker" neChains 1
   threadDelay 1_000_000
 
 allChains :: NE.NonEmpty Int
