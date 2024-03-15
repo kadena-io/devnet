@@ -13,15 +13,19 @@ executable mining-trigger
                      , async
                      , bytestring
                      , case-insensitive
+                     , clock
                      , containers
                      , scotty
                      , aeson
                      , http-client
                      , http-types
                      , transformers
+                     , generic-lens
+                     , lens
                      , mtl
                      , optparse-applicative
                      , random
+                     , strict-base
                      , text
                      , wai
                      , wai-cors

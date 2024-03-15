@@ -1,25 +1,36 @@
 {-# LANGUAGE ApplicativeDo #-}
+{-# LANGUAGE OverloadedLabels #-}
 {-# LANGUAGE OverloadedStrings #-}
+{-# LANGUAGE RecordWildCards #-}
+{-# LANGUAGE StrictData #-}
+
+import Prelude hiding (maximum, minimum)
 
 import Control.Concurrent (threadDelay)
 import Control.Concurrent.Async qualified as Async
+import Control.Concurrent.MVar
+import Control.Lens
 import Control.Monad
 import Control.Monad.IO.Class
 import Data.ByteString.Lazy qualified as BL
 import Data.CaseInsensitive qualified as CI
 import Data.Aeson qualified as A
-import Data.Functor ((<&>))
+import Data.Generics.Labels ()
 import Data.IORef
 import Data.List.NonEmpty qualified as NE
 import Data.Map.Strict qualified as M
+import Data.Maybe (catMaybes)
+import Data.Strict qualified as Strict
 import Data.String (fromString)
 import Data.Text.Lazy.Encoding qualified as T
+import GHC.Generics (Generic)
 import Network.HTTP.Client qualified as HTTP
 import Network.HTTP.Types qualified as HTTP
 import Network.Wai qualified as Wai
 import Network.Wai.Middleware.RequestLogger qualified as Wai
 import Network.Wai.Middleware.Cors qualified as Cors
 import Options.Applicative qualified as Opt
+import System.Clock qualified as Clock
 import System.Random (randomRIO)
 import Text.Printf (printf)
 import Web.Scotty qualified as S
@@ -44,8 +55,16 @@ proxySend chainwebServiceEndpoint networkId chainId = do
       S.setHeader (conv $ CI.original name) (conv value)
   S.raw $ HTTP.responseBody response
 
-transactionProxy :: String -> Int -> Int -> IORef TransactionTriggerState -> IO ()
-transactionProxy chainwebServiceEndpoint port defaultConfirmation tts = S.scotty port $ do
+data ProxyArgs = ProxyArgs
+  { transactionBatchPeriod :: Double
+  , chainwebServiceEndpoint :: String
+  , listenPort :: Int
+  , defaultConfirmation :: Int
+  , ttHandle :: TTHandle
+  }
+
+transactionProxy :: ProxyArgs -> IO ()
+transactionProxy  ProxyArgs{..} = S.scotty listenPort $ do
   S.middleware Wai.logStdoutDev
   S.middleware $ Cors.cors . const . Just $ Cors.simpleCorsResourcePolicy
     { Cors.corsRequestHeaders = Cors.simpleHeaders
@@ -54,41 +73,96 @@ transactionProxy chainwebServiceEndpoint port defaultConfirmation tts = S.scotty
     networkId <- S.captureParam "1"
     chainId <- S.captureParam "2"
     proxySend chainwebServiceEndpoint networkId chainId
-    liftIO $ insertTransactionIO tts (read chainId) defaultConfirmation
+    liftIO $ pushTransaction ttHandle transactionBatchPeriod (read chainId) defaultConfirmation
 
-type PendingConfirmation = Int
+type Confirmations = Int
 type ChainId = Int
 
 data TransactionTriggerState = TTS
-  { _chainMap :: !(M.Map ChainId PendingConfirmation)
-  }
+  { chainMap :: (M.Map ChainId Confirmations)
+  , scheduledTrigger :: Strict.Maybe Clock.TimeSpec
+  , pendingFlush :: Bool
+  } deriving (Show, Generic)
+
+emptyTTS :: TransactionTriggerState
+emptyTTS = TTS M.empty Strict.Nothing False
+
+atStrict :: Ord k => k -> Lens' (M.Map k v) (Maybe v)
+atStrict k f = M.alterF f k
 
 insertTransaction ::
-  ChainId -> PendingConfirmation ->
+  ChainId -> Clock.TimeSpec -> Confirmations ->
   TransactionTriggerState -> TransactionTriggerState
-insertTransaction chainId pending (TTS m) =
-  TTS $ M.alter (Just . maybe pending (max pending)) chainId m
+insertTransaction chainId latest confirmations tts =
+  tts & #chainMap . atStrict chainId %~ Just . maybe pending (+pending)
+      & #scheduledTrigger %~ Strict.Just . Strict.maybe latest (min latest)
+      & #pendingFlush .~ True
+  where pending = confirmations + 1 -- Since we need to flush as well
 
-insertTransactionIO ::
-  IORef TransactionTriggerState -> ChainId -> PendingConfirmation -> IO ()
-insertTransactionIO ref chainId pending = atomicModifyIORef' ref $ \state ->
-  (insertTransaction chainId pending state, ())
+type Demands = ([ChainId], Confirmations)
 
-popPending :: TransactionTriggerState -> ([ChainId], TransactionTriggerState)
-popPending (TTS m) = fmap TTS $ flip M.traverseMaybeWithKey m $
-  \chainId pending -> do
-    ([chainId], if pending > 1 then Just $! (pending - 1) else Nothing)
+popPending :: Clock.TimeSpec -> Double -> TransactionTriggerState ->
+  (Demands, TransactionTriggerState)
+popPending now confirmationPeriod tts = if Strict.Just now < scheduledTrigger tts
+  then (([],0), tts)
+  else
+    let
+      confirmationsDemand = if pendingFlush tts then 2 else 1
+      nextTrigger = now + Clock.fromNanoSecs (round $ confirmationPeriod * 1_000_000_000)
+      positive = anon 0 (<=0)
+      (chains, poppedMap) = flip M.traverseMaybeWithKey (chainMap tts) $ \chainId c ->
+        forOf positive (Just c) $ \confirmations ->
+          ([chainId], confirmations - confirmationsDemand)
+      newTTS = tts
+        { chainMap = poppedMap
+        , scheduledTrigger =
+            Strict.toStrict $ nextTrigger <$ guard (not $ M.null poppedMap)
+        , pendingFlush = False
+        }
+    in ((chains, confirmationsDemand), newTTS)
 
-popPendingIO :: IORef TransactionTriggerState -> IO [ChainId]
-popPendingIO ref = atomicModifyIORef' ref $ \state ->
-  let (chains, state') = popPending state in (state', chains)
+popPendingIO :: IORef TransactionTriggerState -> Double -> IO Demands
+popPendingIO ref confirmationPeriod = do
+  now <- Clock.getTime Clock.Monotonic
+  atomicModifyIORef' ref $ \state ->
+    let (demands, state') = popPending now confirmationPeriod state
+    in (state', demands)
 
-transactionWorker :: String -> Int -> IORef TransactionTriggerState -> IO ()
-transactionWorker miningClientUrl triggerPeriod tts = forever $ do
-  chains <- popPendingIO tts
+data TTHandle = TTHandle
+  { ttStateRef :: IORef TransactionTriggerState
+  , ttSignal :: MVar ()
+  }
+
+newTTHandle :: IO TTHandle
+newTTHandle = TTHandle <$> newIORef emptyTTS <*> newEmptyMVar
+
+pushTransaction :: TTHandle -> Double -> Int -> Int -> IO ()
+pushTransaction TTHandle{..} batchPeriod chainId pending = do
+  let batchPeriodTimeSpec = Clock.fromNanoSecs $ round $ batchPeriod * 1_000_000_000
+  latest <- (+ batchPeriodTimeSpec) <$> Clock.getTime Clock.Monotonic
+  atomicModifyIORef' ttStateRef $ \state ->
+    (insertTransaction chainId latest pending state, ())
+  putMVar ttSignal ()
+
+transactionWorker :: String -> Double -> TTHandle -> IO ()
+transactionWorker miningClientUrl triggerPeriod TTHandle{..} = forever $ do
+  (chains, confirmations) <- waitTrigger
   forM_ (NE.nonEmpty chains) $ \neChains ->
-    requestBlocks miningClientUrl "Transaction Worker" neChains 1
-  threadDelay $ triggerPeriod * 1_000_000
+    requestBlocks miningClientUrl "Transaction Worker" neChains confirmations
+  where
+    waitTrigger = do
+      tts <- readIORef ttStateRef
+      let waitScheduled = (Strict.fromStrict $ scheduledTrigger tts) <&> \scheduled -> do
+            now <- Clock.getTime Clock.Monotonic
+            let delay = max 0 $ Clock.toNanoSecs $ scheduled - now
+            threadDelay $ fromIntegral $ delay `div` 1_000
+          waitSignal = takeMVar ttSignal
+          wakeUps = catMaybes
+            [ waitScheduled
+            , Just waitSignal
+            ]
+      void $ Async.waitAnyCancel =<< mapM Async.async wakeUps
+      popPendingIO ttStateRef triggerPeriod
 
 allChains :: NE.NonEmpty Int
 allChains = NE.fromList [0..19]
@@ -114,14 +188,20 @@ main = run $ do
    <> Opt.help "Period in seconds to trigger block production"
     )
   transactionTriggerPeriod <- Opt.option Opt.auto
-    ( Opt.long "transaction-trigger-period"
+    ( Opt.long "confirmation-trigger-period"
    <> Opt.value 1
    <> Opt.metavar "SECONDS"
    <> Opt.help "Period in seconds to trigger consecutive confirmation blocks"
     )
+  transactionBatchPeriod <- Opt.option Opt.auto
+    ( Opt.long "transaction-batch-period"
+   <> Opt.value 0.05
+   <> Opt.metavar "SECONDS"
+   <> Opt.help "Period in seconds to wait for batching transactions"
+    )
   defaultConfirmation <- Opt.option Opt.auto
     ( Opt.long "default-confirmation"
-   <> Opt.value 5
+   <> Opt.value 4
    <> Opt.metavar "BLOCKS"
    <> Opt.help "Default number of confirmations for transactions"
     )
@@ -132,18 +212,20 @@ main = run $ do
    <> Opt.help "Port to listen for transaction requests"
     )
   return $ do
-    transactionChan <- newIORef $ TTS M.empty
+    ttHandle <- newTTHandle
     requestBlocks miningClientUrl "Startup Trigger" allChains 2
     executeAsync
-      [ "Transaction Proxy" <$ transactionProxy
-          chainwebServiceEndpoint
-          listenPort
-          defaultConfirmation
-          transactionChan
+      [ "Transaction Proxy" <$ transactionProxy ProxyArgs
+          { transactionBatchPeriod
+          , chainwebServiceEndpoint
+          , listenPort
+          , defaultConfirmation
+          , ttHandle
+          }
       , "Transaction Worker" <$ transactionWorker
           miningClientUrl
           transactionTriggerPeriod
-          transactionChan
+          ttHandle
       , "Periodic Trigger" <$ periodicBlocks miningClientUrl idleTriggerPeriod
       ]
   where
