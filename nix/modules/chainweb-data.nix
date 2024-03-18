@@ -15,8 +15,8 @@ let
         "--migrations-folder ${cfg.migrations-folder}"
       } \
       ${concatStringsSep " \\\n" (
-        map 
-          (folder: "--extra-migrations-folder ${folder}") 
+        map
+          (folder: "--extra-migrations-folder ${folder}")
           cfg.extra-migrations-folders
       )} \
       "$@"
@@ -99,6 +99,19 @@ in
         chainweb-node.condition = "process_healthy";
         postgres.condition = "process_healthy";
       };
+      process-compose.readiness_probe = {
+        http_get = {
+          host = "127.0.0.1";
+          scheme = "http";
+          port = cfg.port;
+          path = "/txs/events?limit=1&search=TRANSFER";
+        };
+        initial_delay_seconds = 1;
+        period_seconds = 1;
+        timeout_seconds = 5;
+        success_threshold = 1;
+        failure_threshold = 20;
+      };
     };
     services.ttyd.commands.psql-cwd = "${psql-cwd}/bin/psql-cwd";
     services.ttyd.commands.chainweb-data-fill = "${chainweb-data-fill}/bin/chainweb-data-fill";
@@ -140,7 +153,7 @@ in
 
         ${optionalString (builtins.length cfg.extra-migrations-folders > 0) ''
           The `chainweb-data` service is configured to use additional migrations
-          from these folders: 
+          from these folders:
 
           ${concatStringsSep "\n" (
             map (folder: "- `${truncateMiddle 20 40 folder}`") cfg.extra-migrations-folders
