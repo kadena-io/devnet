@@ -31,55 +31,6 @@ import Web.Scotty qualified as S
 
 import TriggerState
 
-proxySend :: String -> String -> String -> S.ActionM ()
-proxySend chainwebServiceEndpoint networkId chainId = do
-  let path = "/chainweb/0.0/" ++ networkId ++ "/chain/" ++ chainId ++ "/pact/api/v1/send"
-  body <- S.body
-  request <- S.request
-  manager <- liftIO $ HTTP.newManager HTTP.defaultManagerSettings
-  downstreamRequest <- liftIO $ HTTP.parseRequest $ chainwebServiceEndpoint ++ path
-  let downstreamRequest' = downstreamRequest
-        { HTTP.method = "POST"
-        , HTTP.requestBody = HTTP.RequestBodyLBS body
-        , HTTP.requestHeaders = Wai.requestHeaders request
-        }
-  response <- liftIO $ HTTP.httpLbs downstreamRequest' manager
-  S.status $ HTTP.responseStatus response
-  forM_ (HTTP.responseHeaders response) $ \(name, value) -> do
-    let conv = T.decodeUtf8 . BL.fromStrict
-    unless (name `elem` [ "Transfer-Encoding", "Access-Control-Allow-Origin"]) $
-      S.setHeader (conv $ CI.original name) (conv value)
-  S.raw $ HTTP.responseBody response
-
-data ProxyArgs = ProxyArgs
-  { transactionBatchPeriod :: Double
-  , chainwebServiceEndpoint :: String
-  , listenPort :: Int
-  , defaultConfirmation :: Int
-  , ttHandle :: TTHandle
-  }
-
-transactionProxy :: ProxyArgs -> IO ()
-transactionProxy  ProxyArgs{..} = S.scotty listenPort $ do
-  S.middleware Wai.logStdoutDev
-  S.middleware $ Cors.cors . const . Just $ Cors.simpleCorsResourcePolicy
-    { Cors.corsRequestHeaders = Cors.simpleHeaders
-    }
-  S.post (S.regex "/chainweb/0.0/([0-9a-zA-Z\\-\\_]+)/chain/([0-9]+)/pact/api/v1/send") $ do
-    networkId <- S.captureParam "1"
-    chainId <- S.captureParam "2"
-    proxySend chainwebServiceEndpoint networkId chainId
-    liftIO $ pushTransaction ttHandle transactionBatchPeriod (read chainId) defaultConfirmation
-
-transactionWorker :: String -> Double -> TTHandle -> IO ()
-transactionWorker miningClientUrl triggerPeriod tt = forever $ do
-  (chains, confirmations) <- waitTrigger triggerPeriod tt
-  forM_ (NE.nonEmpty chains) $ \neChains ->
-    requestBlocks miningClientUrl "Transaction Worker" neChains confirmations
-
-allChains :: NE.NonEmpty Int
-allChains = NE.fromList [0..19]
-
 main :: IO ()
 main = run $ do
   miningClientUrl <- Opt.strOption
@@ -149,11 +100,64 @@ main = run $ do
       (_, name) <- Async.waitAnyCancel =<< mapM Async.async threads
       putStrLn $ "Thread " ++ name ++ " has exited"
 
+-------------------------------------------------------------------------------
+-- Worker Threads
+-------------------------------------------------------------------------------
+
+data ProxyArgs = ProxyArgs
+  { transactionBatchPeriod :: Double
+  , chainwebServiceEndpoint :: String
+  , listenPort :: Int
+  , defaultConfirmation :: Int
+  , ttHandle :: TTHandle
+  }
+
+transactionProxy :: ProxyArgs -> IO ()
+transactionProxy  ProxyArgs{..} = S.scotty listenPort $ do
+  S.middleware Wai.logStdoutDev
+  S.middleware $ Cors.cors . const . Just $ Cors.simpleCorsResourcePolicy
+    { Cors.corsRequestHeaders = Cors.simpleHeaders
+    }
+  S.post (S.regex "/chainweb/0.0/([0-9a-zA-Z\\-\\_]+)/chain/([0-9]+)/pact/api/v1/send") $ do
+    networkId <- S.captureParam "1"
+    chainId <- S.captureParam "2"
+    proxySend chainwebServiceEndpoint networkId chainId
+    liftIO $ pushTransaction ttHandle transactionBatchPeriod (read chainId) defaultConfirmation
+
+transactionWorker :: String -> Double -> TTHandle -> IO ()
+transactionWorker miningClientUrl triggerPeriod tt = forever $ do
+  (chains, confirmations) <- waitTrigger triggerPeriod tt
+  forM_ (NE.nonEmpty chains) $ \neChains ->
+    requestBlocks miningClientUrl "Transaction Worker" neChains confirmations
+
 periodicBlocks :: String -> Int -> IO ()
 periodicBlocks miningClientUrl delay = forever $ do
   chainid <- randomRIO (0, 19) :: IO Int
   requestBlocks miningClientUrl "Periodic Trigger" (NE.singleton chainid) 1
   threadDelay $ delay * 1_000_000
+
+-------------------------------------------------------------------------------
+
+proxySend :: String -> String -> String -> S.ActionM ()
+proxySend chainwebServiceEndpoint networkId chainId = do
+  let path = "/chainweb/0.0/" ++ networkId ++ "/chain/" ++ chainId ++ "/pact/api/v1/send"
+  body <- S.body
+  request <- S.request
+  manager <- liftIO $ HTTP.newManager HTTP.defaultManagerSettings
+  downstreamRequest <- liftIO $ HTTP.parseRequest $ chainwebServiceEndpoint ++ path
+  let downstreamRequest' = downstreamRequest
+        { HTTP.method = "POST"
+        , HTTP.requestBody = HTTP.RequestBodyLBS body
+        , HTTP.requestHeaders = Wai.requestHeaders request
+        }
+  response <- liftIO $ HTTP.httpLbs downstreamRequest' manager
+  S.status $ HTTP.responseStatus response
+  forM_ (HTTP.responseHeaders response) $ \(name, value) -> do
+    let conv = T.decodeUtf8 . BL.fromStrict
+    unless (name `elem` [ "Transfer-Encoding", "Access-Control-Allow-Origin"]) $
+      S.setHeader (conv $ CI.original name) (conv value)
+  S.raw $ HTTP.responseBody response
+
 
 requestBlocks :: String -> String -> NE.NonEmpty Int -> Int -> IO ()
 requestBlocks miningClientUrl source chainids count = do
@@ -173,3 +177,6 @@ requestBlocks miningClientUrl source chainids count = do
   putStrLn $ if HTTP.responseStatus response == HTTP.status200
     then desc
     else desc ++ ", failed to make blocks: " ++ show (response)
+
+allChains :: NE.NonEmpty Int
+allChains = NE.fromList [0..19]
