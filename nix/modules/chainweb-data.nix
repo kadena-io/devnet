@@ -107,10 +107,10 @@ in
           path = "/txs/events?limit=1&search=TRANSFER";
         };
         initial_delay_seconds = 1;
-        period_seconds = 1;
+        period_seconds = 5;
         timeout_seconds = 5;
         success_threshold = 1;
-        failure_threshold = 20;
+        failure_threshold = 240;
       };
     };
     services.ttyd.commands.psql-cwd = "${psql-cwd}/bin/psql-cwd";
