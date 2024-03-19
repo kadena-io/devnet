@@ -25,11 +25,11 @@
         "hs-nix-infra": "hs-nix-infra"
       },
       "locked": {
-        "lastModified": 1706632410,
-        "narHash": "sha256-R3D5oxGRSbXJFS+KIoEP0AoyCh2bxMhSEFEVzmutSgU=",
+        "lastModified": 1710773080,
+        "narHash": "sha256-f+VMnn7J4GQYD4tRzWkLEIkSJ4V60z61qZ6UFi1gUjc=",
         "owner": "kadena-io",
         "repo": "chainweb-data",
-        "rev": "757b742bd059a9b41576e629fe391146e09ff4cd",
+        "rev": "fd899884e07e464c85d1687720dfca19adeb3d56",
         "type": "github"
       },
       "original": {
@@ -1012,11 +1012,11 @@
         ]
       },
       "locked": {
-        "lastModified": 1707999958,
-        "narHash": "sha256-Y66O097DhlPe39lplIySZLQJCJSz5Xpj3aGjpFC2GGo=",
+        "lastModified": 1710771252,
+        "narHash": "sha256-cV7YVoSMSLXcvw2MDBDuVU2jvHzdlCAevcdDxFW+6JM=",
         "owner": "kadena-io",
         "repo": "kadena-nix",
-        "rev": "910d1ad474b8a5cbfe8a823483a109836221b3ba",
+        "rev": "712ddcab99f6e0daa19d81dded6f157d3db805fb",
         "type": "github"
       },
       "original": {

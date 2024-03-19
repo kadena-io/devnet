@@ -86,7 +86,16 @@ in
         }
       '';
 
+      mapConnectionUpgrade = ''
+        # $connection_upgrade is used for websocket proxying
+        map $http_upgrade $connection_upgrade {
+            default upgrade;
+            '''      close;
+        }
+      '';
+
       in indentString ''
+        ${mapConnectionUpgrade}
         ${mapRetryAfter}
 
         ${indentString cfg.extraHttpConfig}
