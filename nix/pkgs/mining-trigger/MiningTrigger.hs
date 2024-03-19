@@ -49,7 +49,7 @@ main = run $ do
     ( Opt.long "idle-trigger-period"
    <> Opt.value 10
    <> Opt.metavar "SECONDS"
-   <> Opt.help "Period in seconds to trigger block production"
+   <> Opt.help "Period in seconds to produce another block height when idle"
     )
   transactionTriggerPeriod <- Opt.option Opt.auto
     ( Opt.long "confirmation-trigger-period"
@@ -64,8 +64,8 @@ main = run $ do
    <> Opt.help "Period in seconds to wait for batching transactions"
     )
   defaultConfirmation <- Opt.option Opt.auto
-    ( Opt.long "default-confirmation"
-   <> Opt.value 4
+    ( Opt.long "default-confirmation-count"
+   <> Opt.value 5
    <> Opt.metavar "BLOCKS"
    <> Opt.help "Default number of confirmations for transactions"
     )
@@ -78,6 +78,10 @@ main = run $ do
   return $ do
     ttHandle <- newTTHandle
     requestBlocks miningClientUrl "Startup Trigger" allChains 2
+    let -- Because of the way chainweb-mining-client produces blocks and the way
+        -- it interacts with Chainweb's chain braiding, we need to adjust the
+        -- idleTriggerPeriod to get approximately the desired period.
+        periodicBlocksDelay = idleTriggerPeriod * 0.616
     executeAsync
       [ "Transaction Proxy" <$ transactionProxy ProxyArgs
           { transactionBatchPeriod
@@ -90,7 +94,7 @@ main = run $ do
           miningClientUrl
           transactionTriggerPeriod
           ttHandle
-      , "Periodic Trigger" <$ periodicBlocks miningClientUrl idleTriggerPeriod
+      , "Periodic Trigger" <$ periodicBlocks miningClientUrl periodicBlocksDelay
       ]
   where
     run m = join $ Opt.execParser $ Opt.info
@@ -130,11 +134,11 @@ transactionWorker miningClientUrl triggerPeriod tt = forever $ do
   forM_ (NE.nonEmpty chains) $ \neChains ->
     requestBlocks miningClientUrl "Transaction Worker" neChains confirmations
 
-periodicBlocks :: String -> Int -> IO ()
+periodicBlocks :: String -> Double -> IO ()
 periodicBlocks miningClientUrl delay = forever $ do
   chainid <- randomRIO (0, 19) :: IO Int
   requestBlocks miningClientUrl "Periodic Trigger" (NE.singleton chainid) 1
-  threadDelay $ delay * 1_000_000
+  threadDelay $ round $ delay * 1_000_000
 
 -------------------------------------------------------------------------------
 
