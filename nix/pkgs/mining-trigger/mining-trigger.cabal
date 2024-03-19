@@ -9,6 +9,7 @@ build-type:          Simple
 
 executable mining-trigger
   main-is:             MiningTrigger.hs
+  other-modules:       TriggerState
   build-depends:       base
                      , async
                      , bytestring

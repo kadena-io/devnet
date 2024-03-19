@@ -2,13 +2,11 @@
 {-# LANGUAGE OverloadedLabels #-}
 {-# LANGUAGE OverloadedStrings #-}
 {-# LANGUAGE RecordWildCards #-}
-{-# LANGUAGE StrictData #-}
 
 import Prelude hiding (maximum, minimum)
 
 import Control.Concurrent (threadDelay)
 import Control.Concurrent.Async qualified as Async
-import Control.Concurrent.MVar
 import Control.Lens
 import Control.Monad
 import Control.Monad.IO.Class
@@ -16,24 +14,22 @@ import Data.ByteString.Lazy qualified as BL
 import Data.CaseInsensitive qualified as CI
 import Data.Aeson qualified as A
 import Data.Generics.Labels ()
-import Data.IORef
 import Data.List.NonEmpty qualified as NE
-import Data.Map.Strict qualified as M
-import Data.Maybe (catMaybes)
-import Data.Strict qualified as Strict
 import Data.String (fromString)
 import Data.Text.Lazy.Encoding qualified as T
-import GHC.Generics (Generic)
 import Network.HTTP.Client qualified as HTTP
 import Network.HTTP.Types qualified as HTTP
 import Network.Wai qualified as Wai
 import Network.Wai.Middleware.RequestLogger qualified as Wai
 import Network.Wai.Middleware.Cors qualified as Cors
 import Options.Applicative qualified as Opt
-import System.Clock qualified as Clock
 import System.Random (randomRIO)
 import Text.Printf (printf)
 import Web.Scotty qualified as S
+
+-------------------------------------------------------------------------------
+
+import TriggerState
 
 proxySend :: String -> String -> String -> S.ActionM ()
 proxySend chainwebServiceEndpoint networkId chainId = do
@@ -75,94 +71,11 @@ transactionProxy  ProxyArgs{..} = S.scotty listenPort $ do
     proxySend chainwebServiceEndpoint networkId chainId
     liftIO $ pushTransaction ttHandle transactionBatchPeriod (read chainId) defaultConfirmation
 
-type Confirmations = Int
-type ChainId = Int
-
-data TransactionTriggerState = TTS
-  { chainMap :: (M.Map ChainId Confirmations)
-  , scheduledTrigger :: Strict.Maybe Clock.TimeSpec
-  , pendingFlush :: Bool
-  } deriving (Show, Generic)
-
-emptyTTS :: TransactionTriggerState
-emptyTTS = TTS M.empty Strict.Nothing False
-
-atStrict :: Ord k => k -> Lens' (M.Map k v) (Maybe v)
-atStrict k f = M.alterF f k
-
-insertTransaction ::
-  ChainId -> Clock.TimeSpec -> Confirmations ->
-  TransactionTriggerState -> TransactionTriggerState
-insertTransaction chainId latest confirmations tts =
-  tts & #chainMap . atStrict chainId %~ Just . maybe pending (+pending)
-      & #scheduledTrigger %~ Strict.Just . Strict.maybe latest (min latest)
-      & #pendingFlush .~ True
-  where pending = confirmations + 1 -- Since we need to flush as well
-
-type Demands = ([ChainId], Confirmations)
-
-popPending :: Clock.TimeSpec -> Double -> TransactionTriggerState ->
-  (Demands, TransactionTriggerState)
-popPending now confirmationPeriod tts = if Strict.Just now < scheduledTrigger tts
-  then (([],0), tts)
-  else
-    let
-      confirmationsDemand = if pendingFlush tts then 2 else 1
-      nextTrigger = now + Clock.fromNanoSecs (round $ confirmationPeriod * 1_000_000_000)
-      positive = anon 0 (<=0)
-      (chains, poppedMap) = flip M.traverseMaybeWithKey (chainMap tts) $ \chainId c ->
-        forOf positive (Just c) $ \confirmations ->
-          ([chainId], confirmations - confirmationsDemand)
-      newTTS = tts
-        { chainMap = poppedMap
-        , scheduledTrigger =
-            Strict.toStrict $ nextTrigger <$ guard (not $ M.null poppedMap)
-        , pendingFlush = False
-        }
-    in ((chains, confirmationsDemand), newTTS)
-
-popPendingIO :: IORef TransactionTriggerState -> Double -> IO Demands
-popPendingIO ref confirmationPeriod = do
-  now <- Clock.getTime Clock.Monotonic
-  atomicModifyIORef' ref $ \state ->
-    let (demands, state') = popPending now confirmationPeriod state
-    in (state', demands)
-
-data TTHandle = TTHandle
-  { ttStateRef :: IORef TransactionTriggerState
-  , ttSignal :: MVar ()
-  }
-
-newTTHandle :: IO TTHandle
-newTTHandle = TTHandle <$> newIORef emptyTTS <*> newEmptyMVar
-
-pushTransaction :: TTHandle -> Double -> Int -> Int -> IO ()
-pushTransaction TTHandle{..} batchPeriod chainId pending = do
-  let batchPeriodTimeSpec = Clock.fromNanoSecs $ round $ batchPeriod * 1_000_000_000
-  latest <- (+ batchPeriodTimeSpec) <$> Clock.getTime Clock.Monotonic
-  atomicModifyIORef' ttStateRef $ \state ->
-    (insertTransaction chainId latest pending state, ())
-  putMVar ttSignal ()
-
 transactionWorker :: String -> Double -> TTHandle -> IO ()
-transactionWorker miningClientUrl triggerPeriod TTHandle{..} = forever $ do
-  (chains, confirmations) <- waitTrigger
+transactionWorker miningClientUrl triggerPeriod tt = forever $ do
+  (chains, confirmations) <- waitTrigger triggerPeriod tt
   forM_ (NE.nonEmpty chains) $ \neChains ->
     requestBlocks miningClientUrl "Transaction Worker" neChains confirmations
-  where
-    waitTrigger = do
-      tts <- readIORef ttStateRef
-      let waitScheduled = (Strict.fromStrict $ scheduledTrigger tts) <&> \scheduled -> do
-            now <- Clock.getTime Clock.Monotonic
-            let delay = max 0 $ Clock.toNanoSecs $ scheduled - now
-            threadDelay $ fromIntegral $ delay `div` 1_000
-          waitSignal = takeMVar ttSignal
-          wakeUps = catMaybes
-            [ waitScheduled
-            , Just waitSignal
-            ]
-      void $ Async.waitAnyCancel =<< mapM Async.async wakeUps
-      popPendingIO ttStateRef triggerPeriod
 
 allChains :: NE.NonEmpty Int
 allChains = NE.fromList [0..19]
