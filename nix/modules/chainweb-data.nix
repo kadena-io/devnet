@@ -6,6 +6,7 @@ let
     if strLen s <= startLen + endLen then s
     else strings.substring 0 startLen s + "..." + strings.substring (strLen s - endLen) endLen s;
   cfg = config.services.chainweb-data;
+  port = toString cfg.port;
   absolutePgData = "$(${pkgs.coreutils}/bin/realpath ${config.env.PGDATA})";
   dbstring = "postgresql:///$USER?host=${absolutePgData}";
   chainweb-data-with-common-params = pkgs.writeShellScript "cwd-with-common-params" ''
@@ -23,7 +24,7 @@ let
   '' ;
   start-chainweb-data = pkgs.writeShellScript "start-chainweb-data" ''
     ${chainweb-data-with-common-params} --migrate \
-      server --port ${toString cfg.port} --serve-swagger-ui
+      server --port ${port} --serve-swagger-ui
   '';
   psqlrc = pkgs.writeText ".psqlrc" ''
     \x auto
@@ -100,17 +101,10 @@ in
         postgres.condition = "process_healthy";
       };
       process-compose.readiness_probe = {
-        http_get = {
-          host = "127.0.0.1";
-          scheme = "http";
-          port = cfg.port;
-          path = "/txs/events?limit=1&search=TRANSFER";
-        };
-        initial_delay_seconds = 1;
-        period_seconds = 5;
-        timeout_seconds = 5;
-        success_threshold = 1;
-        failure_threshold = 240;
+        exec.command = ''
+          until curl 'http://localhost:${port}/txs/events?limit=1&search=TRANSFER'; do sleep 0.1 ; done
+        '';
+        timeout_seconds = 1200;
       };
     };
     services.ttyd.commands.psql-cwd = "${psql-cwd}/bin/psql-cwd";
@@ -119,7 +113,7 @@ in
     services.postgres.enable= true;
 
     services.http-server = {
-      upstreams.chainweb-data = "server localhost:${toString cfg.port};";
+      upstreams.chainweb-data = "server localhost:${port};";
       extraHttpConfig = optionalString cfg.throttle ''
         limit_req_zone $binary_remote_addr zone=cwd:10m rate=10r/s;
       '';
@@ -160,7 +154,7 @@ in
           )}
         ''}
 
-        The `chainweb-data` service is configured to listen to port `${toString cfg.port}`,
+        The `chainweb-data` service is configured to listen to port `${port}`,
         however, the public HTTP API is configured to proxy requests to this port.
       '';
     };
