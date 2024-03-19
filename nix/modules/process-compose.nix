@@ -22,7 +22,14 @@ in
     process.implementation = "process-compose";
     sites.landing-page.commands.process-compose.markdown =
       "* `attach`: Attach to the Process Compose management interface";
-    sites.landing-page.container-api.ports = mkAfter
-      "- `${pc-port}`: Process Compose management API";
+    sites.landing-page.container-api = {
+      ports = mkAfter
+        "- `${pc-port}`: Process Compose management API";
+      envVars = mkAfter
+        ( "- `PC_TUI_ENABLED`: When `true`, enables the container's process-compose TUI"
+        + ", when `false`, logs to stdout"
+        + ", defaults to `true` if a TTY is detected or `false` otherwise"
+        );
+    };
   };
 }
