@@ -2,6 +2,7 @@
 {-# LANGUAGE OverloadedLabels #-}
 {-# LANGUAGE OverloadedStrings #-}
 {-# LANGUAGE RecordWildCards #-}
+{-# LANGUAGE ViewPatterns #-}
 
 import Prelude hiding (maximum, minimum)
 
@@ -12,6 +13,7 @@ import Control.Monad
 import Control.Monad.IO.Class
 import Data.ByteString.Lazy qualified as BL
 import Data.CaseInsensitive qualified as CI
+import Data.Char (toLower)
 import Data.Aeson qualified as A
 import Data.Generics.Labels ()
 import Data.List.NonEmpty qualified as NE
@@ -75,15 +77,15 @@ main = run $ do
    <> Opt.metavar "PORT"
    <> Opt.help "Port to listen for transaction requests"
     )
-  disableIdle <- Opt.option Opt.auto
+  ~(FlexiBool disableIdle) <- Opt.option Opt.auto
     ( Opt.long "disable-idle-worker"
-   <> Opt.value False
+   <> Opt.value (FlexiBool False)
    <> Opt.metavar "BOOL"
    <> Opt.help "Disable idle periodic block production"
     )
-  disableConfirmation <- Opt.option Opt.auto
+  ~(FlexiBool disableConfirmation) <- Opt.option Opt.auto
     ( Opt.long "disable-confirmation-worker"
-   <> Opt.value False
+   <> Opt.value (FlexiBool False)
    <> Opt.metavar "BOOL"
    <> Opt.help "Disable confirmation block production"
     )
@@ -209,3 +211,17 @@ requestBlocks miningClientUrl source chainids count = do
 
 allChains :: NE.NonEmpty Int
 allChains = NE.fromList [0..19]
+
+newtype FlexiBool = FlexiBool Bool
+
+instance Read FlexiBool where
+  readsPrec _ str | Just b <- match = [(FlexiBool b, "")]
+    where match = case map toLower str of
+            "true" -> Just True
+            "false" -> Just False
+            "1" -> Just True
+            "0" -> Just False
+            "yes" -> Just True
+            "no" -> Just False
+            _ -> Nothing
+  readsPrec _ _ = []
