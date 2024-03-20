@@ -26,7 +26,10 @@ let
     };
     MINING_DISABLE_IDLE = {
       description = ''
-        Disable periodic mining when the network is idle.
+        Disable periodic mining when the network is idle. Note that this is *NOT RECOMMENDED*
+        for most cases, since in the absence of mining, the node's current time will
+        lag behind and transactions will not be accepted. Consider increasing MINING_IDLE_PERIOD
+        instead.
       '';
       summary = "Disable idle mining";
       default = false;
