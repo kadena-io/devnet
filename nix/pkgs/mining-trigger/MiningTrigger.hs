@@ -126,8 +126,12 @@ transactionProxy  ProxyArgs{..} = S.scotty listenPort $ do
     networkId <- S.captureParam "1"
     chainId <- S.captureParam "2"
     accepted <- proxySend chainwebServiceEndpoint networkId chainId
-    liftIO $ when accepted $
-      pushTransaction ttHandle transactionBatchPeriod (read chainId) defaultConfirmation
+    let demand = defaultConfirmation
+    liftIO $ when accepted $ do
+      if demand > 0
+      then pushTransaction ttHandle transactionBatchPeriod (read chainId) demand
+      else putStrLn $
+        "(Transaction Proxy) Not requesting blocks due to confirmation demand = " ++ show demand
 
 transactionWorker :: String -> Double -> TTHandle -> IO ()
 transactionWorker miningClientUrl triggerPeriod tt = forever $ do
