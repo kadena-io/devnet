@@ -64,7 +64,7 @@ main = run $ do
    <> Opt.help "Period in seconds to wait for batching transactions"
     )
   defaultConfirmation <- Opt.option Opt.auto
-    ( Opt.long "default-confirmation-count"
+    ( Opt.long "confirmation-count"
    <> Opt.value 5
    <> Opt.metavar "BLOCKS"
    <> Opt.help "Default number of confirmations for transactions"

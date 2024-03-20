@@ -1,0 +1,36 @@
+html {
+  scroll-behavior: smooth;
+}
+
+:target {
+  animation: yellowflash-bg 4s;
+}
+@keyframes yellowflash-bg {
+  0%, 50% { background: yellow; }
+  100% { background: transparent; }
+}
+
+details {
+  border: 2px solid #00000024; /* Customizable border */
+  padding: 10px;
+  border-radius: 5px; /* Optional: for rounded corners */
+  position: relative;
+}
+
+summary {
+  list-style: none; /* Removes the default marker */
+}
+
+summary::-webkit-details-marker {
+  display: none; /* Specific to WebKit browsers to remove the default marker */
+}
+
+summary::after {
+  content: '▼'; /* Default closed state marker */
+  float: right; /* Positioning the marker to the right */
+  transition: transform 0.3s ease; /* Smooth transition for rotation */
+}
+
+details[open] summary::after {
+  transform: rotate(180deg); /* Flips the marker when details are open */
+}
