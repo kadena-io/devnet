@@ -75,6 +75,18 @@ main = run $ do
    <> Opt.metavar "PORT"
    <> Opt.help "Port to listen for transaction requests"
     )
+  disableIdle <- Opt.option Opt.auto
+    ( Opt.long "disable-idle-worker"
+   <> Opt.value False
+   <> Opt.metavar "BOOL"
+   <> Opt.help "Disable idle periodic block production"
+    )
+  disableConfirmation <- Opt.option Opt.auto
+    ( Opt.long "disable-confirmation-worker"
+   <> Opt.value False
+   <> Opt.metavar "BOOL"
+   <> Opt.help "Disable confirmation block production"
+    )
   return $ do
     ttHandle <- newTTHandle
     requestBlocks miningClientUrl "Startup Trigger" allChains 2
@@ -90,11 +102,15 @@ main = run $ do
           , defaultConfirmation
           , ttHandle
           }
-      , "Transaction Worker" <$ transactionWorker
+      ] ++ [
+        "Transaction Worker" <$ transactionWorker
           miningClientUrl
           transactionTriggerPeriod
           ttHandle
-      , "Periodic Trigger" <$ periodicBlocks miningClientUrl periodicBlocksDelay
+        | not disableConfirmation
+      ] ++ [
+        "Periodic Trigger" <$ periodicBlocks miningClientUrl periodicBlocksDelay
+        | not disableIdle
       ]
   where
     run m = join $ Opt.execParser $ Opt.info

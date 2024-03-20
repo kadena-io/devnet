@@ -24,6 +24,14 @@ let
       summary = "Time to mint when idle";
       default = 30.0;
     };
+    MINING_DISABLE_IDLE = {
+      description = ''
+        Disable periodic mining when the network is idle.
+      '';
+      summary = "Disable idle mining";
+      default = false;
+      type = types.bool;
+    };
     MINING_BATCH_PERIOD = {
       description = ''
         Wait for this period, in seconds, after receiving a transaction and then mine blocks
@@ -49,6 +57,14 @@ let
       '';
       summary = "Confirmation period";
       default = 5.0;
+    };
+    MINING_DISABLE_CONFIRMATION = {
+      description = ''
+        Disable quick mining for confirming transactions.
+      '';
+      summary = "Disable confirmation mining";
+      default = false;
+      type = types.bool;
     };
   };
   envValue = name: builtins.toString (builtins.toJSON cfg.envVars.${name});
@@ -103,6 +119,8 @@ in
           --confirmation-trigger-period ${spliceVariable "MINING_CONFIRMATION_PERIOD"} \
           --transaction-batch-period ${spliceVariable "MINING_BATCH_PERIOD"} \
           --confirmation-count ${spliceVariable "MINING_CONFIRMATION_COUNT"} \
+          --disable-idle-worker ${spliceVariable "MINING_DISABLE_IDLE"} \
+          --disable-confirmation-worker ${spliceVariable "MINING_DISABLE_CONFIRMATION"} \
       '').outPath;
       process-compose.depends_on = {
         chainweb-node.condition = "process_healthy";
