@@ -116,16 +116,20 @@ in
       services.chainweb-mining-client = {
         order = 8;
         markdown = ''
-          ### On-Demand Mining
-          This container has a chainweb-mining-client in on-demand mode.
-          You can produce blocks by sending a POST request to the `/make-blocks` endpoint.
+          ### Flexible Mining
+          This container comes with a `chainweb-mining-client` in `on-demand` mode and a
+          `mining-trigger` service that triggers mining periodically and also in response
+          to incoming transactions. You can customise the mining behaviour by setting
+          [environment variables](#mining-env-vars).
+
+          You can also trigger minting explicitly by sending `POST /make-blocks` requests.
           (see [the relevant section in the chainweb-mining-client README](https://github.com/kadena-io/chainweb-mining-client/tree/master?tab=readme-ov-file#non-pow-mining))
 
           <details> <summary id="mining-env-vars" > **Environment Variables** </summary>
 
           <div style="margin-left:10px">
           ${concatMapStringsSep "\n" (name: with envVars.${name}; ''
-            #### <span> ${name} </span>
+            #### ${name}
             ${description} (default: ${envValue name})
           '') (builtins.attrNames envVars)}
           </div>
