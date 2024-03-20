@@ -63,7 +63,9 @@ let
     };
     MINING_DISABLE_CONFIRMATION = {
       description = ''
-        Disable quick mining for confirming transactions.
+        Disable quick mining for confirming transactions. Note that if you want to mint
+        the blocks containing transactions only and no further confirmations, don't disable
+        this option and use MINING_CONFIRMATION_COUNT=1 instead.
       '';
       summary = "Disable confirmation mining";
       default = false;
