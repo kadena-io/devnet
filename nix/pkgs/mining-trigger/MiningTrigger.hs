@@ -125,8 +125,9 @@ transactionProxy  ProxyArgs{..} = S.scotty listenPort $ do
   S.post (S.regex "/chainweb/0.0/([0-9a-zA-Z\\-\\_]+)/chain/([0-9]+)/pact/api/v1/send") $ do
     networkId <- S.captureParam "1"
     chainId <- S.captureParam "2"
-    proxySend chainwebServiceEndpoint networkId chainId
-    liftIO $ pushTransaction ttHandle transactionBatchPeriod (read chainId) defaultConfirmation
+    accepted <- proxySend chainwebServiceEndpoint networkId chainId
+    liftIO $ when accepted $
+      pushTransaction ttHandle transactionBatchPeriod (read chainId) defaultConfirmation
 
 transactionWorker :: String -> Double -> TTHandle -> IO ()
 transactionWorker miningClientUrl triggerPeriod tt = forever $ do
@@ -142,7 +143,7 @@ periodicBlocks miningClientUrl delay = forever $ do
 
 -------------------------------------------------------------------------------
 
-proxySend :: String -> String -> String -> S.ActionM ()
+proxySend :: String -> String -> String -> S.ActionM Bool
 proxySend chainwebServiceEndpoint networkId chainId = do
   let path = "/chainweb/0.0/" ++ networkId ++ "/chain/" ++ chainId ++ "/pact/api/v1/send"
   body <- S.body
@@ -161,6 +162,7 @@ proxySend chainwebServiceEndpoint networkId chainId = do
     unless (name `elem` [ "Transfer-Encoding", "Access-Control-Allow-Origin"]) $
       S.setHeader (conv $ CI.original name) (conv value)
   S.raw $ HTTP.responseBody response
+  return $ HTTP.responseStatus response == HTTP.status200
 
 
 requestBlocks :: String -> String -> NE.NonEmpty Int -> Int -> IO ()
