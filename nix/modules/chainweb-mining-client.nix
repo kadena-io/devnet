@@ -120,10 +120,9 @@ in
           This container comes with a `chainweb-mining-client` in `on-demand` mode and a
           `mining-trigger` service that triggers mining periodically and also in response
           to incoming transactions. You can customise the mining behaviour by setting
-          [environment variables](#mining-env-vars).
-
-          You can also trigger minting explicitly by sending `POST /make-blocks` requests.
-          (see [the relevant section in the chainweb-mining-client README](https://github.com/kadena-io/chainweb-mining-client/tree/master?tab=readme-ov-file#non-pow-mining))
+          [environment variables](#mining-env-vars). You can also trigger minting explicitly
+          by sending [`POST /make-blocks`](https://github.com/kadena-io/chainweb-mining-client/tree/master?tab=readme-ov-file#non-pow-mining)
+          requests.
 
           <details> <summary id="mining-env-vars" > **Environment Variables** </summary>
 

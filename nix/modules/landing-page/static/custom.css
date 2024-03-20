@@ -11,10 +11,9 @@ html {
 }
 
 details {
-  border: 2px solid #00000024; /* Customizable border */
+  border: 2px solid #00000024;
   padding: 10px;
-  border-radius: 5px; /* Optional: for rounded corners */
-  position: relative;
+  border-radius: 5px;
 }
 
 summary {
@@ -27,8 +26,8 @@ summary::-webkit-details-marker {
 
 summary::after {
   content: '▼'; /* Default closed state marker */
-  float: right; /* Positioning the marker to the right */
-  transition: transform 0.3s ease; /* Smooth transition for rotation */
+  float: right;
+  transition: transform 0.3s ease;
 }
 
 details[open] summary::after {
