@@ -90,11 +90,12 @@ main = run $ do
   return $ do
     ttHandle <- newTTHandle
     requestBlocks miningClientUrl "Startup Trigger" allChains 2
+    checkIdleTriggerPeriod idleTriggerPeriod
     let -- Because of the way chainweb-mining-client produces blocks and the way
         -- it interacts with Chainweb's chain braiding, we need to adjust the
         -- idleTriggerPeriod to get approximately the desired period.
         periodicBlocksDelay = idleTriggerPeriod * 0.616
-    executeAsync
+    executeAsync $
       [ "Transaction Proxy" <$ transactionProxy ProxyArgs
           { transactionBatchPeriod
           , chainwebServiceEndpoint
@@ -119,6 +120,8 @@ main = run $ do
     executeAsync threads = do
       (_, name) <- Async.waitAnyCancel =<< mapM Async.async threads
       putStrLn $ "Thread " ++ name ++ " has exited"
+    checkIdleTriggerPeriod p = when (p <= 0) $
+      fail "Error: Idle trigger period must be positive"
 
 -------------------------------------------------------------------------------
 -- Worker Threads
