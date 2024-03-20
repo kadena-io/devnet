@@ -71,6 +71,15 @@ in
       type = details.type or float;
       inherit (details) default description;
     }) envVars;
+    expose-make-blocks = mkOption {
+      type = types.bool;
+      default = true;
+      description = ''
+        Expose the `/make-blocks` endpoint on the HTTP server. This endpoint is used to trigger
+        mining explicitly. This option is useful for testing and development purposes, but
+        it is not recommended for publicly accessible deployments.
+      '';
+    };
   };
   config = mkIf cfg.enable {
     packages = [ pkgs.chainweb-mining-client ];
@@ -102,15 +111,19 @@ in
     };
     services.http-server = {
       upstreams.chainweb-mining-client = "server localhost:${on-demand-port};";
-      servers.devnet.extraConfig = mkBefore ''
-        location = /make-blocks {
-          proxy_pass http://chainweb-mining-client/make-blocks;
-          proxy_buffering off;
-        }
-        location ~ ^/chainweb/0.0/[0-9a-zA-Z\-\_]+/chain/[0-9]+/pact/api/v1/send {
-          proxy_pass http://localhost:1791;
-        }
-      '';
+      servers.devnet.extraConfig = mkMerge [
+        (mkIf cfg.expose-make-blocks ''
+          location = /make-blocks {
+            proxy_pass http://chainweb-mining-client/make-blocks;
+            proxy_buffering off;
+          }
+        '')
+        (mkBefore ''
+          location ~ ^/chainweb/0.0/[0-9a-zA-Z\-\_]+/chain/[0-9]+/pact/api/v1/send {
+            proxy_pass http://localhost:1791;
+          }
+        '')
+      ];
     };
     sites.landing-page = {
       services.chainweb-mining-client = {
@@ -120,9 +133,11 @@ in
           This container comes with a `chainweb-mining-client` in `on-demand` mode and a
           `mining-trigger` service that triggers mining periodically and also in response
           to incoming transactions. You can customise the mining behaviour by setting
-          [environment variables](#mining-env-vars). You can also trigger minting explicitly
-          by sending [`POST /make-blocks`](https://github.com/kadena-io/chainweb-mining-client/tree/master?tab=readme-ov-file#non-pow-mining)
-          requests.
+          [environment variables](#mining-env-vars). ${optionalString cfg.expose-make-blocks ''
+            You can also trigger mining explicitly
+            by sending [`POST /make-blocks`](https://github.com/kadena-io/chainweb-mining-client/tree/master?tab=readme-ov-file#non-pow-mining)
+            requests.
+          ''}
 
           <details> <summary id="mining-env-vars" > **Environment Variables** </summary>
 

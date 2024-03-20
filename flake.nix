@@ -168,6 +168,7 @@
           services.postgres.forward-socket-port = null;
           services.chainweb-node.throttle = true;
           services.chainweb-data.throttle = true;
+          services.chainweb-mining-client.expose-make-blocks = false;
         };
         container-default = {
           imports = [default];
