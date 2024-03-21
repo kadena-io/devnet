@@ -24,6 +24,8 @@ import Network.HTTP.Types qualified as HTTP
 import Network.Wai qualified as Wai
 import Network.Wai.Middleware.RequestLogger qualified as Wai
 import Network.Wai.Middleware.Cors qualified as Cors
+import Options.Applicative
+    ( auto, help, long, metavar, option, strOption, value )
 import Options.Applicative qualified as Opt
 import System.Random (randomRIO)
 import Text.Printf (printf)
@@ -35,59 +37,59 @@ import TriggerState
 
 main :: IO ()
 main = run $ do
-  miningClientUrl <- Opt.strOption
-    ( Opt.long "mining-client-url"
-   <> Opt.value "http://localhost:1790"
-   <> Opt.metavar "URL"
-   <> Opt.help "URL of the mining client to trigger block production"
+  miningClientUrl <- strOption
+    ( long "mining-client-url"
+   <> value "http://localhost:1790"
+   <> metavar "URL"
+   <> help "URL of the mining client to trigger block production"
     )
-  chainwebServiceEndpoint <- Opt.strOption
-    ( Opt.long "chainweb-service-endpoint"
-   <> Opt.value "http://localhost:1848"
-   <> Opt.metavar "URL"
-   <> Opt.help "URL of the chainweb service to proxy transactions to"
+  chainwebServiceEndpoint <- strOption
+    ( long "chainweb-service-endpoint"
+   <> value "http://localhost:1848"
+   <> metavar "URL"
+   <> help "URL of the chainweb service to proxy transactions to"
     )
-  idleTriggerPeriod <- Opt.option Opt.auto
-    ( Opt.long "idle-trigger-period"
-   <> Opt.value 10
-   <> Opt.metavar "SECONDS"
-   <> Opt.help "Period in seconds to produce another block height when idle"
+  idleTriggerPeriod <- option auto
+    ( long "idle-trigger-period"
+   <> value 10
+   <> metavar "SECONDS"
+   <> help "Period in seconds to produce another block height when idle"
     )
-  transactionTriggerPeriod <- Opt.option Opt.auto
-    ( Opt.long "confirmation-trigger-period"
-   <> Opt.value 1
-   <> Opt.metavar "SECONDS"
-   <> Opt.help "Period in seconds to trigger consecutive confirmation blocks"
+  transactionTriggerPeriod <- option auto
+    ( long "confirmation-trigger-period"
+   <> value 1
+   <> metavar "SECONDS"
+   <> help "Period in seconds to trigger consecutive confirmation blocks"
     )
-  transactionBatchPeriod <- Opt.option Opt.auto
-    ( Opt.long "transaction-batch-period"
-   <> Opt.value 0.05
-   <> Opt.metavar "SECONDS"
-   <> Opt.help "Period in seconds to wait for batching transactions"
+  transactionBatchPeriod <- option auto
+    ( long "transaction-batch-period"
+   <> value 0.05
+   <> metavar "SECONDS"
+   <> help "Period in seconds to wait for batching transactions"
     )
-  defaultConfirmation <- Opt.option Opt.auto
-    ( Opt.long "confirmation-count"
-   <> Opt.value 5
-   <> Opt.metavar "BLOCKS"
-   <> Opt.help "Default number of confirmations for transactions"
+  defaultConfirmation <- option auto
+    ( long "confirmation-count"
+   <> value 5
+   <> metavar "BLOCKS"
+   <> help "Default number of confirmations for transactions"
     )
-  listenPort <- Opt.option Opt.auto
-    ( Opt.long "port"
-   <> Opt.value 1791
-   <> Opt.metavar "PORT"
-   <> Opt.help "Port to listen for transaction requests"
+  listenPort <- option auto
+    ( long "port"
+   <> value 1791
+   <> metavar "PORT"
+   <> help "Port to listen for transaction requests"
     )
-  ~(FlexiBool disableIdle) <- Opt.option Opt.auto
-    ( Opt.long "disable-idle-worker"
-   <> Opt.value (FlexiBool False)
-   <> Opt.metavar "BOOL"
-   <> Opt.help "Disable idle periodic block production"
+  ~(FlexiBool disableIdle) <- option auto
+    ( long "disable-idle-worker"
+   <> value (FlexiBool False)
+   <> metavar "BOOL"
+   <> help "Disable idle periodic block production"
     )
-  ~(FlexiBool disableConfirmation) <- Opt.option Opt.auto
-    ( Opt.long "disable-confirmation-worker"
-   <> Opt.value (FlexiBool False)
-   <> Opt.metavar "BOOL"
-   <> Opt.help "Disable confirmation block production"
+  ~(FlexiBool disableConfirmation) <- option auto
+    ( long "disable-confirmation-worker"
+   <> value (FlexiBool False)
+   <> metavar "BOOL"
+   <> help "Disable confirmation block production"
     )
   return $ do
     ttHandle <- newTTHandle
@@ -182,10 +184,10 @@ proxySend chainwebServiceEndpoint networkId chainId = do
         }
   response <- liftIO $ HTTP.httpLbs downstreamRequest' manager
   S.status $ HTTP.responseStatus response
-  forM_ (HTTP.responseHeaders response) $ \(name, value) -> do
+  forM_ (HTTP.responseHeaders response) $ \(name, val) -> do
     let conv = T.decodeUtf8 . BL.fromStrict
     unless (name `elem` [ "Transfer-Encoding", "Access-Control-Allow-Origin"]) $
-      S.setHeader (conv $ CI.original name) (conv value)
+      S.setHeader (conv $ CI.original name) (conv val)
   S.raw $ HTTP.responseBody response
   return $ HTTP.responseStatus response == HTTP.status200
 
