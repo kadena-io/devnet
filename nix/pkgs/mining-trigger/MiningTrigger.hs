@@ -1,4 +1,5 @@
 {-# LANGUAGE ApplicativeDo #-}
+{-# LANGUAGE DuplicateRecordFields #-}
 {-# LANGUAGE LambdaCase #-}
 {-# LANGUAGE OverloadedLabels #-}
 {-# LANGUAGE OverloadedStrings #-}
@@ -57,7 +58,7 @@ main = run $ do
    <> metavar "SECONDS"
    <> help "Period in seconds to produce another block height when idle"
     )
-  transactionTriggerPeriod <- option auto
+  confirmationTriggerPeriod <- option auto
     ( long "confirmation-trigger-period"
    <> value 1
    <> metavar "SECONDS"
@@ -68,6 +69,12 @@ main = run $ do
    <> value 0.05
    <> metavar "SECONDS"
    <> help "Period in seconds to wait for batching transactions"
+    )
+  miningCooldown <- option auto
+    ( long "mining-cooldown"
+   <> value 0.05
+   <> metavar "SECONDS"
+   <> help "The minimum time between mining requests"
     )
   defaultConfirmation <- option auto
     ( long "confirmation-count"
@@ -111,11 +118,13 @@ main = run $ do
           , ttHandle
           }
       ] ++ [
-        "Transaction Worker" <$ transactionWorker
-          miningClientUrl
-          transactionTriggerPeriod
-          ttHandle
-          reportActivity
+        "Transaction Worker" <$ transactionWorker TransactionWorkerArgs
+          { miningClientUrl
+          , confirmationTriggerPeriod
+          , ttHandle
+          , reportActivity
+          , miningCooldown
+          }
         | not disableConfirmation
       ] ++ [
         "Periodic Trigger" <$ periodicBlocks
@@ -163,12 +172,22 @@ transactionProxy  ProxyArgs{..} = S.scotty listenPort $ do
       else putStrLn $
         "(Transaction Proxy) Not requesting blocks due to confirmation demand = " ++ show demand
 
-transactionWorker :: String -> Double -> TTHandle -> ReportSignal -> IO ()
-transactionWorker miningClientUrl triggerPeriod tt reportActivity = forever $ do
-  (chains, confirmations) <- waitTrigger triggerPeriod tt
+data TransactionWorkerArgs = TransactionWorkerArgs
+  { miningClientUrl :: String
+  , confirmationTriggerPeriod :: Double
+  , ttHandle :: TTHandle
+  , reportActivity :: ReportSignal
+  , miningCooldown :: Double
+  }
+
+transactionWorker :: TransactionWorkerArgs -> IO ()
+transactionWorker TransactionWorkerArgs{..} = forever $ do
+  (chains, confirmations) <- waitTrigger confirmationTriggerPeriod ttHandle
   report reportActivity
   forM_ (NE.nonEmpty chains) $ \neChains ->
-    requestBlocks miningClientUrl "Transaction Worker" neChains confirmations
+    replicateM_ confirmations $ do
+      requestBlocks miningClientUrl "Transaction Worker" neChains confirmations
+      threadDelay $ round $ miningCooldown * 1_000_000
 
 periodicBlocks :: String -> Double -> WaitSignal -> IO ()
 periodicBlocks miningClientUrl delay waitActivity = forever $ do
