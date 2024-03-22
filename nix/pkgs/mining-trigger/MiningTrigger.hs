@@ -113,9 +113,13 @@ main = run $ do
     )
   return $ do
     (logger, cleanup) <- Logger.newFastLogger $ Logger.LogStdout Logger.defaultBufSize
+    manager <- HTTP.newManager HTTP.defaultManagerSettings
     let
       runApp name app = do
-        let ctx = AppCtx $ \msg -> logger $ "[" <> name <> "] " <> msg
+        let ctx = AppCtx
+              { appLogger = \msg -> logger $ "[" <> name <> "] " <> msg
+              , appManager = manager
+              }
         logger $ "Starting " <> name
         runReaderT app ctx
     ttHandle <- newTTHandle
@@ -181,6 +185,7 @@ data ProxyArgs = ProxyArgs
 transactionProxy :: ProxyArgs -> App ()
 transactionProxy  ProxyArgs{..} = do
   Logg logg <- askLogg
+  manager <- asks appManager
   let setFormat s = if devRequestLogger then s else s
         { Wai.outputFormat = Wai.Apache Wai.FromHeader
         }
@@ -196,7 +201,7 @@ transactionProxy  ProxyArgs{..} = do
     S.post (S.regex "/chainweb/0.0/([0-9a-zA-Z\\-\\_]+)/chain/([0-9]+)/pact/api/v1/send") $ do
       networkId <- S.captureParam "1"
       chainId <- S.captureParam "2"
-      accepted <- proxySend chainwebServiceEndpoint networkId chainId
+      accepted <- proxySend manager chainwebServiceEndpoint networkId chainId
       let demand = defaultConfirmation
       liftIO $ when accepted $ do
         if demand > 0
@@ -233,25 +238,25 @@ periodicBlocks miningClientUrl delay waitActivity = forever $ do
 -------------------------------------------------------------------------------
 
 data AppCtx = AppCtx
-  { logger :: Logger.FastLogger
+  { appLogger :: Logger.FastLogger
+  , appManager :: HTTP.Manager
   }
 
 type App = ReaderT AppCtx IO
 
 logg :: Logger.LogStr -> App ()
-logg msg = asks logger >>= \logger -> liftIO $ logger msg
+logg msg = asks appLogger >>= \logger -> liftIO $ logger msg
 
 newtype Logg = Logg (forall m. MonadIO m => Logger.LogStr -> m ())
 
 askLogg :: App Logg
-askLogg = asks logger <&> \l -> Logg $ \msg -> liftIO $ l msg
+askLogg = asks appLogger <&> \l -> Logg $ \msg -> liftIO $ l msg
 
-proxySend :: String -> String -> String -> S.ActionM Bool
-proxySend chainwebServiceEndpoint networkId chainId = do
+proxySend :: HTTP.Manager -> String -> String -> String -> S.ActionM Bool
+proxySend manager chainwebServiceEndpoint networkId chainId = do
   let path = "/chainweb/0.0/" ++ networkId ++ "/chain/" ++ chainId ++ "/pact/api/v1/send"
   body <- S.body
   request <- S.request
-  manager <- liftIO $ HTTP.newManager HTTP.defaultManagerSettings
   downstreamRequest <- liftIO $ HTTP.parseRequest $ chainwebServiceEndpoint ++ path
   let downstreamRequest' = downstreamRequest
         { HTTP.method = "POST"
@@ -270,8 +275,8 @@ proxySend chainwebServiceEndpoint networkId chainId = do
 
 requestBlocks :: String -> NE.NonEmpty Int -> Int -> App ()
 requestBlocks miningClientUrl chainids count = do
+  manager <- asks appManager
   response <- liftIO $ do
-    manager <- HTTP.newManager HTTP.defaultManagerSettings
     request <- HTTP.parseRequest (miningClientUrl <> "/make-blocks") <&> \r -> r
       { HTTP.method = "POST"
       , HTTP.requestHeaders = [("Content-Type", "application/json")]
