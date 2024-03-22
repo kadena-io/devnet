@@ -160,7 +160,7 @@ main = run $ do
           }
         | not disableConfirmation
       ] ++ [
-        "Periodic Trigger" =: periodicBlocks
+        "Idle Trigger" =: periodicBlocks
           miningClientUrl
           periodicBlocksDelay
           waitActivity
