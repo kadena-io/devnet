@@ -113,8 +113,10 @@ main = run $ do
    <> help "Enable request logging in development mode"
     )
   return $ do
-    (logger, cleanup) <- Logger.newFastLogger $ Logger.LogStdout Logger.defaultBufSize
-    let logLn msg = logger $ msg <> "\n"
+    (timedLogger, cleanup) <- do
+      timeCache <- Logger.newTimeCache Logger.simpleTimeFormat'
+      Logger.newTimedFastLogger timeCache $ Logger.LogStdout Logger.defaultBufSize
+    let logLn msg = timedLogger $ \time -> Logger.toLogStr time <> " " <> msg <> "\n"
     manager <- HTTP.newManager HTTP.defaultManagerSettings
     let
       runApp name app = do
