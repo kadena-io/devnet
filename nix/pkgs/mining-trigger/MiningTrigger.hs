@@ -151,7 +151,7 @@ main = run $ do
           , devRequestLogger
           }
       ] ++ [
-        "Confirmation Trigger" =: transactionWorker TransactionWorkerArgs
+        "Confirmation Trigger" =: confirmationTrigger TransactionWorkerArgs
           { miningClientUrl
           , confirmationTriggerPeriod
           , ttHandle
@@ -160,7 +160,7 @@ main = run $ do
           }
         | not disableConfirmation
       ] ++ [
-        "Idle Trigger" =: periodicBlocks
+        "Idle Trigger" =: idleTrigger
           miningClientUrl
           periodicBlocksDelay
           waitActivity
@@ -226,8 +226,8 @@ data TransactionWorkerArgs = TransactionWorkerArgs
   , miningCooldown :: Double
   }
 
-transactionWorker :: TransactionWorkerArgs -> App ()
-transactionWorker TransactionWorkerArgs{..} = forever $ do
+confirmationTrigger :: TransactionWorkerArgs -> App ()
+confirmationTrigger TransactionWorkerArgs{..} = forever $ do
   (chains, confirmations) <- liftIO $ waitTrigger confirmationTriggerPeriod ttHandle
   liftIO $ report reportActivity
   forM_ (NE.nonEmpty chains) $ \neChains ->
@@ -235,8 +235,8 @@ transactionWorker TransactionWorkerArgs{..} = forever $ do
       requestBlocks miningClientUrl neChains 1
       liftIO $ threadDelay $ round $ miningCooldown * 1_000_000
 
-periodicBlocks :: String -> Double -> WaitSignal -> App ()
-periodicBlocks miningClientUrl delay waitActivity = forever $ do
+idleTrigger :: String -> Double -> WaitSignal -> App ()
+idleTrigger miningClientUrl delay waitActivity = forever $ do
   let sleep = threadDelay $ round $ delay * 1_000_000
   liftIO (Async.race (wait waitActivity) sleep) >>= \case
     Left () -> return () -- Network not idle
