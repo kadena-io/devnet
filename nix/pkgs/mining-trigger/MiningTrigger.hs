@@ -100,6 +100,12 @@ main = run $ do
    <> metavar "BOOL"
    <> help "Disable confirmation block production"
     )
+  ~(FlexiBool devRequestLogger) <- option auto
+    ( long "dev-request-logger"
+   <> value (FlexiBool True)
+   <> metavar "BOOL"
+   <> help "Enable request logging in development mode"
+    )
   return $ do
     ttHandle <- newTTHandle
     (waitActivity, reportActivity) <- newSignal
@@ -116,6 +122,7 @@ main = run $ do
           , listenPort
           , defaultConfirmation
           , ttHandle
+          , devRequestLogger
           }
       ] ++ [
         "Transaction Worker" <$ transactionWorker TransactionWorkerArgs
@@ -153,11 +160,12 @@ data ProxyArgs = ProxyArgs
   , listenPort :: Int
   , defaultConfirmation :: Int
   , ttHandle :: TTHandle
+  , devRequestLogger :: Bool
   }
 
 transactionProxy :: ProxyArgs -> IO ()
 transactionProxy  ProxyArgs{..} = S.scotty listenPort $ do
-  S.middleware Wai.logStdoutDev
+  S.middleware $ if devRequestLogger then Wai.logStdoutDev else Wai.logStdout
   S.middleware $ Cors.cors . const . Just $ Cors.simpleCorsResourcePolicy
     { Cors.corsRequestHeaders = Cors.simpleHeaders
     }
