@@ -186,7 +186,7 @@ transactionWorker TransactionWorkerArgs{..} = forever $ do
   report reportActivity
   forM_ (NE.nonEmpty chains) $ \neChains ->
     replicateM_ confirmations $ do
-      requestBlocks miningClientUrl "Confirmation Trigger" neChains confirmations
+      requestBlocks miningClientUrl "Confirmation Trigger" neChains 1
       threadDelay $ round $ miningCooldown * 1_000_000
 
 periodicBlocks :: String -> Double -> WaitSignal -> IO ()
