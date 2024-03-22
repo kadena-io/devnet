@@ -113,14 +113,14 @@ main = run $ do
     )
   return $ do
     (logger, cleanup) <- Logger.newFastLogger $ Logger.LogStdout Logger.defaultBufSize
+    let logLn msg = logger $ msg <> "\n"
     manager <- HTTP.newManager HTTP.defaultManagerSettings
     let
       runApp name app = do
         let ctx = AppCtx
-              { appLogger = \msg -> logger $ "[" <> name <> "] " <> msg
+              { appLogger = \msg -> logLn $ "[" <> name <> "] " <> msg
               , appManager = manager
               }
-        logger $ "Starting " <> name
         runReaderT app ctx
     ttHandle <- newTTHandle
     (waitActivity, reportActivity) <- newSignal
@@ -131,10 +131,11 @@ main = run $ do
         -- idleTriggerPeriod to get approximately the desired period.
         periodicBlocksDelay = idleTriggerPeriod * 0.616
         executeAsync threads = do
-          let threadIOs = threads <&> \(name, threadApp) ->
+          let threadIOs = threads <&> \(name, threadApp) -> do
+                logLn $ "Starting " <> name
                 name <$ runApp name threadApp
           (_, name) <- Async.waitAnyCancel =<< mapM Async.async threadIOs
-          logger $ "Thread " <> name <> " has exited"
+          logLn $ "Thread " <> name <> " has exited"
         name =: thread = (name, thread)
 
     flip finally cleanup $ executeAsync $
