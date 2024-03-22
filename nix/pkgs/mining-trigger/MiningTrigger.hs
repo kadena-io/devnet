@@ -1,4 +1,5 @@
 {-# LANGUAGE ApplicativeDo #-}
+{-# LANGUAGE LambdaCase #-}
 {-# LANGUAGE OverloadedLabels #-}
 {-# LANGUAGE OverloadedStrings #-}
 {-# LANGUAGE RecordWildCards #-}
@@ -8,6 +9,7 @@ import Prelude hiding (maximum, minimum)
 
 import Control.Concurrent (threadDelay)
 import Control.Concurrent.Async qualified as Async
+import Control.Concurrent.MVar
 import Control.Lens
 import Control.Monad
 import Control.Monad.IO.Class
@@ -93,6 +95,7 @@ main = run $ do
     )
   return $ do
     ttHandle <- newTTHandle
+    (waitActivity, reportActivity) <- newSignal
     requestBlocks miningClientUrl "Startup Trigger" allChains 2
     checkIdleTriggerPeriod idleTriggerPeriod
     let -- Because of the way chainweb-mining-client produces blocks and the way
@@ -112,9 +115,13 @@ main = run $ do
           miningClientUrl
           transactionTriggerPeriod
           ttHandle
+          reportActivity
         | not disableConfirmation
       ] ++ [
-        "Periodic Trigger" <$ periodicBlocks miningClientUrl periodicBlocksDelay
+        "Periodic Trigger" <$ periodicBlocks
+          miningClientUrl
+          periodicBlocksDelay
+          waitActivity
         | not disableIdle
       ]
   where
@@ -156,17 +163,21 @@ transactionProxy  ProxyArgs{..} = S.scotty listenPort $ do
       else putStrLn $
         "(Transaction Proxy) Not requesting blocks due to confirmation demand = " ++ show demand
 
-transactionWorker :: String -> Double -> TTHandle -> IO ()
-transactionWorker miningClientUrl triggerPeriod tt = forever $ do
+transactionWorker :: String -> Double -> TTHandle -> ReportSignal -> IO ()
+transactionWorker miningClientUrl triggerPeriod tt reportActivity = forever $ do
   (chains, confirmations) <- waitTrigger triggerPeriod tt
+  report reportActivity
   forM_ (NE.nonEmpty chains) $ \neChains ->
     requestBlocks miningClientUrl "Transaction Worker" neChains confirmations
 
-periodicBlocks :: String -> Double -> IO ()
-periodicBlocks miningClientUrl delay = forever $ do
-  chainid <- randomRIO (0, 19) :: IO Int
-  requestBlocks miningClientUrl "Periodic Trigger" (NE.singleton chainid) 1
-  threadDelay $ round $ delay * 1_000_000
+periodicBlocks :: String -> Double -> WaitSignal -> IO ()
+periodicBlocks miningClientUrl delay waitActivity = forever $ do
+  let sleep = threadDelay $ round $ delay * 1_000_000
+  Async.race (wait waitActivity) sleep >>= \case
+    Left () -> return () -- Network not idle
+    Right () -> do
+      chainid <- randomRIO (0, 19) :: IO Int
+      requestBlocks miningClientUrl "Periodic Trigger" (NE.singleton chainid) 1
 
 -------------------------------------------------------------------------------
 
@@ -213,6 +224,16 @@ requestBlocks miningClientUrl source chainids count = do
 
 allChains :: NE.NonEmpty Int
 allChains = NE.fromList [0..19]
+
+newtype WaitSignal = WaitSignal {wait :: IO ()}
+newtype ReportSignal = ReportSignal {report :: IO ()}
+
+newSignal :: IO (WaitSignal, ReportSignal)
+newSignal = newEmptyMVar <&> \mvar ->
+  ( WaitSignal $ takeMVar mvar
+  , ReportSignal $ void $ tryPutMVar mvar ()
+  )
+
 
 newtype FlexiBool = FlexiBool Bool
 
