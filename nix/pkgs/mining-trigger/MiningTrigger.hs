@@ -186,7 +186,7 @@ transactionWorker TransactionWorkerArgs{..} = forever $ do
   report reportActivity
   forM_ (NE.nonEmpty chains) $ \neChains ->
     replicateM_ confirmations $ do
-      requestBlocks miningClientUrl "Transaction Worker" neChains confirmations
+      requestBlocks miningClientUrl "Confirmation Trigger" neChains confirmations
       threadDelay $ round $ miningCooldown * 1_000_000
 
 periodicBlocks :: String -> Double -> WaitSignal -> IO ()
@@ -196,7 +196,7 @@ periodicBlocks miningClientUrl delay waitActivity = forever $ do
     Left () -> return () -- Network not idle
     Right () -> do
       chainid <- randomRIO (0, 19) :: IO Int
-      requestBlocks miningClientUrl "Periodic Trigger" (NE.singleton chainid) 1
+      requestBlocks miningClientUrl "Idle Trigger" (NE.singleton chainid) 1
 
 -------------------------------------------------------------------------------
 
