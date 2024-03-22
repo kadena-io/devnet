@@ -28,6 +28,7 @@ executable mining-trigger
                      , random
                      , strict-base
                      , text
+                     , time
                      , unliftio
                      , wai
                      , wai-cors

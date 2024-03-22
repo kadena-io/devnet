@@ -23,6 +23,8 @@ import Data.Generics.Labels ()
 import Data.List.NonEmpty qualified as NE
 import Data.String (fromString)
 import Data.Text.Lazy.Encoding qualified as T
+import Data.Time.Clock qualified as Time
+import Data.Time.Format qualified as Time
 import Network.HTTP.Client qualified as HTTP
 import Network.HTTP.Types qualified as HTTP
 import Network.Wai qualified as Wai
@@ -114,8 +116,9 @@ main = run $ do
     )
   return $ do
     (timedLogger, cleanup) <- do
-      timeCache <- Logger.newTimeCache Logger.simpleTimeFormat'
-      Logger.newTimedFastLogger timeCache $ Logger.LogStdout Logger.defaultBufSize
+      let getTimeStr = Time.getCurrentTime <&> fromString .
+            Time.formatTime Time.defaultTimeLocale "%Y-%m-%d %H:%M:%S%3Q"
+      Logger.newTimedFastLogger getTimeStr $ Logger.LogStdout Logger.defaultBufSize
     let logLn msg = timedLogger $ \time -> Logger.toLogStr time <> " " <> msg <> "\n"
     manager <- HTTP.newManager HTTP.defaultManagerSettings
     let
