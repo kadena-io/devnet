@@ -28,8 +28,10 @@ executable mining-trigger
                      , random
                      , strict-base
                      , text
+                     , unliftio
                      , wai
                      , wai-cors
                      , wai-extra
+                     , fast-logger
   default-language:    GHC2021
-  ghc-options:         -Wall
+  ghc-options:         -Wall -Wno-name-shadowing

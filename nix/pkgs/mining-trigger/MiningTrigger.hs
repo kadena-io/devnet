@@ -9,11 +9,12 @@
 import Prelude hiding (maximum, minimum)
 
 import Control.Concurrent (threadDelay)
-import Control.Concurrent.Async qualified as Async
 import Control.Concurrent.MVar
+import Control.Exception (finally)
 import Control.Lens
 import Control.Monad
 import Control.Monad.IO.Class
+import Control.Monad.Reader
 import Data.ByteString.Lazy qualified as BL
 import Data.CaseInsensitive qualified as CI
 import Data.Char (toLower)
@@ -30,8 +31,12 @@ import Network.Wai.Middleware.Cors qualified as Cors
 import Options.Applicative
     ( auto, help, long, metavar, option, strOption, value )
 import Options.Applicative qualified as Opt
+import System.Log.FastLogger qualified as Logger
 import System.Random (randomRIO)
 import Text.Printf (printf)
+
+import UnliftIO.Async qualified as Async
+
 import Web.Scotty qualified as S
 
 -------------------------------------------------------------------------------
@@ -107,16 +112,29 @@ main = run $ do
    <> help "Enable request logging in development mode"
     )
   return $ do
+    (logger, cleanup) <- Logger.newFastLogger $ Logger.LogStdout Logger.defaultBufSize
+    let
+      runApp name app = do
+        let ctx = AppCtx $ \msg -> logger $ "[" <> name <> "] " <> msg
+        logger $ "Starting " <> name
+        runReaderT app ctx
     ttHandle <- newTTHandle
     (waitActivity, reportActivity) <- newSignal
-    requestBlocks miningClientUrl "Startup Trigger" allChains 2
+    runApp "Startup Trigger" $ requestBlocks miningClientUrl allChains 2
     checkIdleTriggerPeriod idleTriggerPeriod
     let -- Because of the way chainweb-mining-client produces blocks and the way
         -- it interacts with Chainweb's chain braiding, we need to adjust the
         -- idleTriggerPeriod to get approximately the desired period.
         periodicBlocksDelay = idleTriggerPeriod * 0.616
-    executeAsync $
-      [ "Transaction Proxy" <$ transactionProxy ProxyArgs
+        executeAsync threads = do
+          let threadIOs = threads <&> \(name, threadApp) ->
+                name <$ runApp name threadApp
+          (_, name) <- Async.waitAnyCancel =<< mapM Async.async threadIOs
+          logger $ "Thread " <> name <> " has exited"
+        name =: thread = (name, thread)
+
+    flip finally cleanup $ executeAsync $
+      [ "Transaction Proxy" =: transactionProxy ProxyArgs
           { transactionBatchPeriod
           , chainwebServiceEndpoint
           , listenPort
@@ -125,7 +143,7 @@ main = run $ do
           , devRequestLogger
           }
       ] ++ [
-        "Transaction Worker" <$ transactionWorker TransactionWorkerArgs
+        "Confirmation Trigger" =: transactionWorker TransactionWorkerArgs
           { miningClientUrl
           , confirmationTriggerPeriod
           , ttHandle
@@ -134,7 +152,7 @@ main = run $ do
           }
         | not disableConfirmation
       ] ++ [
-        "Periodic Trigger" <$ periodicBlocks
+        "Periodic Trigger" =: periodicBlocks
           miningClientUrl
           periodicBlocksDelay
           waitActivity
@@ -144,9 +162,6 @@ main = run $ do
     run m = join $ Opt.execParser $ Opt.info
       (Opt.helper <*> m)
       (Opt.fullDesc <> Opt.progDesc "Chainweb Mining Trigger")
-    executeAsync threads = do
-      (_, name) <- Async.waitAnyCancel =<< mapM Async.async threads
-      putStrLn $ "Thread " ++ name ++ " has exited"
     checkIdleTriggerPeriod p = when (p <= 0) $
       fail "Error: Idle trigger period must be positive"
 
@@ -163,22 +178,31 @@ data ProxyArgs = ProxyArgs
   , devRequestLogger :: Bool
   }
 
-transactionProxy :: ProxyArgs -> IO ()
-transactionProxy  ProxyArgs{..} = S.scotty listenPort $ do
-  S.middleware $ if devRequestLogger then Wai.logStdoutDev else Wai.logStdout
-  S.middleware $ Cors.cors . const . Just $ Cors.simpleCorsResourcePolicy
-    { Cors.corsRequestHeaders = Cors.simpleHeaders
-    }
-  S.post (S.regex "/chainweb/0.0/([0-9a-zA-Z\\-\\_]+)/chain/([0-9]+)/pact/api/v1/send") $ do
-    networkId <- S.captureParam "1"
-    chainId <- S.captureParam "2"
-    accepted <- proxySend chainwebServiceEndpoint networkId chainId
-    let demand = defaultConfirmation
-    liftIO $ when accepted $ do
-      if demand > 0
-      then pushTransaction ttHandle transactionBatchPeriod (read chainId) demand
-      else putStrLn $
-        "(Transaction Proxy) Not requesting blocks due to confirmation demand = " ++ show demand
+transactionProxy :: ProxyArgs -> App ()
+transactionProxy  ProxyArgs{..} = do
+  Logg logg <- askLogg
+  let setFormat s = if devRequestLogger then s else s
+        { Wai.outputFormat = Wai.Apache Wai.FromHeader
+        }
+  logMiddleware <- liftIO $ Wai.mkRequestLogger $ Wai.defaultRequestLoggerSettings
+    & setFormat
+    & \s -> s { Wai.destination = Wai.Callback logg }
+
+  liftIO $ S.scotty listenPort $ do
+    S.middleware $ logMiddleware
+    S.middleware $ Cors.cors . const . Just $ Cors.simpleCorsResourcePolicy
+      { Cors.corsRequestHeaders = Cors.simpleHeaders
+      }
+    S.post (S.regex "/chainweb/0.0/([0-9a-zA-Z\\-\\_]+)/chain/([0-9]+)/pact/api/v1/send") $ do
+      networkId <- S.captureParam "1"
+      chainId <- S.captureParam "2"
+      accepted <- proxySend chainwebServiceEndpoint networkId chainId
+      let demand = defaultConfirmation
+      liftIO $ when accepted $ do
+        if demand > 0
+        then pushTransaction ttHandle transactionBatchPeriod (read chainId) demand
+        else logg $
+          "Not requesting blocks due to confirmation demand = " <> fromString (show demand)
 
 data TransactionWorkerArgs = TransactionWorkerArgs
   { miningClientUrl :: String
@@ -188,25 +212,39 @@ data TransactionWorkerArgs = TransactionWorkerArgs
   , miningCooldown :: Double
   }
 
-transactionWorker :: TransactionWorkerArgs -> IO ()
+transactionWorker :: TransactionWorkerArgs -> App ()
 transactionWorker TransactionWorkerArgs{..} = forever $ do
-  (chains, confirmations) <- waitTrigger confirmationTriggerPeriod ttHandle
-  report reportActivity
+  (chains, confirmations) <- liftIO $ waitTrigger confirmationTriggerPeriod ttHandle
+  liftIO $ report reportActivity
   forM_ (NE.nonEmpty chains) $ \neChains ->
     replicateM_ confirmations $ do
-      requestBlocks miningClientUrl "Confirmation Trigger" neChains 1
-      threadDelay $ round $ miningCooldown * 1_000_000
+      requestBlocks miningClientUrl neChains 1
+      liftIO $ threadDelay $ round $ miningCooldown * 1_000_000
 
-periodicBlocks :: String -> Double -> WaitSignal -> IO ()
+periodicBlocks :: String -> Double -> WaitSignal -> App ()
 periodicBlocks miningClientUrl delay waitActivity = forever $ do
   let sleep = threadDelay $ round $ delay * 1_000_000
-  Async.race (wait waitActivity) sleep >>= \case
+  liftIO (Async.race (wait waitActivity) sleep) >>= \case
     Left () -> return () -- Network not idle
     Right () -> do
-      chainid <- randomRIO (0, 19) :: IO Int
-      requestBlocks miningClientUrl "Idle Trigger" (NE.singleton chainid) 1
+      chainid <- liftIO $ randomRIO (0, 19)
+      requestBlocks miningClientUrl (NE.singleton chainid) 1
 
 -------------------------------------------------------------------------------
+
+data AppCtx = AppCtx
+  { logger :: Logger.FastLogger
+  }
+
+type App = ReaderT AppCtx IO
+
+logg :: Logger.LogStr -> App ()
+logg msg = asks logger >>= \logger -> liftIO $ logger msg
+
+newtype Logg = Logg (forall m. MonadIO m => Logger.LogStr -> m ())
+
+askLogg :: App Logg
+askLogg = asks logger <&> \l -> Logg $ \msg -> liftIO $ l msg
 
 proxySend :: String -> String -> String -> S.ActionM Bool
 proxySend chainwebServiceEndpoint networkId chainId = do
@@ -230,24 +268,25 @@ proxySend chainwebServiceEndpoint networkId chainId = do
   return $ HTTP.responseStatus response == HTTP.status200
 
 
-requestBlocks :: String -> String -> NE.NonEmpty Int -> Int -> IO ()
-requestBlocks miningClientUrl source chainids count = do
-  manager <- HTTP.newManager HTTP.defaultManagerSettings
-  request <- HTTP.parseRequest (miningClientUrl <> "/make-blocks") <&> \r -> r
-    { HTTP.method = "POST"
-    , HTTP.requestHeaders = [("Content-Type", "application/json")]
-    , HTTP.requestBody = HTTP.RequestBodyLBS $ A.encode $
-        A.Object $ flip foldMap chainids $ \c -> fromString (show c) A..= count
-    }
-  response <- HTTP.httpLbs request manager
-  let desc = printf "(%s) Requested %s on %s" source blocks chains where
+requestBlocks :: String -> NE.NonEmpty Int -> Int -> App ()
+requestBlocks miningClientUrl chainids count = do
+  response <- liftIO $ do
+    manager <- HTTP.newManager HTTP.defaultManagerSettings
+    request <- HTTP.parseRequest (miningClientUrl <> "/make-blocks") <&> \r -> r
+      { HTTP.method = "POST"
+      , HTTP.requestHeaders = [("Content-Type", "application/json")]
+      , HTTP.requestBody = HTTP.RequestBodyLBS $ A.encode $
+          A.Object $ flip foldMap chainids $ \c -> fromString (show c) A..= count
+      }
+    HTTP.httpLbs request manager
+  let desc = printf "Requested %s on %s" blocks chains where
         blocks = show count ++ if count == 1 then " block" else " blocks"
         chains = case chainids of
           c NE.:| [] -> "chain " ++ show c
           cs -> "chains " ++ show (NE.toList cs)
-  putStrLn $ if HTTP.responseStatus response == HTTP.status200
+  logg $ Logger.toLogStr $ if HTTP.responseStatus response == HTTP.status200
     then desc
-    else desc ++ ", failed to make blocks: " ++ show (response)
+    else desc ++ ", failed to make blocks: " ++ show response
 
 allChains :: NE.NonEmpty Int
 allChains = NE.fromList [0..19]
@@ -261,6 +300,7 @@ newSignal = newEmptyMVar <&> \mvar ->
   , ReportSignal $ void $ tryPutMVar mvar ()
   )
 
+-------------------------------------------------------------------------------
 
 newtype FlexiBool = FlexiBool Bool
 
