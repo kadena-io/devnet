@@ -26,6 +26,7 @@ import Data.Text.Lazy.Encoding qualified as T
 import Network.HTTP.Client qualified as HTTP
 import Network.HTTP.Types qualified as HTTP
 import Network.Wai qualified as Wai
+import Network.Wai.Handler.Warp qualified as Warp
 import Network.Wai.Middleware.RequestLogger qualified as Wai
 import Network.Wai.Middleware.Cors qualified as Cors
 import Options.Applicative
@@ -194,7 +195,12 @@ transactionProxy  ProxyArgs{..} = do
     & setFormat
     & \s -> s { Wai.destination = Wai.Callback logg }
 
-  liftIO $ S.scotty listenPort $ do
+  let opts = S.defaultOptions
+        { S.verbose = 0
+        , S.settings = Warp.setPort listenPort Warp.defaultSettings
+        }
+  logg $ "Listening on port " <> Logger.toLogStr (show listenPort)
+  liftIO $ S.scottyOpts opts $ do
     S.middleware $ logMiddleware
     S.middleware $ Cors.cors . const . Just $ Cors.simpleCorsResourcePolicy
       { Cors.corsRequestHeaders = Cors.simpleHeaders

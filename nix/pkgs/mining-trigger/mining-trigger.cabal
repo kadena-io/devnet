@@ -32,6 +32,7 @@ executable mining-trigger
                      , wai
                      , wai-cors
                      , wai-extra
+                     , warp
                      , fast-logger
   default-language:    GHC2021
   ghc-options:         -Wall -Wno-name-shadowing
