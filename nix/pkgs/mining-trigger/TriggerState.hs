@@ -89,7 +89,7 @@ pushTransaction TTHandle{..} batchPeriod chainId pending = do
   latest <- (+ batchPeriodTimeSpec) <$> Clock.getTime Clock.Monotonic
   atomicModifyIORef' ttStateRef $ \state ->
     (insertTransaction chainId latest pending state, ())
-  putMVar ttSignal ()
+  void $ tryPutMVar ttSignal ()
 
 popPendingIO :: IORef TransactionTriggerState -> Double -> IO Demands
 popPendingIO ref confirmationPeriod = do
