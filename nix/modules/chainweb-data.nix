@@ -24,7 +24,7 @@ let
   '' ;
   start-chainweb-data = pkgs.writeShellScript "start-chainweb-data" ''
     ${chainweb-data-with-common-params} --migrate \
-      server --port ${port} --serve-swagger-ui
+      server --port ${port} --serve-swagger-ui --level ${cfg.logLevel}
   '';
   psqlrc = pkgs.writeText ".psqlrc" ''
     \x auto
@@ -34,7 +34,7 @@ let
     ${pkgs.postgresql}/bin/psql "${cfg.dbstring}"
   '';
   chainweb-data-fill = pkgs.writeShellScriptBin "chainweb-data-fill" ''
-    ${chainweb-data-with-common-params} --ignore-schema-diff fill --level debug
+    ${chainweb-data-with-common-params} --ignore-schema-diff fill --level ${cfg.logLevel}
   '';
   links = flatten [
     "[Open API Spec](/cwd-spec/)"
@@ -84,6 +84,13 @@ in
       description = ''
         Whether to throttle the chainweb-data endpoints. This is useful for
         public deployments.
+      '';
+    };
+    logLevel = mkOption {
+      type = types.enum [ "debug" "info" "warn" "error" "quiet" ];
+      default = "debug";
+      description = ''
+        The log level for chainweb-data.
       '';
     };
   };
