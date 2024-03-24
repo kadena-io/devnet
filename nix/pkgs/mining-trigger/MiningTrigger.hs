@@ -117,7 +117,7 @@ main = run $ do
   return $ do
     (timedLogger, cleanup) <- do
       let getTimeStr = Time.getCurrentTime <&> fromString .
-            Time.formatTime Time.defaultTimeLocale "%Y-%m-%d %H:%M:%S%3Q"
+            Time.formatTime Time.defaultTimeLocale "%Y-%m-%dT%H:%M:%S%3QZ"
       Logger.newTimedFastLogger getTimeStr $ Logger.LogStdout Logger.defaultBufSize
     let logLn msg = timedLogger $ \time -> Logger.toLogStr time <> " " <> msg <> "\n"
     manager <- HTTP.newManager HTTP.defaultManagerSettings
