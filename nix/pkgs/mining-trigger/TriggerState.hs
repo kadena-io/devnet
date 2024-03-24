@@ -41,7 +41,7 @@ insertTransaction ::
   ChainId -> Clock.TimeSpec -> Confirmations ->
   TransactionTriggerState -> TransactionTriggerState
 insertTransaction chainId latest confirmations tts =
-  tts & #chainMap . atStrict chainId %~ Just . maybe pending (+pending)
+  tts & #chainMap . atStrict chainId %~ Just . maybe pending (max pending)
       & #scheduledTrigger %~ Strict.Just . Strict.maybe latest (min latest)
       & #pendingFlush .~ True
   where pending = confirmations + 1 -- Since we need to flush as well
