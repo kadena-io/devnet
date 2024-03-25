@@ -2,7 +2,7 @@
   inputs = {
     nixpkgs.url = "github:NixOS/nixpkgs/23.11";
     kadena-nix = {
-      url = "github:kadena-io/kadena-nix";
+      url = "github:kadena-io/kadena-nix/enis/bundle-kadena-graph";
       inputs = {
         nixpkgs.follows = "nixpkgs";
         flake-utils.follows = "flake-utils";
