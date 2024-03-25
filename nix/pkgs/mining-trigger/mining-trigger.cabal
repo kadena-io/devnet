@@ -1,0 +1,39 @@
+cabal-version:       2.4
+name:                mining-trigger
+version:             0.1.0.0
+description:         Trigger mining on a Kadena devnet node
+license:             BSD-3-Clause
+author:              Enis Bayramoglu
+maintainer:          enis@kadena.io
+build-type:          Simple
+
+executable mining-trigger
+  main-is:             MiningTrigger.hs
+  other-modules:       TriggerState
+  build-depends:       base
+                     , async
+                     , bytestring
+                     , case-insensitive
+                     , clock
+                     , containers
+                     , scotty
+                     , aeson
+                     , http-client
+                     , http-types
+                     , transformers
+                     , generic-lens
+                     , lens
+                     , mtl
+                     , optparse-applicative
+                     , random
+                     , strict-base
+                     , text
+                     , time
+                     , unliftio
+                     , wai
+                     , wai-cors
+                     , wai-extra
+                     , warp
+                     , fast-logger
+  default-language:    GHC2021
+  ghc-options:         -Wall -Wno-name-shadowing

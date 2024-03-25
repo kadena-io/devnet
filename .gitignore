@@ -4,3 +4,6 @@ db/
 # Nix-related
 result
 .devenv
+
+# Haskell-related
+dist-newstyle/

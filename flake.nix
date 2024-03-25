@@ -72,6 +72,9 @@
           flakeInfo.revLink = "https://npmjs.com/package/${packageName}/v/${version}";
           in kadena-graph // { inherit flakeInfo; }
           ;
+        mining-trigger = pkgs.haskellPackages.callCabal2nix "mining-trigger" nix/pkgs/mining-trigger {
+          scotty = pkgs.haskellPackages.scotty_0_20_1;
+        };
       });
       pkgs = import nixpkgs { inherit system; overlays = [ overlay ]; };
       devnetInfo = {
@@ -149,10 +152,6 @@
           services.chainweb-mining-client.enable = true;
           services.http-server.enable = true;
         };
-        on-demand-minimal = {
-          imports = [minimal];
-          services.chainweb-mining-client.worker = "on-demand";
-        };
         default = {
           imports = [minimal];
           services.chainweb-data.enable = true;
@@ -169,6 +168,7 @@
           services.postgres.forward-socket-port = null;
           services.chainweb-node.throttle = true;
           services.chainweb-data.throttle = true;
+          services.chainweb-mining-client.expose-make-blocks = false;
         };
         container-default = {
           imports = [default];
@@ -211,6 +211,7 @@
               nix run --impure ".#$DEVNET_VARIANT/runSqlpage"
           '').outPath;
         };
+        packages.mining-trigger = pkgs.mining-trigger;
         inherit configurations;
         overlays.default = overlay;
         lib = { inherit mkFlake bundleWithInfo; };
