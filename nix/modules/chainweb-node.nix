@@ -1,6 +1,7 @@
 { pkgs, lib, config, ... }:
 let
   cfg = config.services.chainweb-node;
+  service-port = toString cfg.service-port;
   start-chainweb-node = stateDir: pkgs.writeShellScript "start-chainweb-node" ''
     ${cfg.package}/bin/chainweb-node \
     --config-file=${./chainweb/chainweb-node.common.yaml} \
@@ -24,7 +25,7 @@ let
     --service-port=${toString cfg.service-port}
   '';
   throttleDirectives = lib.optionalString cfg.throttle ''
-    limit_req zone=cwn burst=2;
+    limit_req zone=cwn burst=200;
     add_header Retry-After $retry_after always;
   '';
 in
@@ -61,17 +62,10 @@ in
     processes.chainweb-node = {
       exec = "${start-chainweb-node config.env.DEVENV_STATE}";
       process-compose.readiness_probe = {
-          http_get = {
-          host = "127.0.0.1";
-          scheme = "http";
-          port = cfg.service-port;
-          path = "/health-check";
-          };
-          initial_delay_seconds = 1;
-          period_seconds = 1;
-          timeout_seconds = 5;
-          success_threshold = 1;
-          failure_threshold = 20;
+        exec.command = ''
+          until curl http://localhost:${service-port}/health-check; do sleep 0.1 ; done
+        '';
+        timeout_seconds = 10;
       };
     };
 
@@ -103,7 +97,13 @@ in
         peer-api = "server localhost:1789;";
       };
       extraHttpConfig = lib.optionalString cfg.throttle ''
-        limit_req_zone $binary_remote_addr zone=cwn:10m rate=10r/s;
+        limit_req_zone $binary_remote_addr zone=cwn:10m rate=20r/s;
+        limit_req_status 429;
+        limit_conn_status 429;
+        map $status $retry_after {
+            default ''';
+            429 '1';
+        }
       '';
       retry-after-duration = 1;
       servers.devnet = {
