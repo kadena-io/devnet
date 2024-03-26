@@ -34,6 +34,7 @@ in {
         environment = [
           "PORT=${port}"
           "PRISMA_LOGGING_ENABLED=true"
+          "NODE_ENV=production"
         ];
         working_dir = graph-folder;
         depends_on.chainweb-data.condition = "process_healthy";

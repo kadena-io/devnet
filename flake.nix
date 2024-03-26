@@ -155,6 +155,7 @@
         default = {
           imports = [minimal];
           services.chainweb-data.enable = true;
+          services.graph.enable = true;
           sites.explorer.enable =
             # Enable the explorer only on Linux (which includes all containers)
             # the reason is nginx+lua isn't compiling on darwin as of the current
@@ -174,14 +175,6 @@
           imports = [default];
           services.ttyd.enable = true;
           services.pact-cli.enable = true;
-        };
-        graph = {
-          imports = [container-default];
-          services.graph.enable = true;
-        };
-        crashnet-graph = {
-          imports = [crashnet];
-          services.graph.enable = true;
         };
         # Useful for iterating on nginx configurations
         http-only = {
