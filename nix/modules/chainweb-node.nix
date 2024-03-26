@@ -1,6 +1,7 @@
 { pkgs, lib, config, ... }:
 let
   cfg = config.services.chainweb-node;
+  service-port = toString cfg.service-port;
   start-chainweb-node = stateDir: pkgs.writeShellScript "start-chainweb-node" ''
     ${cfg.package}/bin/chainweb-node \
     --config-file=${./chainweb/chainweb-node.common.yaml} \
@@ -11,6 +12,7 @@ let
     --cluster-id=devnet-minimal \
     --p2p-max-session-count=3 \
     --mempool-p2p-max-session-count=3 \
+    --p2p-port=${toString cfg.p2p-port} \
     --known-peer-info=YNo8pXthYQ9RQKv1bbpQf2R5LcLYA3ppx2BL2Hf8fIM@bootstrap-node:1789 \
     --log-level=info \
     --enable-mining-coordination \
@@ -19,11 +21,11 @@ let
     --rosetta \
     --allowReadsInLocal \
     --database-directory=${stateDir}/chainweb/db \
-    --disable-pow
+    --disable-pow \
     --service-port=${toString cfg.service-port}
   '';
   throttleDirectives = lib.optionalString cfg.throttle ''
-    limit_req zone=cwn burst=2;
+    limit_req zone=cwn burst=200;
     add_header Retry-After $retry_after always;
   '';
 in
@@ -39,7 +41,12 @@ in
     service-port = lib.mkOption {
       type = lib.types.port;
       default = 1848;
-      description = "The port on which the chainweb-node service listens.";
+      description = "The port on which the chainweb-node service endpoint listens.";
+    };
+    p2p-port = lib.mkOption {
+      type = lib.types.port;
+      default = 1789;
+      description = "The port on which the chainweb-node p2p endpoint listens.";
     };
     throttle = lib.mkOption {
       type = lib.types.bool;
@@ -55,17 +62,10 @@ in
     processes.chainweb-node = {
       exec = "${start-chainweb-node config.env.DEVENV_STATE}";
       process-compose.readiness_probe = {
-          http_get = {
-          host = "127.0.0.1";
-          scheme = "http";
-          port = cfg.service-port;
-          path = "/health-check";
-          };
-          initial_delay_seconds = 1;
-          period_seconds = 1;
-          timeout_seconds = 5;
-          success_threshold = 1;
-          failure_threshold = 20;
+        exec.command = ''
+          until curl http://localhost:${service-port}/health-check; do sleep 0.1 ; done
+        '';
+        timeout_seconds = 10;
       };
     };
 
@@ -79,8 +79,10 @@ in
         is configured to proxy requests to this port.
       '';
     };
-    sites.landing-page.container-api.ports =
-      "- `${toString config.services.chainweb-node.service-port}`: Chainweb node's service port";
+    sites.landing-page.container-api.ports = lib.concatStringsSep "\n" [
+      "- `${toString cfg.service-port}`: Chainweb node's service port"
+      "- `${toString cfg.p2p-port}`: Chainweb node's p2p API port"
+    ];
     sites.landing-page.commands.chainweb-node.markdown = ''
       * `cwtool`: A collection of tools that are helpful for maintaining, testing, and debugging Chainweb
     '';
@@ -95,7 +97,13 @@ in
         peer-api = "server localhost:1789;";
       };
       extraHttpConfig = lib.optionalString cfg.throttle ''
-        limit_req_zone $binary_remote_addr zone=cwn:10m rate=10r/s;
+        limit_req_zone $binary_remote_addr zone=cwn:10m rate=20r/s;
+        limit_req_status 429;
+        limit_conn_status 429;
+        map $status $retry_after {
+            default ''';
+            429 '1';
+        }
       '';
       retry-after-duration = 1;
       servers.devnet = {

@@ -42,6 +42,9 @@ let
 
       ### Folders
       ${cfg.container-api.folders}
+
+      ### Environment Variables
+      ${cfg.container-api.envVars}
     '';
     mainSection = ''
       ${configDoc}
@@ -122,6 +125,11 @@ in
       folders = mkOption {
         type = types.lines;
         description = "Special folders for interfacing with the container";
+        default = "";
+      };
+      envVars = mkOption {
+        type = types.lines;
+        description = "Environment variables used by the container's services";
         default = "";
       };
     };

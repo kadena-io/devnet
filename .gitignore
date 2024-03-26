@@ -5,3 +5,6 @@ db/
 result
 .devenv
 .envrc
+
+# Haskell-related
+dist-newstyle/

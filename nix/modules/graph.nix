@@ -5,6 +5,7 @@ let
   port = toString cfg.port;
   absolutePgData = "$(${pkgs.coreutils}/bin/realpath ${config.env.PGDATA})";
   dbstring = "postgresql://$(whoami)@localhost/$(whoami)?host=${absolutePgData}";
+  graph-folder = "${cfg.package}/lib/node_modules/@kadena/graph/";
 in {
   options.services.graph = {
     enable = mkEnableOption "graph";
@@ -29,13 +30,18 @@ in {
       # DATABASE_URL needs to be a part of the exec, because it interpolates the
       # username and the absolute path to the PGDATA directory.
       exec = ''DATABASE_URL="${dbstring}"  ${cfg.package}/bin/kadena-graph'';
-      process-compose.environment = [
-        "PORT=${port}"
-        "PRISMA_LOGGING_ENABLED=true"
-      ];
+      process-compose = {
+        environment = [
+          "PORT=${port}"
+          "PRISMA_LOGGING_ENABLED=true"
+          "NODE_ENV=production"
+        ];
+        working_dir = graph-folder;
+        depends_on.chainweb-data.condition = "process_healthy";
+      };
     };
     services.chainweb-data.extra-migrations-folders = [
-      "${cfg.package}/lib/node_modules/@kadena/graph/cwd-extra-migrations/"
+      "${graph-folder}/cwd-extra-migrations/"
     ];
     services.http-server = {
       upstreams.graph = "server localhost:${port};";
@@ -43,6 +49,9 @@ in {
         location = /graphql {
           proxy_pass http://graph;
           proxy_buffering off;
+          proxy_http_version 1.1;
+          proxy_set_header Upgrade $http_upgrade;
+          proxy_set_header Connection $connection_upgrade;
         }
       '';
     };

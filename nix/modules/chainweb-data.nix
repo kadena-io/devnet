@@ -6,6 +6,7 @@ let
     if strLen s <= startLen + endLen then s
     else strings.substring 0 startLen s + "..." + strings.substring (strLen s - endLen) endLen s;
   cfg = config.services.chainweb-data;
+  port = toString cfg.port;
   absolutePgData = "$(${pkgs.coreutils}/bin/realpath ${config.env.PGDATA})";
   dbstring = "postgresql:///$USER?host=${absolutePgData}";
   chainweb-data-with-common-params = pkgs.writeShellScript "cwd-with-common-params" ''
@@ -15,15 +16,15 @@ let
         "--migrations-folder ${cfg.migrations-folder}"
       } \
       ${concatStringsSep " \\\n" (
-        map 
-          (folder: "--extra-migrations-folder ${folder}") 
+        map
+          (folder: "--extra-migrations-folder ${folder}")
           cfg.extra-migrations-folders
       )} \
       "$@"
   '' ;
   start-chainweb-data = pkgs.writeShellScript "start-chainweb-data" ''
     ${chainweb-data-with-common-params} --migrate \
-      server --port ${toString cfg.port} --serve-swagger-ui
+      server --port ${port} --serve-swagger-ui --level ${cfg.logLevel}
   '';
   psqlrc = pkgs.writeText ".psqlrc" ''
     \x auto
@@ -33,7 +34,7 @@ let
     ${pkgs.postgresql}/bin/psql "${cfg.dbstring}"
   '';
   chainweb-data-fill = pkgs.writeShellScriptBin "chainweb-data-fill" ''
-    ${chainweb-data-with-common-params} --ignore-schema-diff fill --level debug
+    ${chainweb-data-with-common-params} --ignore-schema-diff fill --level ${cfg.logLevel}
   '';
   links = flatten [
     "[Open API Spec](/cwd-spec/)"
@@ -85,6 +86,13 @@ in
         public deployments.
       '';
     };
+    logLevel = mkOption {
+      type = types.enum [ "debug" "info" "warn" "error" "quiet" ];
+      default = "debug";
+      description = ''
+        The log level for chainweb-data.
+      '';
+    };
   };
   config = mkIf cfg.enable {
     packages = [
@@ -99,6 +107,12 @@ in
         chainweb-node.condition = "process_healthy";
         postgres.condition = "process_healthy";
       };
+      process-compose.readiness_probe = {
+        exec.command = ''
+          until curl 'http://localhost:${port}/txs/events?limit=1&search=TRANSFER'; do sleep 0.1 ; done
+        '';
+        timeout_seconds = 1200;
+      };
     };
     services.ttyd.commands.psql-cwd = "${psql-cwd}/bin/psql-cwd";
     services.ttyd.commands.chainweb-data-fill = "${chainweb-data-fill}/bin/chainweb-data-fill";
@@ -106,7 +120,7 @@ in
     services.postgres.enable= true;
 
     services.http-server = {
-      upstreams.chainweb-data = "server localhost:${toString cfg.port};";
+      upstreams.chainweb-data = "server localhost:${port};";
       extraHttpConfig = optionalString cfg.throttle ''
         limit_req_zone $binary_remote_addr zone=cwd:10m rate=10r/s;
       '';
@@ -140,14 +154,14 @@ in
 
         ${optionalString (builtins.length cfg.extra-migrations-folders > 0) ''
           The `chainweb-data` service is configured to use additional migrations
-          from these folders: 
+          from these folders:
 
           ${concatStringsSep "\n" (
             map (folder: "- `${truncateMiddle 20 40 folder}`") cfg.extra-migrations-folders
           )}
         ''}
 
-        The `chainweb-data` service is configured to listen to port `${toString cfg.port}`,
+        The `chainweb-data` service is configured to listen to port `${port}`,
         however, the public HTTP API is configured to proxy requests to this port.
       '';
     };

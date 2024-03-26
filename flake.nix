@@ -1,6 +1,6 @@
 {
   inputs = {
-    nixpkgs.url = "github:NixOS/nixpkgs/nixpkgs-unstable";
+    nixpkgs.url = "github:NixOS/nixpkgs/23.11";
     kadena-nix = {
       url = "github:kadena-io/kadena-nix";
       inputs = {
@@ -19,6 +19,10 @@
     txg.url = "github:kadena-io/txg";
     block-explorer.url = "github:kadena-io/block-explorer/devnet";
     nix-exe-bundle = { url = "github:3noch/nix-bundle-exe"; flake = false; };
+    process-compose = {
+      url = "github:F1bonacc1/process-compose";
+      inputs = { nixpkgs.follows = "nixpkgs"; flake-utils.follows = "flake-utils"; };
+    };
   };
 
   outputs = { self
@@ -41,7 +45,7 @@
       pact = let
         cwnDefault = inputs.chainweb-node.packages.${system}.default;
         pactMeta = cwnDefault.cached.meta.pact;
-        pactSrc = builtins.fetchGit { inherit (pactMeta.src) rev url; name = "source";};
+        pactSrc = pkgs.fetchgit { inherit (pactMeta.src) rev url hash; name = "source";};
         pactFlake = (import inputs.flake-compat { src = pactSrc; }).defaultNix;
         meta = {
           flakeInfo.rev = pactMeta.src.rev;
@@ -77,6 +81,9 @@
           flakeInfo.revLink = "https://npmjs.com/package/${packageName}/v/${version}";
           in kadena-graph // { inherit flakeInfo; }
           ;
+        mining-trigger = pkgs.haskellPackages.callCabal2nix "mining-trigger" nix/pkgs/mining-trigger {
+          scotty = pkgs.haskellPackages.scotty_0_20_1;
+        };
       });
       pkgs = import nixpkgs { inherit system; overlays = [ overlay ]; };
       devnetInfo = {
@@ -105,7 +112,11 @@
         nix/modules/show-es-output.nix
         nix/modules/utils.nix
         nix/modules/graph.nix
-        { sites.landing-page = devnetInfo; }
+        {
+          sites.landing-page = devnetInfo;
+          process-managers.process-compose.package =
+            inputs.process-compose.packages.${system}.process-compose;
+        }
       ];
       packageExtras = {
       };
@@ -169,6 +180,7 @@
         default = {
           imports = [minimal];
           services.chainweb-data.enable = true;
+          services.graph.enable = true;
           sites.explorer.enable =
             # Enable the explorer only on Linux (which includes all containers)
             # the reason is nginx+lua isn't compiling on darwin as of the current
@@ -182,15 +194,12 @@
           services.postgres.forward-socket-port = null;
           services.chainweb-node.throttle = true;
           services.chainweb-data.throttle = true;
+          services.chainweb-mining-client.expose-make-blocks = false;
         };
         container-default = {
           imports = [default];
           services.ttyd.enable = true;
           services.pact-cli.enable = true;
-        };
-        graph = {
-          imports = [container-default];
-          services.graph.enable = true;
         };
         # Useful for iterating on nginx configurations
         http-only = {
@@ -220,6 +229,7 @@
               nix run --impure ".#$DEVNET_VARIANT/runSqlpage"
           '').outPath;
         };
+        packages.mining-trigger = pkgs.mining-trigger;
         inherit configurations;
         overlays.default = overlay;
         lib = { inherit mkFlake bundleWithInfo; };
