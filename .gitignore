@@ -4,6 +4,7 @@ db/
 # Nix-related
 result
 .devenv
+.envrc
 
 # Haskell-related
 dist-newstyle/
