@@ -71,15 +71,16 @@
         ]
       },
       "locked": {
-        "lastModified": 1710359273,
-        "narHash": "sha256-jUEzVqRAwhtwNRbT+UoreNuqypqnAkVL+3K3e6bdQMg=",
+        "lastModified": 1712092437,
+        "narHash": "sha256-W92X9LRQfz3akOSqXWy35PVULovWy5Kh9lr56GnSf+A=",
         "owner": "kadena-io",
         "repo": "chainweb-node",
-        "rev": "5ca1ca1bebd814915ce4d476e5852f42ed01fc75",
+        "rev": "ccb2d477755286b69fadf86d5753ab6b610cb887",
         "type": "github"
       },
       "original": {
         "owner": "kadena-io",
+        "ref": "chessai/bump-pact-hyperlane-message-id",
         "repo": "chainweb-node",
         "type": "github"
       }
