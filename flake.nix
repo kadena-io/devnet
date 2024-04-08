@@ -11,7 +11,7 @@
     flake-utils.url = "github:numtide/flake-utils";
     flake-compat.url = "github:kadena-io/flake-compat";
     devenv.url = "github:cachix/devenv";
-    chainweb-node.url = "github:kadena-io/chainweb-node/chessai/bump-pact-hyperlane-message-id";
+    chainweb-node.url = "github:kadena-io/chainweb-node/hyperlane-merkle-message-id-fixes";
     chainweb-data.url = "github:kadena-io/chainweb-data";
     chainweb-mining-client.url = "github:kadena-io/chainweb-mining-client/enis/update-to-flakes-and-haskellNix";
     block-explorer.url = "github:kadena-io/block-explorer/devnet";
