@@ -1012,11 +1012,11 @@
         ]
       },
       "locked": {
-        "lastModified": 1711465174,
-        "narHash": "sha256-DLCALddzNmsJ0m5SvHT2y6689ZfvDHwEGnRdQzbBgNE=",
+        "lastModified": 1712733223,
+        "narHash": "sha256-Vl4nSPmxvjUNJ+sQZgeDOKORVO69fmtYqsxb7n1SkSQ=",
         "owner": "kadena-io",
         "repo": "kadena-nix",
-        "rev": "13c270dc0bd362f39d8ad277c546d8329f911278",
+        "rev": "c58bcd4697039bf0cab923dba457bb5c60df5bb0",
         "type": "github"
       },
       "original": {
