@@ -2,9 +2,18 @@
 with lib;
 let
   cfg = config.sites.explorer;
-  lua_core_path = "${pkgs.luajitPackages.lua-resty-core}/lib/lua/5.1/?.lua";
-  lua_lrucache_path = "${pkgs.luajitPackages.lua-resty-lrucache}/lib/lua/5.1/?.lua";
-  lua_path = "${lua_core_path};${lua_lrucache_path};;";
+  setConfigValues = builtins.toFile "setConfigValues.js" ''
+    <script>
+      function setConfig(key, value) {
+        var node = document.querySelector('script[data-obelisk-executable-config-inject-key="' + key + '"]');
+        node.innerHTML = btoa(value);
+      }
+      origin = window.location.origin;
+      dataBackends = { development: { p2p: origin, service: origin, data: origin } };
+      setConfig('common/route', 'origin');
+      setConfig('frontend/data-backends', JSON.stringify(dataBackends));
+    </script>
+  '';
   processedIndex = pkgs.runCommand "processed-index.html.mustache" {} ''
     abspath=$(basename ${cfg.package}/ghcjs/*-all.js)
 
@@ -13,7 +22,11 @@ let
     sed \
       -e "s|/ghcjs/all.js|ghcjs/$abspath|g" \
       -e 's|<base data-ssr="" href="/" />|<base data-ssr="" href="/explorer/"/>|g' \
-        ${cfg.package}/index.html.mustache > $out/index.html.mustache
+      -e 's|</head>|\n -script-placeholder- \n</head>|g' \
+        ${cfg.package}/index.html.mustache > $out/index.html
+
+    sed -e '/-script-placeholder-/ {' -e 'r ${setConfigValues}' -e 'd' -e '}' \
+      -i $out/index.html
   '';
 in {
   options.sites.explorer = {
@@ -26,10 +39,6 @@ in {
     };
   };
   config = lib.mkIf cfg.enable {
-    services.http-server.nginx-modules = [ pkgs.nginxModules.lua ];
-    services.http-server.extraHttpConfig = ''
-      lua_package_path "${lua_path}";
-    '';
     services.http-server.servers.devnet.extraConfig = ''
       location ~ ^/explorer/?$ {
           default_type text/html;
@@ -64,37 +73,8 @@ in {
       }
       location @rewrite_index {
         root ${processedIndex};
-        rewrite ^ /index.html.mustache break;
-        set $route ''';
-        set $databackends ''';
-        rewrite_by_lua_block {
-          -- Derive the route from the request
-          -- If the request is coming from a proxy, use the X-Forwarded-Proto header to determine the scheme
-          local scheme = ngx.req.get_headers()["X-Forwarded-Proto"] or ngx.var.scheme
-          local route = scheme .. "://" .. ngx.req.get_headers()["Host"]
-
-          -- Base64 encode the route
-          local encoded = ngx.encode_base64(route)
-
-          ngx.var.route = encoded
-
-          local databackends = string.format([[
-            {
-              "development": {
-                "p2p": "%s",
-                "service": "%s",
-                "data": "%s"
-              }
-            }
-          ]], route, route, route)
-
-          ngx.var.databackends = ngx.encode_base64(databackends)
-        }
+        rewrite ^ /index.html break;
         default_type text/html;
-        sub_filter '{{route}}' $route;
-        sub_filter '{{dataBackends}}' $databackends;
-        sub_filter_once off;
-        sub_filter_types *;
 
         # Disable caching
         add_header Cache-Control "no-cache, no-store, must-revalidate";
