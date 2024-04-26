@@ -1357,11 +1357,11 @@
         ]
       },
       "locked": {
-        "lastModified": 1707499191,
-        "narHash": "sha256-8covZ7lP5poGyKVn5EEAeAYGPttplaXVmKSf0mm6O8U=",
+        "lastModified": 1712440905,
+        "narHash": "sha256-r3BRB7X1G4fvBhlb2VCxjP7tmHDUkH/y8oS4zFdqPX8=",
         "owner": "F1bonacc1",
         "repo": "process-compose",
-        "rev": "b7989c77b6edb255140e236cc2793856a3808a61",
+        "rev": "5a7b83ed8a0f6be58efa9e4940ff41517892eca2",
         "type": "github"
       },
       "original": {
