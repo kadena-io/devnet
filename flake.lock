@@ -71,16 +71,16 @@
         ]
       },
       "locked": {
-        "lastModified": 1714132837,
-        "narHash": "sha256-2S6rM+19MmeOsXNlxF/hNY/X2TTHjnwH/vc5LUO5vYM=",
+        "lastModified": 1714400256,
+        "narHash": "sha256-EyLwU09zKCe7KVNr6KX8OSZMEX84qpnimW9xAV+zj/M=",
         "owner": "kadena-io",
         "repo": "chainweb-node",
-        "rev": "c81d141725bfba5bb58f2bd10e24b352348dc470",
+        "rev": "cbdae2fa1695a3b558cc920e2c9489a883066ea4",
         "type": "github"
       },
       "original": {
         "owner": "kadena-io",
-        "ref": "hyperlane-merkle-message-id-fixes",
+        "ref": "push-mryovoxstzoo",
         "repo": "chainweb-node",
         "type": "github"
       }
