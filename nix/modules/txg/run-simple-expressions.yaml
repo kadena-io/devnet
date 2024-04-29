@@ -1,0 +1,36 @@
+batchSize: 1
+chainwebHosts:
+- hostname: localhost
+  p2pPort: 1789
+  servicePort: 1848
+chainwebVersion: fast-development
+confirmationDepth: 6
+elasticSearchConfig:
+  esApiKey: null
+  esHost: localhost
+  esIndex: txg
+  esPort: 9200
+  esDelay: 10000000
+gasLimit: 600
+gasPrice: 1.0e-3
+isChainweb: true
+nodeChainIds:
+- 0
+scriptCommand:
+  contents:
+    contents:
+      # mean: 1000000.0
+      # mean: 500000.0
+      mean: 250000.0
+      # var: 62500.0
+      var: 0
+    tag: GaussianTD
+  tag: RunCoinContract
+    # tag: RunSimpleExpressions
+timetolive: 3600
+trackMempoolStatConfig: null
+  #   exponentialBackoff: 50000
+  #   numChunks: 1
+  #   retries: 10
+verbose:
+  verbosity: false
