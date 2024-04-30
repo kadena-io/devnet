@@ -65,8 +65,7 @@
         "hs-nix-infra": "hs-nix-infra_3",
         "nix-filter": "nix-filter",
         "pact": [
-          "chainweb-node",
-          "empty"
+          "pact-override"
         ]
       },
       "locked": {
@@ -1381,6 +1380,10 @@
         "kadena-nix": "kadena-nix",
         "nix-exe-bundle": "nix-exe-bundle",
         "nixpkgs": "nixpkgs_6",
+        "pact-override": [
+          "chainweb-node",
+          "empty"
+        ],
         "process-compose": "process-compose"
       }
     },

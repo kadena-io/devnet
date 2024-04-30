@@ -11,7 +11,17 @@
     flake-utils.url = "github:numtide/flake-utils";
     flake-compat.url = "github:kadena-io/flake-compat";
     devenv.url = "github:cachix/devenv";
-    chainweb-node.url = "github:kadena-io/chainweb-node";
+
+    # The pact-override input is not a true input to this flake, but it is used
+    # to override the pact input of chainweb-node optionally. chainweb-node's
+    # pact input is normally a trivial "empty" flake, which tells it to use
+    # the pact package from its cabal.project, but a non-"empty" flake overrides it.
+    pact-override.follows = "chainweb-node/empty";
+    chainweb-node = {
+      url = "github:kadena-io/chainweb-node";
+      inputs.pact.follows = "pact-override";
+    };
+
     chainweb-data.url = "github:kadena-io/chainweb-data";
     chainweb-mining-client.url = "github:kadena-io/chainweb-mining-client";
     block-explorer.url = "github:kadena-io/block-explorer/devnet";
