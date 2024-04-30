@@ -13,7 +13,7 @@
     devenv.url = "github:cachix/devenv";
     chainweb-node.url = "github:kadena-io/chainweb-node";
     chainweb-data.url = "github:kadena-io/chainweb-data";
-    chainweb-mining-client.url = "github:kadena-io/chainweb-mining-client/enis/update-to-flakes-and-haskellNix";
+    chainweb-mining-client.url = "github:kadena-io/chainweb-mining-client";
     block-explorer.url = "github:kadena-io/block-explorer/devnet";
     nix-exe-bundle = { url = "github:3noch/nix-bundle-exe"; flake = false; };
     process-compose = {

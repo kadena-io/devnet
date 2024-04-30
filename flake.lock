@@ -44,16 +44,15 @@
         "hs-nix-infra": "hs-nix-infra_2"
       },
       "locked": {
-        "lastModified": 1699971075,
-        "narHash": "sha256-1TIERCcq4QGDh9bt+3BluvSVu7G4dYdiCx/5XoblanI=",
+        "lastModified": 1700211411,
+        "narHash": "sha256-HJ5bsavMNpvxTsOTj1ZVV8YQzZBtUGRSB2GNaLqA3vQ=",
         "owner": "kadena-io",
         "repo": "chainweb-mining-client",
-        "rev": "2f3f37d9753166013bf45beddf124673ce1ba58a",
+        "rev": "bdd2c7395d0f9f066d1f3d50ee7c277a9bffa081",
         "type": "github"
       },
       "original": {
         "owner": "kadena-io",
-        "ref": "enis/update-to-flakes-and-haskellNix",
         "repo": "chainweb-mining-client",
         "type": "github"
       }
