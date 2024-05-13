@@ -52,7 +52,11 @@
       pact = let
         cwnDefault = inputs.chainweb-node.packages.${system}.default;
         pactMeta = cwnDefault.cached.meta.pact;
-        pactSrc = pkgs.fetchgit { inherit (pactMeta.src) rev url hash; name = "source";};
+        pactSrc = pkgs.fetchgit {
+          inherit (pactMeta.src) rev url;
+          sha256 = pactMeta.src.hash;
+          name = "source";
+        };
         pactFlake = (import inputs.flake-compat { src = pactSrc; }).defaultNix;
         meta = {
           flakeInfo.rev = pactMeta.src.rev;
