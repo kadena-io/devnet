@@ -122,7 +122,7 @@ in
     services.http-server = {
       upstreams.chainweb-data = "server localhost:${port};";
       extraHttpConfig = optionalString cfg.throttle ''
-        limit_req_zone $binary_remote_addr zone=cwd:10m rate=10r/s;
+        limit_req_zone $binary_remote_addr zone=cwd:10m rate=20r/s;
       '';
       retry-after-duration = 1;
       servers.devnet.extraConfig = ''
@@ -132,7 +132,7 @@ in
 
           ${optionalString cfg.throttle ''
             proxy_set_header Chainweb-Execution-Strategy Bounded;
-            limit_req zone=cwd burst=2;
+            limit_req zone=cwd burst=20;
           ''}
         }
       '';

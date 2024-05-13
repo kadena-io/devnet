@@ -11,9 +11,19 @@
     flake-utils.url = "github:numtide/flake-utils";
     flake-compat.url = "github:kadena-io/flake-compat";
     devenv.url = "github:cachix/devenv";
-    chainweb-node.url = "github:kadena-io/chainweb-node/hyperlane-merkle-message-id-fixes";
+
+    # The pact-override input is not a true input to this flake, but it is used
+    # to override the pact input of chainweb-node optionally. chainweb-node's
+    # pact input is normally a trivial "empty" flake, which tells it to use
+    # the pact package from its cabal.project, but a non-"empty" flake overrides it.
+    pact-override.follows = "chainweb-node/empty";
+    chainweb-node = {
+      url = "github:kadena-io/chainweb-node/hyperlane-merkle-message-id-fixes";
+      inputs.pact.follows = "pact-override";
+    };
+
     chainweb-data.url = "github:kadena-io/chainweb-data";
-    chainweb-mining-client.url = "github:kadena-io/chainweb-mining-client/enis/update-to-flakes-and-haskellNix";
+    chainweb-mining-client.url = "github:kadena-io/chainweb-mining-client";
     block-explorer.url = "github:kadena-io/block-explorer/devnet";
     nix-exe-bundle = { url = "github:3noch/nix-bundle-exe"; flake = false; };
     process-compose = {
@@ -42,7 +52,11 @@
       pact = let
         cwnDefault = inputs.chainweb-node.packages.${system}.default;
         pactMeta = cwnDefault.cached.meta.pact;
-        pactSrc = pkgs.fetchgit { inherit (pactMeta.src) rev url hash; name = "source";};
+        pactSrc = pkgs.fetchgit {
+          inherit (pactMeta.src) rev url;
+          sha256 = pactMeta.src.hash;
+          name = "source";
+        };
         pactFlake = (import inputs.flake-compat { src = pactSrc; }).defaultNix;
         meta = {
           flakeInfo.rev = pactMeta.src.rev;
@@ -156,13 +170,7 @@
           imports = [minimal];
           services.chainweb-data.enable = true;
           services.graph.enable = true;
-          sites.explorer.enable =
-            # Enable the explorer only on Linux (which includes all containers)
-            # the reason is nginx+lua isn't compiling on darwin as of the current
-            # nixpkgs version we pin. We can remove this once nginx+lua gets fixed
-            # on a future nixpkgs update
-            pkgs.lib.mkIf (pkgs.hostPlatform.isLinux)
-              true;
+          sites.explorer.enable = true;
         };
         crashnet = {
           imports = [default];

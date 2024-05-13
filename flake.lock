@@ -44,16 +44,15 @@
         "hs-nix-infra": "hs-nix-infra_2"
       },
       "locked": {
-        "lastModified": 1699971075,
-        "narHash": "sha256-1TIERCcq4QGDh9bt+3BluvSVu7G4dYdiCx/5XoblanI=",
+        "lastModified": 1700211411,
+        "narHash": "sha256-HJ5bsavMNpvxTsOTj1ZVV8YQzZBtUGRSB2GNaLqA3vQ=",
         "owner": "kadena-io",
         "repo": "chainweb-mining-client",
-        "rev": "2f3f37d9753166013bf45beddf124673ce1ba58a",
+        "rev": "bdd2c7395d0f9f066d1f3d50ee7c277a9bffa081",
         "type": "github"
       },
       "original": {
         "owner": "kadena-io",
-        "ref": "enis/update-to-flakes-and-haskellNix",
         "repo": "chainweb-mining-client",
         "type": "github"
       }
@@ -66,8 +65,7 @@
         "hs-nix-infra": "hs-nix-infra_3",
         "nix-filter": "nix-filter",
         "pact": [
-          "chainweb-node",
-          "empty"
+          "pact-override"
         ]
       },
       "locked": {
@@ -1013,11 +1011,11 @@
         ]
       },
       "locked": {
-        "lastModified": 1711465174,
-        "narHash": "sha256-DLCALddzNmsJ0m5SvHT2y6689ZfvDHwEGnRdQzbBgNE=",
+        "lastModified": 1712907771,
+        "narHash": "sha256-luhyxJBYEwTerc8+fkvpDGVEMQSPisbJMO2XwghSqiE=",
         "owner": "kadena-io",
         "repo": "kadena-nix",
-        "rev": "13c270dc0bd362f39d8ad277c546d8329f911278",
+        "rev": "2c1973cf0ae56348a15639d902f7f22973463379",
         "type": "github"
       },
       "original": {
@@ -1358,11 +1356,11 @@
         ]
       },
       "locked": {
-        "lastModified": 1707499191,
-        "narHash": "sha256-8covZ7lP5poGyKVn5EEAeAYGPttplaXVmKSf0mm6O8U=",
+        "lastModified": 1712440905,
+        "narHash": "sha256-r3BRB7X1G4fvBhlb2VCxjP7tmHDUkH/y8oS4zFdqPX8=",
         "owner": "F1bonacc1",
         "repo": "process-compose",
-        "rev": "b7989c77b6edb255140e236cc2793856a3808a61",
+        "rev": "5a7b83ed8a0f6be58efa9e4940ff41517892eca2",
         "type": "github"
       },
       "original": {
@@ -1383,6 +1381,10 @@
         "kadena-nix": "kadena-nix",
         "nix-exe-bundle": "nix-exe-bundle",
         "nixpkgs": "nixpkgs_6",
+        "pact-override": [
+          "chainweb-node",
+          "empty"
+        ],
         "process-compose": "process-compose"
       }
     },
