@@ -36,13 +36,6 @@ let
   chainweb-data-fill = pkgs.writeShellScriptBin "chainweb-data-fill" ''
     ${chainweb-data-with-common-params} --ignore-schema-diff fill --level ${cfg.logLevel}
   '';
-  links = flatten [
-    "[Open API Spec](/cwd-spec/)"
-    (optionals (config.services.ttyd.enable or false) [
-      "[DB Access](/ttyd/psql-cwd/)"
-      "[Run `fill` operation](/ttyd/chainweb-data-fill/)"
-    ])
-  ];
 in
 {
   options.services.chainweb-data = {
