@@ -72,6 +72,11 @@
           default = inputs.${flakeName}.packages.${system}.default;
         in bundle default // { inherit flakeInfo; };
       bundleWithInfo' = bundleWithInfo inputs;
+      withNpmjsInfo = drv: let
+        inherit (drv) packageName version;
+        flakeInfo.revLink = "https://npmjs.com/package/${packageName}/v/${version}";
+        in drv // { inherit flakeInfo; }
+        ;
       overlay = (self: super: {
         chainweb-data = bundleWithInfo' "chainweb-data";
         chainweb-mining-client = bundleWithInfo' "chainweb-mining-client";
@@ -80,17 +85,14 @@
         block-explorer = inputs.block-explorer.packages.x86_64-linux.static // {
           flakeInfo = get-flake-info "block-explorer";
         };
-        kadena-graph = let
-          inherit (inputs.kadena-nix.packages.${system}) kadena-graph;
-          inherit (kadena-graph) packageName version;
-          flakeInfo.revLink = "https://npmjs.com/package/${packageName}/v/${version}";
-          in kadena-graph // { inherit flakeInfo; }
-          ;
+        kadena-graph = withNpmjsInfo kadena-nix-pkgs.kadena-graph;
+        kadena-cli = withNpmjsInfo kadena-nix-pkgs.kadena-cli;
         mining-trigger = pkgs.haskellPackages.callCabal2nix "mining-trigger" nix/pkgs/mining-trigger {
           scotty = pkgs.haskellPackages.scotty_0_20_1;
         };
       });
       pkgs = import nixpkgs { inherit system; overlays = [ overlay ]; };
+      kadena-nix-pkgs = inputs.kadena-nix.packages.${system};
       devnetInfo = {
         devnetVersion = "0.1.0";
         devnetRepo = "https://github.com/kadena-io/devnet";
@@ -171,6 +173,7 @@
           services.chainweb-data.enable = true;
           services.graph.enable = true;
           sites.explorer.enable = true;
+          utils.kadena-cli.enable = true;
         };
         crashnet = {
           imports = [default];
