@@ -1007,14 +1007,15 @@
         ],
         "nixpkgs": [
           "nixpkgs"
-        ]
+        ],
+        "nixpkgs-23-05": "nixpkgs-23-05"
       },
       "locked": {
-        "lastModified": 1712907771,
-        "narHash": "sha256-luhyxJBYEwTerc8+fkvpDGVEMQSPisbJMO2XwghSqiE=",
+        "lastModified": 1715695974,
+        "narHash": "sha256-+CSxIDtv3J0EDajNadJuLzSscTDlR3P3vW6z2zWqwXA=",
         "owner": "kadena-io",
         "repo": "kadena-nix",
-        "rev": "2c1973cf0ae56348a15639d902f7f22973463379",
+        "rev": "cf174ab1a4eb79500af6942b4d0f29544a92fc49",
         "type": "github"
       },
       "original": {
@@ -1105,6 +1106,22 @@
       },
       "original": {
         "owner": "NixOS",
+        "repo": "nixpkgs",
+        "type": "github"
+      }
+    },
+    "nixpkgs-23-05": {
+      "locked": {
+        "lastModified": 1685566663,
+        "narHash": "sha256-btHN1czJ6rzteeCuE/PNrdssqYD2nIA4w48miQAFloM=",
+        "owner": "NixOS",
+        "repo": "nixpkgs",
+        "rev": "4ecab3273592f27479a583fb6d975d4aba3486fe",
+        "type": "github"
+      },
+      "original": {
+        "owner": "NixOS",
+        "ref": "23.05",
         "repo": "nixpkgs",
         "type": "github"
       }
