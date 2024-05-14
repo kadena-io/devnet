@@ -1011,11 +1011,11 @@
         "nixpkgs-23-05": "nixpkgs-23-05"
       },
       "locked": {
-        "lastModified": 1715695974,
-        "narHash": "sha256-+CSxIDtv3J0EDajNadJuLzSscTDlR3P3vW6z2zWqwXA=",
+        "lastModified": 1715700188,
+        "narHash": "sha256-PFqKvCZP4BI6UJnTG9xoi6sgnQW0XQfIIgLQ397gW98=",
         "owner": "kadena-io",
         "repo": "kadena-nix",
-        "rev": "cf174ab1a4eb79500af6942b4d0f29544a92fc49",
+        "rev": "ea006870c6d5a13c6d63ff5855a81aa0219aefa6",
         "type": "github"
       },
       "original": {
