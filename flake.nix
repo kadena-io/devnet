@@ -1,6 +1,6 @@
 {
   inputs = {
-    nixpkgs.url = "github:NixOS/nixpkgs/23.11";
+    nixpkgs.url = "github:NixOS/nixpkgs/24.05";
     kadena-nix = {
       url = "github:kadena-io/kadena-nix";
       inputs = {
@@ -87,9 +87,7 @@
         };
         kadena-graph = withNpmjsInfo kadena-nix-pkgs.kadena-graph;
         kadena-cli = withNpmjsInfo kadena-nix-pkgs.kadena-cli;
-        mining-trigger = pkgs.haskellPackages.callCabal2nix "mining-trigger" nix/pkgs/mining-trigger {
-          scotty = pkgs.haskellPackages.scotty_0_20_1;
-        };
+        mining-trigger = pkgs.haskellPackages.callCabal2nix "mining-trigger" nix/pkgs/mining-trigger {};
       });
       pkgs = import nixpkgs { inherit system; overlays = [ overlay ]; };
       kadena-nix-pkgs = inputs.kadena-nix.packages.${system};
