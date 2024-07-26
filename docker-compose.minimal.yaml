@@ -54,6 +54,7 @@ services:
     - --allowReadsInLocal
     - --database-directory=/chainweb/db
     - --disable-pow
+    - --no-full-historic-pact-state
     expose:
       - "1848"
       - "1789"
