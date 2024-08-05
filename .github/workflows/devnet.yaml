@@ -4,6 +4,12 @@ on:
   push:
     branches:
       - main
+  workflow_dispatch:
+    inputs:
+      tag:
+        description: 'Docker tag for the images'
+        required: false
+        default: 'latest'
 
 jobs:
   build:
@@ -29,10 +35,11 @@ jobs:
         Host nixremotebuilderarm64
         "{{ secrets.REMOTE_NIX_BUILDER_HOST_ARM64 }}"
         EOF
+
     - name: Log in to Docker Hub
       run: echo "${{ secrets.DOCKERHUB_ }}" | docker login -u "${{ secrets.DOCKER_USER }}" --password-stdin
 
     - name: Nix build
       run: ./build_and_load_docker_images.sh
       env:
-        TAG: ${{ secrets.DOCKER_TAG }}
+        TAG: ${{ github.event.inputs.tag }}
