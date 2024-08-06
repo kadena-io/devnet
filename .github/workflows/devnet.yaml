@@ -1,0 +1,47 @@
+name: Devent Container Build
+
+on:
+  workflow_dispatch:
+    inputs:
+      tag:
+        description: 'Docker tag for the images'
+        required: false
+        default: 'latest'
+      variant:
+        description: 'Devnet variant'
+        required: false
+        default: 'container-default'
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    steps:
+    - name: Checkout repository
+      uses: actions/checkout@v2
+
+    - name: Set up Nix
+      uses: cachix/install-nix-action@v16
+      with:
+        nix_path: nixpkgs=channel:nixos-unstable
+
+    - name: Setup SSH config
+      run: |
+        echo "${{ secrets.REMOTE_NIX_BUILDER_SSH }}" > ~/.ssh/id_rsa && chmod 600 ~/.ssh/id_rsa
+        cat <<EOF > ~/.ssh/config
+
+        Host nixremotebuilderamd64
+        "{{ secrets.REMOTE_NIX_BUILDER_HOST_AMD64 }}"
+
+        Host nixremotebuilderarm64
+        "{{ secrets.REMOTE_NIX_BUILDER_HOST_ARM64 }}"
+        EOF
+
+    - name: Log in to Docker Hub
+      run: echo "${{ secrets.DOCKERHUB_ }}" | docker login -u "${{ secrets.DOCKER_USER }}" --password-stdin
+
+    - name: Nix build
+      run: ./build_and_load_docker_images.sh
+      env:
+        TAG: ${{ github.event.inputs.tag }}
+        VARIANT: ${{ github.event.inputs.variant }}
