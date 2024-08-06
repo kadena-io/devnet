@@ -27,6 +27,7 @@ jobs:
 
     - name: Setup SSH config
       run: |
+        mkdir -p ~/.ssh && chmod 700 ~/.ssh
         echo "${{ secrets.REMOTE_NIX_BUILDER_SSH }}" > ~/.ssh/id_rsa && chmod 600 ~/.ssh/id_rsa
         cat <<EOF > ~/.ssh/config
 
