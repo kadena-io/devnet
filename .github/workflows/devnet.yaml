@@ -51,8 +51,11 @@ jobs:
         ssh-keyscan -H ${{ secrets.REMOTE_NIX_BUILDER_HOST_AMD64 }} >> ~/.ssh/known_hosts
         ssh-keyscan -H ${{ secrets.REMOTE_NIX_BUILDER_HOST_ARM64 }} >> ~/.ssh/known_hosts
 
-    - name: Display SSH config
-      run: cat ~/.ssh/config
+    - name: Start SSH agent and add key
+      run: |
+        eval "$(ssh-agent -s)"
+        ssh-add ~/.ssh/id_rsa
+
     - name: Log in to Docker Hub
       run: echo "${{ secrets.DOCKERHUB_PAT }}" | docker login -u "${{ secrets.DOCKERHUB_USER }}" --password-stdin
 
