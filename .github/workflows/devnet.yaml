@@ -34,11 +34,14 @@ jobs:
           HostName ${{ secrets.REMOTE_NIX_BUILDER_HOST_AMD64 }}
           User root
           IdentityFile ~/.ssh/id_rsa
+          IdentitiesOnly yes
 
         Host nixremotebuilderarm64
           HostName ${{ secrets.REMOTE_NIX_BUILDER_HOST_ARM64 }}
           User root
           IdentityFile ~/.ssh/id_rsa
+          IdentitiesOnly yes
+          
         EOF
         
     - name: Add remote host keys to known_hosts
