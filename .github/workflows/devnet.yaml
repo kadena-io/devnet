@@ -39,7 +39,7 @@ jobs:
         EOF
 
     - name: Log in to Docker Hub
-      run: echo "${{ secrets.DOCKERHUB_ }}" | docker login -u "${{ secrets.DOCKER_USER }}" --password-stdin
+      run: echo "${{ secrets.DOCKERHUB_PAT }}" | docker login -u "${{ secrets.DOCKERHUB_USER }}" --password-stdin
 
     - name: Nix build
       run: ./build_and_load_docker_images.sh
