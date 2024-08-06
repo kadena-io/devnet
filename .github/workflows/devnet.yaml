@@ -1,15 +1,16 @@
 name: Devent Container Build
 
 on:
-  push:
-    branches:
-      - main
   workflow_dispatch:
     inputs:
       tag:
         description: 'Docker tag for the images'
         required: false
         default: 'latest'
+      variant:
+        description: 'Devnet variant'
+        required: false
+        default: 'container-default'
 
 jobs:
   build:
@@ -43,3 +44,4 @@ jobs:
       run: ./build_and_load_docker_images.sh
       env:
         TAG: ${{ github.event.inputs.tag }}
+        VARIANT: ${{ github.event.inputs.variant }}
