@@ -30,13 +30,17 @@ jobs:
         mkdir -p ~/.ssh && chmod 700 ~/.ssh
         echo "${{ secrets.REMOTE_NIX_BUILDER_SSH }}" > ~/.ssh/id_rsa && chmod 600 ~/.ssh/id_rsa
         cat <<EOF > ~/.ssh/config
-
         Host nixremotebuilderamd64
-        "{{ secrets.REMOTE_NIX_BUILDER_HOST_AMD64 }}"
+          HostName ${{ secrets.REMOTE_NIX_BUILDER_HOST_AMD64 }}
+          User root
+          IdentityFile ~/.ssh/id_rsa
 
         Host nixremotebuilderarm64
-        "{{ secrets.REMOTE_NIX_BUILDER_HOST_ARM64 }}"
+          HostName ${{ secrets.REMOTE_NIX_BUILDER_HOST_ARM64 }}
+          User root
+          IdentityFile ~/.ssh/id_rsa
         EOF
+        
     - name: Display SSH config
       run: cat ~/.ssh/config
     - name: Log in to Docker Hub
