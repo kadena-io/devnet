@@ -42,7 +42,7 @@ jobs:
       run: echo "${{ secrets.DOCKERHUB_PAT }}" | docker login -u "${{ secrets.DOCKERHUB_USER }}" --password-stdin
 
     - name: Nix build
-      run: ./build_and_load_docker_images.sh
+      run: cd .github/workflows && ./build_and_load_docker_images.sh
       env:
         TAG: ${{ github.event.inputs.tag }}
         VARIANT: ${{ github.event.inputs.variant }}
