@@ -35,12 +35,14 @@ jobs:
           User root
           IdentityFile ~/.ssh/id_rsa
           IdentitiesOnly yes
+          IdentityAgent none
 
         Host nixremotebuilderarm64
           HostName ${{ secrets.REMOTE_NIX_BUILDER_HOST_ARM64 }}
           User root
           IdentityFile ~/.ssh/id_rsa
           IdentitiesOnly yes
+          IdentityAgent none
           
         EOF
         
