@@ -1,4 +1,4 @@
-name: Devent Container Build
+name: Devnet Container Build
 
 on:
   workflow_dispatch:
