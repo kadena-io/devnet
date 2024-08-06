@@ -37,7 +37,8 @@ jobs:
         Host nixremotebuilderarm64
         "{{ secrets.REMOTE_NIX_BUILDER_HOST_ARM64 }}"
         EOF
-
+    - name: Display SSH config
+      run: cat ~/.ssh/config
     - name: Log in to Docker Hub
       run: echo "${{ secrets.DOCKERHUB_PAT }}" | docker login -u "${{ secrets.DOCKERHUB_USER }}" --password-stdin
 
