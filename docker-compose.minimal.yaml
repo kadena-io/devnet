@@ -1,5 +1,3 @@
-version: "3.9"
-
 # API Services are exposed on port 8080 on the host
 
 # boostrap certificate fingerprint: YNo7pXthYQ9RQKv1bbpQf2R5LcLYA3ppx2BL2Hf8fIM
@@ -42,9 +40,8 @@ services:
     - --p2p-hostname=bootstrap-node
     - --bootstrap-reachability=1
     - --cluster-id=devnet-minimal
-      #    - --disable-mempool-p2p
     - --p2p-max-session-count=2
-    - --mempool-p2p-max-session-count=2
+    - --mempool-p2p-max-session-count=10
     - --known-peer-info=YNo7pXthYQ9RQKv1bbpQf2R5LcLYA3ppx2BL2Hf8fIM@bootstrap-node:1789
     - --log-level=info
     - --enable-mining-coordination
@@ -72,7 +69,8 @@ services:
     command:
     - --public-key=${MINER_PUBLIC_KEY}
     - --node=bootstrap-node:1848
-    - --worker=constant-delay
+    #- --worker=constant-delay
+    - --worker=on-demand
     - --thread-count=1
     - --log-level=info
     - --no-tls
