@@ -41,7 +41,7 @@ services:
     - --bootstrap-reachability=1
     - --cluster-id=devnet-minimal
     - --p2p-max-session-count=2
-    - --mempool-p2p-max-session-count=2
+    - --mempool-p2p-max-session-count=10
     - --known-peer-info=YNo7pXthYQ9RQKv1bbpQf2R5LcLYA3ppx2BL2Hf8fIM@bootstrap-node:1789
     - --log-level=info
     - --enable-mining-coordination
@@ -69,7 +69,7 @@ services:
     command:
     - --public-key=${MINER_PUBLIC_KEY}
     - --node=bootstrap-node:1848
-    - --worker=constant-delay
+    - --worker=on-demand
     - --thread-count=1
     - --log-level=info
     - --no-tls

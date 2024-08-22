@@ -61,12 +61,12 @@ jq -rc '.requestKeys[0]' |
 # INJECT INTO MEMPOOL
 
 # tee /dev/stderr |
-# 
+#
 # # format for mempool
 # jq -rc '[ .cmds | .[] |  tojson ]' |
-# 
+#
 # tee /dev/stderr |
-# 
+#
 # # PUT into mempool
 # curl \
 #     "https://$NODE:1789/chainweb/0.0/development/chain/$CHAINID/mempool/insert" \
@@ -74,7 +74,7 @@ jq -rc '.requestKeys[0]' |
 #     -d @- \
 #     -H "Content-Type:application/json" \
 #     -sk
-# 
+#
 # # Get pending TXs
 # curl \
 #     "https://$NODE:1789/chainweb/0.0/development/chain/$CHAINID/mempool/getPending" \
@@ -83,9 +83,9 @@ jq -rc '.requestKeys[0]' |
 #     -H "Content-Type:application/json" \
 #     -sk
 # echo
-# 
+#
 # sleep 2
-# 
+#
 # curl \
 #     "https://$NODE:1789/chainweb/0.0/development/chain/$CHAINID/mempool/getPending" \
 #     -XPOST \
@@ -93,7 +93,7 @@ jq -rc '.requestKeys[0]' |
 #     -H "Content-Type:application/json" \
 #     -sk
 # echo
-# 
+#
 # # poll
 # res='{}'
 # while [[ $res = "{}" ]] ; do
