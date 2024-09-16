@@ -1,5 +1,5 @@
 chainweb:
-  chainwebVersion: development
+  chainwebVersion: pact5-development
   allowReadsInLocal: true
   headerStream: true
   throttling:

@@ -9,7 +9,7 @@ let
         node.innerHTML = btoa(value);
       }
       origin = window.location.origin;
-      dataBackends = { development: { p2p: origin, service: origin, data: origin } };
+      dataBackends = { pact5-development: { p2p: origin, service: origin, data: origin } };
       setConfig('common/route', 'origin');
       setConfig('frontend/data-backends', JSON.stringify(dataBackends));
     </script>
@@ -42,7 +42,7 @@ in {
     services.http-server.servers.devnet.extraConfig = ''
       location ~ ^/explorer/?$ {
           default_type text/html;
-          return 200 '<html><head><meta http-equiv="refresh" content="0;url=/explorer/development" /></head></html>';
+          return 200 '<html><head><meta http-equiv="refresh" content="0;url=/explorer/pact5-development" /></head></html>';
       }
 
       location /explorer/ {

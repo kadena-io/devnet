@@ -73,7 +73,7 @@ services:
     - --thread-count=1
     - --log-level=info
     - --no-tls
-    - --constant-delay-block-time=10
+    - --constant-delay-block-time=5
     ports:
     - target: 1917
       published: 1917
