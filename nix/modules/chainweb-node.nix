@@ -18,7 +18,6 @@ let
     --enable-mining-coordination \
     --mining-public-key=f89ef46927f506c70b6a58fd322450a936311dc6ac91f4ec3d8ef949608dbf1f \
     --header-stream \
-    --rosetta \
     --allowReadsInLocal \
     --database-directory=${stateDir}/chainweb/db \
     --disable-pow \
@@ -127,9 +126,6 @@ in
           }
 
           # Optional Service APIs
-          location ~ ^/chainweb/0.0/[0-9a-zA-Z\-\_]+/rosetta/ {
-            proxy_pass http://service-api;
-          }
           location ~ /chainweb/0.0/[0-9a-zA-Z\-\_]+/header/updates {
             proxy_buffering off;
             proxy_pass http://service-api;
