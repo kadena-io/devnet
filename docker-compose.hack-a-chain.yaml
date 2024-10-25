@@ -1,3 +1,8 @@
+# Containers
+# Chainweb Node
+# Hack-a-chain indexer service
+# Postgres
+# Local Stack
 services:
   hack-a-chain-indexer:
     image: kadena/hackichain-indexer:latest
