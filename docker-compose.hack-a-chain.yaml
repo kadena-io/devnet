@@ -1,0 +1,13 @@
+services:
+  hack-a-chain-indexer:
+    image: kadena/hackichain-indexer:latest
+    container_name: hack-a-chain-indexer
+    ports:
+      - "8000:8000"
+    environment:
+      - DATABASE_URL=postgres://postgres:postgres@db:5432/mydb
+    depends_on:
+      - db
+    networks:
+      - app-network
+  chainweb-node:
