@@ -135,7 +135,7 @@ services:
   # Main indexer service
   indexer:
     build:
-      context: https://github.com/hack-a-chain-software/indexer-kadena.git#main
+      context: https://github.com/hack-a-chain-software/indexer-kadena.git#schead
       dockerfile: Dockerfile
     #command: --run
     env_file:
