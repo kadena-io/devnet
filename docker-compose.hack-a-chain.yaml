@@ -137,19 +137,19 @@ services:
     build:
       context: ${INDEXER_REPO}
       dockerfile: Dockerfile
-    command: --run
+    command: ["node", "dist/index.js", "--run"]
     env_file:
       - .env
     environment:
-      SYNC_BASE_URL="http://localhost:1848/chainweb/0.0"
-      SYNC_MIN_HEIGHT=0
-      SYNC_FETCH_INTERVAL_IN_BLOCKS=50
-      SYNC_TIME_BETWEEN_REQUESTS_IN_MS=5000
-      SYNC_ATTEMPTS_MAX_RETRY=10
-      SYNC_ATTEMPTS_INTERVAL_IN_MS=2000
-      SYNC_NETWORK="devnet"
-      NODE_API_URL=http://localhost:1848
-      RUN_GRAPHQL_ON_START=false
+      SYNC_BASE_URL: "http://localhost:1848/chainweb/0.0"
+      SYNC_MIN_HEIGHT: 0
+      SYNC_FETCH_INTERVAL_IN_BLOCKS: 50
+      SYNC_TIME_BETWEEN_REQUESTS_IN_MS: 5000
+      SYNC_ATTEMPTS_MAX_RETRY: 10
+      SYNC_ATTEMPTS_INTERVAL_IN_MS: 2000
+      SYNC_NETWORK: "devnet"
+      NODE_API_URL: http://localhost:1848
+      RUN_GRAPHQL_ON_START: false
     ports:
       - "3000:3000"
     depends_on:
@@ -166,9 +166,19 @@ services:
     build:
       context: ${INDEXER_REPO}
       dockerfile: Dockerfile
-    command: --graphqlServer
+    command: ["node", "dist/index.js", "--graphqlServer"]
     env_file:
       - .env
+    environment:
+      SYNC_BASE_URL: "http://localhost:1848/chainweb/0.0"
+      SYNC_MIN_HEIGHT: 0
+      SYNC_FETCH_INTERVAL_IN_BLOCKS: 50
+      SYNC_TIME_BETWEEN_REQUESTS_IN_MS: 5000
+      SYNC_ATTEMPTS_MAX_RETRY: 10
+      SYNC_ATTEMPTS_INTERVAL_IN_MS: 2000
+      SYNC_NETWORK: "devnet"
+      NODE_API_URL: http://localhost:1848
+      RUN_GRAPHQL_ON_START: false
     ports:
       - "3001:3001"
     depends_on:
