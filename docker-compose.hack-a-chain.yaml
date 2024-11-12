@@ -105,9 +105,9 @@ services:
     ports:
       - "4566:4566"
     environment:
-      - SERVICES=s3
-      - DEBUG=1
-      - DATA_DIR=/var/lib/localstack
+      SERVICES: s3
+      DEBUG: 1
+      PERSISTENCE: 1
     env_file:
       - .env
     volumes:
@@ -150,6 +150,7 @@ services:
       SYNC_NETWORK: "devnet"
       NODE_API_URL: http://localhost:1848
       RUN_GRAPHQL_ON_START: false
+      KADENA_GRAPHQL_API_PORT: 3001
     ports:
       - "3000:3000"
     depends_on:
@@ -178,7 +179,9 @@ services:
       SYNC_ATTEMPTS_INTERVAL_IN_MS: 2000
       SYNC_NETWORK: "devnet"
       NODE_API_URL: http://localhost:1848
+      # this run_graphql is for the hackachain graphql, not the kadena one
       RUN_GRAPHQL_ON_START: false
+      KADENA_GRAPHQL_API_PORT: 3001
     ports:
       - "3001:3001"
     depends_on:
