@@ -114,23 +114,47 @@ services:
       - ${PWD}/indexer/localstack:/var/lib/localstack
       - ${PWD}/indexer/init-s3.py:/etc/localstack/init/ready.d/init-s3.py
 
+  certs:
+    image: alpine
+    volumes:
+      - ./indexer/certs:/certs
+    entrypoint: /bin/sh -c '
+      apk add --no-cache openssl &&
+      mkdir -p /certs &&
+      openssl req -new -newkey rsa:4096 -days 365 -nodes -x509 
+        -keyout /certs/server.key 
+        -out /certs/server.crt 
+        -subj "/C=US/ST=Blockchain/L=Kadena/O=Hackachain/OU=Indexer/CN=localhost" &&
+      chown -R 999:999 /certs &&
+      chmod 600 /certs/server.key
+      ' 
+    
   postgres:
     image: postgres:latest
     environment:
       POSTGRES_USER: ${DB_USERNAME}
       POSTGRES_PASSWORD: ${DB_PASSWORD}
       POSTGRES_DB: ${DB_NAME}
-      POSTGRES_HOST_AUTH_METHOD: trust
-    command: -c ssl=off
+    command: [
+      "postgres",
+      "-c", "ssl=on",
+      "-c", "ssl_cert_file=/var/lib/postgresql/certs/server.crt",
+      "-c", "ssl_key_file=/var/lib/postgresql/certs/server.key"
+    ]
+#command: -c ssl=off
     ports:
       - "5432:5432"
     volumes:
       - ${PWD}/indexer/postgres:/var/lib/postgresql/data
+      - ./indexer/certs:/var/lib/postgresql/certs:ro
     healthcheck:
       test: ["CMD-SHELL", "pg_isready -U ${DB_USERNAME} -d ${DB_NAME}"]
       interval: 1s
       timeout: 5s
       retries: 10
+    depends_on:
+      certs:
+        condition: service_completed_successfully
 
   # Main indexer service
   indexer:
@@ -147,10 +171,13 @@ services:
       SYNC_TIME_BETWEEN_REQUESTS_IN_MS: 5000
       SYNC_ATTEMPTS_MAX_RETRY: 10
       SYNC_ATTEMPTS_INTERVAL_IN_MS: 2000
-      SYNC_NETWORK: "devnet"
+      SYNC_NETWORK: "development"
       NODE_API_URL: http://localhost:1848
       RUN_GRAPHQL_ON_START: false
       KADENA_GRAPHQL_API_PORT: 3001
+      RUN_STREAMING_ON_START: true
+      RUN_MISSING_BLOCKS_ON_START: false
+      DB_SSL_ENABLED: false
     ports:
       - "3000:3000"
     depends_on:
@@ -177,11 +204,12 @@ services:
       SYNC_TIME_BETWEEN_REQUESTS_IN_MS: 5000
       SYNC_ATTEMPTS_MAX_RETRY: 10
       SYNC_ATTEMPTS_INTERVAL_IN_MS: 2000
-      SYNC_NETWORK: "devnet"
+      SYNC_NETWORK: "development"
       NODE_API_URL: http://localhost:1848
       # this run_graphql is for the hackachain graphql, not the kadena one
       RUN_GRAPHQL_ON_START: false
       KADENA_GRAPHQL_API_PORT: 3001
+      DB_SSL_ENABLED: false
     ports:
       - "3001:3001"
     depends_on:
