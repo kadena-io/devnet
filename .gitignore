@@ -1,9 +1,16 @@
 # default db folder
 db/
 
+# created for hack-a-chain version
+indexer/
+
+
 # Nix-related
 result
 .devenv
 
 # Haskell-related
 dist-newstyle/
+
+# logs
+.log
