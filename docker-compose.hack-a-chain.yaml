@@ -52,7 +52,6 @@ services:
     - DISABLE_POW_VALIDATION
 
   simulation-miner:
-    container_name: simulation-miner
     image: "${MINING_CLIENT_IMAGE}"
     platform: linux/amd64
     restart: unless-stopped
@@ -100,7 +99,6 @@ services:
   
   # S3 bucket emulation
   localstack:
-    container_name: localstack_main
     image: localstack/localstack:s3-latest
     ports:
       - "4566:4566"
@@ -112,7 +110,7 @@ services:
       - .env
     volumes:
       - ${PWD}/indexer/localstack:/var/lib/localstack
-      - ${PWD}/indexer/init-s3.py:/etc/localstack/init/ready.d/init-s3.py
+      - ${PWD}/scripts/indexer/init-s3.py:/etc/localstack/init/ready.d/init-s3.py
 
   certs:
     image: alpine

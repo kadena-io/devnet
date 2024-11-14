@@ -2,9 +2,39 @@
 
 This repository contains the definition of the Kadena Devnet using two alternative technologies.
 See below for running the devnet using Docker Compose.
+
+## Nix all-in-one
 For running it with Nix or using Nix to generate a single container with all the devnet services see [nix/README.md](nix/README.md) or [the Docker Hub page of the devnet image](https://hub.docker.com/r/kadena/devnet).
+**This system is no longer maintained, please use docker compose**
 
 ## Docker Compose Deployment of Kadena Devnet
+
+### Variants
+
+#### docker-compose.minimal.yaml
+This version contains a single node, a miner, and an api nginx service for the api p2p on port 8080 (but you can directly access the 1848 service port and 1789 p2p port as well).  This is the most simple version of devnet and used most commonly if you are only working with the node.
+
+```sh
+docker compose -f docker-compose.minimal.yaml up -d
+```
+
+#### docker-compose.hack-a-chain.yaml
+This version contains all of the above, plus the required components to start the hack-a-chain indexer process and expose graphQL.
+
+```sh
+docker compose -f docker-compose.hack-a-chain.yaml build
+docker compose -f docker-compose.hack-a-chain.yaml up -d
+```
+
+#### docker-compose.yaml
+The original docker-compose.yaml was written for testing multiple nodes in an earlier development era.  It is not used as often now.
+
+### Usage
+
+Note: some of the docker commands in here are for docker-compose.yaml only, they are older instructions.
+**tl;dr: have docker compose installed and run one of the above command blocks from this directory**
+
+These docker commands assume you are in the main directory of this repo, as some reference files in an expected location.  Most instances will create a folder in this directory to store the database and other content in, to make it easier to access these items.
 
 Before you begin, check your docker settings to make sure that docker has access
 to at least 8GB of RAM and 4 CPUs.
@@ -24,7 +54,7 @@ docker compose down
 
 Services are exposed on the host on port 8080 via HTTP.
 
-## Settings
+#### Settings
 
 Default values for some settings are defined in the `.env` file and can be
 overwritten with environment variables:
@@ -43,7 +73,7 @@ MINER_PUBLIC_KEY=f89ef46927f506c70b6a58fd322450a936311dc6ac91f4ec3d8ef949608dbf1
 MINER_PRIVATE_KEY=da81490c7efd5a95398a3846fa57fd17339bdf1b941d102f2d3217ad29785ff0
 ```
 
-## chainweb-node Docker Images
+### chainweb-node Docker Images
 
 The fastest way to build for development and incremental builds is to build
 chainweb-node docker images locally. The docker compose file expects the
@@ -231,39 +261,14 @@ db/0/sqlite
 
     You can also use the commands listed elsewhere in this document to query into the node container directly if you reference the right container name: devnet-bootstrap-node-1
 
-# Setup Machine
+# Setting Up
+
+This system expects you to have docker and docker compose installed; these are integrated now on most systems, so a separate compose plugin install should not be required.  See the following:
+
+[docker installation instructions for linux](https://docs.docker.com/engine/install/ubuntu/)
+[docker compose installation for linux](https://docs.docker.com/compose/install/linux/)
 
 ### Ubuntu:
-
-Install docker
-
-```sh
-sudo apt-get update
-sudo apt-get install ca-certificates curl gnupg lsb-release
-curl -fsSL https://download.docker.com/linux/ubuntu/gpg | sudo gpg --dearmor -o /usr/share/keyrings/docker-archive-keyring.gpg
-echo \
- "deb [arch=$(dpkg --print-architecture) signed-by=/usr/share/keyrings/docker-archive-keyring.gpg] https://download.docker.com/linux/ubuntu \
- $(lsb_release -cs) stable" | sudo tee /etc/apt/sources.list.d/docker.list > /dev/null
-sudo apt-get update
-sudo apt-get install docker-ce docker-ce-cli containerd.io
-```
-
-Install docker compose V2
-
-```sh
-mkdir -p ~/.docker/cli-plugins/
-curl -SL https://github.com/docker/compose/releases/download/v2.2.3/docker-compose-linux-x86_64 -o ~/.docker/cli-plugins/docker-compose
-chmod +x ~/.docker/cli-plugins/docker-compose
-```
-
-Give current user access to docker
-
-```sh
-sudo groupadd docker
-sudo usermod -aG docker $USER
-newgrp docker
-```
-
 Install other tools
 
 ```sh
