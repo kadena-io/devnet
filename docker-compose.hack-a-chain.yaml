@@ -154,28 +154,18 @@ services:
       certs:
         condition: service_completed_successfully
 
-  # Main indexer service
-  indexer:
+## Indexer Startup
+  # Run migrations when databases are up
+  indexer-migrations:
     build:
       context: ${INDEXER_REPO}
       dockerfile: Dockerfile
-    command: ["node", "dist/index.js", "--run"]
+    command: > 
+      node dist/index.js --database
+      && npx sequelize-cli db:migrate
     env_file:
-      - .env
-    environment:
-      SYNC_BASE_URL: "http://localhost:1848/chainweb/0.0"
-      SYNC_MIN_HEIGHT: 0
-      SYNC_FETCH_INTERVAL_IN_BLOCKS: 50
-      SYNC_TIME_BETWEEN_REQUESTS_IN_MS: 5000
-      SYNC_ATTEMPTS_MAX_RETRY: 10
-      SYNC_ATTEMPTS_INTERVAL_IN_MS: 2000
-      SYNC_NETWORK: "development"
-      NODE_API_URL: http://localhost:1848
-      RUN_GRAPHQL_ON_START: false
-      KADENA_GRAPHQL_API_PORT: 3001
-      RUN_STREAMING_ON_START: true
-      RUN_MISSING_BLOCKS_ON_START: false
-      DB_SSL_ENABLED: false
+      - path: .env
+      - path: .env.indexer 
     ports:
       - "3000:3000"
     depends_on:
@@ -188,28 +178,17 @@ services:
       api-proxy:
         condition: service_started
 
-  indexer-kadenagraphql:
+  # Main indexer service
+  indexer:
     build:
       context: ${INDEXER_REPO}
       dockerfile: Dockerfile
-    command: ["node", "dist/index.js", "--graphqlServer"]
+    command: ["node", "dist/index.js", "--run"]
     env_file:
-      - .env
-    environment:
-      SYNC_BASE_URL: "http://localhost:1848/chainweb/0.0"
-      SYNC_MIN_HEIGHT: 0
-      SYNC_FETCH_INTERVAL_IN_BLOCKS: 50
-      SYNC_TIME_BETWEEN_REQUESTS_IN_MS: 5000
-      SYNC_ATTEMPTS_MAX_RETRY: 10
-      SYNC_ATTEMPTS_INTERVAL_IN_MS: 2000
-      SYNC_NETWORK: "development"
-      NODE_API_URL: http://localhost:1848
-      # this run_graphql is for the hackachain graphql, not the kadena one
-      RUN_GRAPHQL_ON_START: false
-      KADENA_GRAPHQL_API_PORT: 3001
-      DB_SSL_ENABLED: false
+      - path: .env
+      - path: .env.indexer 
     ports:
-      - "3001:3001"
+      - "3000:3000"
     depends_on:
       localstack:
         condition: service_healthy
@@ -219,7 +198,24 @@ services:
         condition: service_healthy
       api-proxy:
         condition: service_started
+      indexer-migrations:
+        condition: service_completed_successfully
+
+  indexer-kadenagraphql:
+    build:
+      context: ${INDEXER_REPO}
+      dockerfile: Dockerfile
+    command: ["node", "dist/index.js", "--graphqlServer"]
+    env_file:
+      - path: .env
+      - path: .env.indexer 
+    ports:
+      - "3001:3001"
+    depends_on:
+      indexer:
+        condition: service_started
+      
 
 networks:
   default:
-    name: chainweb-indexer-devnet
+    name: chainweb-devnet-indexer
