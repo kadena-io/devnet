@@ -19,7 +19,7 @@ docker compose -f docker-compose.minimal.yaml up -d
 ```
 
 #### docker-compose.hack-a-chain.yaml
-This version contains all of the above, plus the required components to start the hack-a-chain indexer process and expose graphQL.
+This version contains all of the above, plus the required components to start the hack-a-chain indexer process and expose the Kadena GraphQL service on port 3001.
 
 ```sh
 docker compose -f docker-compose.hack-a-chain.yaml build
