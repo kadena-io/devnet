@@ -26,6 +26,11 @@ docker compose -f docker-compose.hack-a-chain.yaml build
 docker compose -f docker-compose.hack-a-chain.yaml up -d
 ```
 
+To watch the indexer and postgres in a terminal, it helps to start it like this:
+`docker compose -f docker-compose.hack-a-chain.yaml up --no-attach simulation-miner --no-attach chainweb-node --no-attach localstack`
+
+
+
 #### docker-compose.yaml
 The original docker-compose.yaml was written for testing multiple nodes in an earlier development era.  It is not used as often now.
 

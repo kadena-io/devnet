@@ -22,6 +22,7 @@ services:
       service: node
     platform: linux/amd64
     hostname: bootstrap-node
+    user: ${UID:-1000}:${GID:-1000}
     labels:
       com.chainweb.devnet.description: "Devnet Bootstrap Node"
       com.chainweb.devnet.bootstrap-node: ""
@@ -53,6 +54,7 @@ services:
     - DISABLE_POW_VALIDATION
 
   simulation-miner:
+    user: ${UID:-1000}:${GID:-1000}
     image: "${MINING_CLIENT_IMAGE}"
     platform: linux/amd64
     restart: unless-stopped
@@ -101,6 +103,7 @@ services:
   # S3 bucket emulation
   localstack:
     image: localstack/localstack:s3-latest
+    hostname: indexer-s3
     ports:
       - "4566:4566"
     environment:
@@ -129,7 +132,7 @@ services:
       ' 
     
   postgres:
-    hostname: devnet-indexer-postgres
+    hostname: indexer-postgres
     image: postgres:latest
     environment:
       POSTGRES_USER: ${DB_USERNAME}
@@ -158,6 +161,7 @@ services:
 ## Indexer Startup
   # Run migrations when databases are up
   indexer-migrations:
+    user: ${UID:-1000}:${GID:-1000}
     build:
       context: ${INDEXER_REPO}
       dockerfile: Dockerfile
@@ -179,6 +183,7 @@ services:
 
   # Main indexer service
   indexer:
+    user: ${UID:-1000}:${GID:-1000}
     build:
       context: ${INDEXER_REPO}
       dockerfile: Dockerfile
@@ -199,6 +204,8 @@ services:
         condition: service_completed_successfully
 
   indexer-kadenagraphql:
+    hostname: indexer-kadenagraphql
+    user: ${UID:-1000}:${GID:-1000}
     build:
       context: ${INDEXER_REPO}
       dockerfile: Dockerfile
