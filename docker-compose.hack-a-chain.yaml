@@ -16,11 +16,12 @@ services:
 # Bootstrap Node
 # For a minimal config, this is the only node we need
 #
-  bootstrap-node:
+  chainweb-node:
     extends:
       file: node.yaml
       service: node
     platform: linux/amd64
+    hostname: bootstrap-node
     labels:
       com.chainweb.devnet.description: "Devnet Bootstrap Node"
       com.chainweb.devnet.bootstrap-node: ""
@@ -33,7 +34,7 @@ services:
     - --p2p-certificate-key-file=/chainweb/devnet-bootstrap-node.key.pem
     - --p2p-hostname=bootstrap-node
     - --bootstrap-reachability=1
-    - --cluster-id=devnet-minimal
+    - --cluster-id=devnet-indexer
     - --p2p-max-session-count=2
     - --mempool-p2p-max-session-count=2
     - --known-peer-info=YNo7pXthYQ9RQKv1bbpQf2R5LcLYA3ppx2BL2Hf8fIM@bootstrap-node:1789
@@ -56,7 +57,7 @@ services:
     platform: linux/amd64
     restart: unless-stopped
     depends_on:
-      bootstrap-node:
+      chainweb-node:
         condition: service_healthy
     entrypoint: "/chainweb-mining-client/chainweb-mining-client"
     command:
@@ -173,7 +174,7 @@ services:
         condition: service_healthy
       postgres:
         condition: service_healthy
-      bootstrap-node:
+      chainweb-node:
         condition: service_healthy
 
   # Main indexer service
@@ -192,7 +193,7 @@ services:
         condition: service_healthy
       postgres:
         condition: service_healthy
-      bootstrap-node:
+      chainweb-node:
         condition: service_healthy
       indexer-migrations:
         condition: service_completed_successfully
