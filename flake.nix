@@ -18,7 +18,7 @@
     # the pact package from its cabal.project, but a non-"empty" flake overrides it.
     pact-override.follows = "chainweb-node/empty";
     chainweb-node = {
-      url = "github:kadena-io/chainweb-node/cc0f3fb4a4814bee75996a6f18ff0551830631dc";
+      url = "github:kadena-io/chainweb-node/b578ff753c395f9fffcdeb794a9ba8c10214ffc2";
       inputs.pact.follows = "pact-override";
     };
 
