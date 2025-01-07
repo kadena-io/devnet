@@ -22,7 +22,7 @@ services:
       service: node
     platform: linux/amd64
     hostname: bootstrap-node
-    user: ${UID:-1000}:${GID:-1000}
+    #    user: ${UID:-1000}:${GID:-1000}
     labels:
       com.chainweb.devnet.description: "Devnet Bootstrap Node"
       com.chainweb.devnet.bootstrap-node: ""
@@ -54,7 +54,7 @@ services:
     - DISABLE_POW_VALIDATION
 
   simulation-miner:
-    user: ${UID:-1000}:${GID:-1000}
+    #  user: ${UID:-1000}:${GID:-1000}
     image: "${MINING_CLIENT_IMAGE}"
     platform: linux/amd64
     restart: unless-stopped
@@ -100,22 +100,6 @@ services:
 #
 # ########################################################################## #
   
-  # S3 bucket emulation
-  localstack:
-    image: localstack/localstack:s3-latest
-    hostname: indexer-s3
-    ports:
-      - "4566:4566"
-    environment:
-      SERVICES: s3
-      DEBUG: 1
-      PERSISTENCE: 1
-    env_file:
-      - .env
-    volumes:
-      - ${PWD}/indexer/localstack:/var/lib/localstack
-      - ${PWD}/scripts/indexer/init-s3.py:/etc/localstack/init/ready.d/init-s3.py
-
   certs:
     image: alpine
     volumes:
@@ -161,7 +145,7 @@ services:
 ## Indexer Startup
   # Run migrations when databases are up
   indexer-migrations:
-    user: ${UID:-1000}:${GID:-1000}
+    # user: ${UID:-1000}:${GID:-1000}
     build:
       context: ${INDEXER_REPO}
       dockerfile: Dockerfile
@@ -174,8 +158,6 @@ services:
     ports:
       - "3000:3000"
     depends_on:
-      localstack:
-        condition: service_healthy
       postgres:
         condition: service_healthy
       chainweb-node:
@@ -183,19 +165,17 @@ services:
 
   # Main indexer service
   indexer:
-    user: ${UID:-1000}:${GID:-1000}
+    # user: ${UID:-1000}:${GID:-1000}
     build:
       context: ${INDEXER_REPO}
       dockerfile: Dockerfile
-    command: ["node", "dist/index.js", "--run"]
+    command: ["node", "dist/index.js", "--streaming"]
     env_file:
       - .env
       - .env.indexer 
     ports:
       - "3000:3000"
     depends_on:
-      localstack:
-        condition: service_healthy
       postgres:
         condition: service_healthy
       chainweb-node:
@@ -209,7 +189,7 @@ services:
     build:
       context: ${INDEXER_REPO}
       dockerfile: Dockerfile
-    command: ["node", "dist/index.js", "--graphqlServer"]
+    command: ["node", "dist/index.js", "--graphql"]
     env_file:
       - .env
       - .env.indexer 
