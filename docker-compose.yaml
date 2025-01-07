@@ -168,7 +168,6 @@ services:
     - --bootstrap-reachability=1
     - --p2p-hostname=0.0.0.0
     - --header-stream
-    - --rosetta
     - --allowReadsInLocal
     - --cluster-id=api-node
     environment:

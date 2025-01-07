@@ -49,7 +49,6 @@ services:
     - --enable-mining-coordination
     - --mining-public-key=${MINER_PUBLIC_KEY}
     - --header-stream
-    - --rosetta
     - --allowReadsInLocal
     - --database-directory=/chainweb/db
     - --disable-pow
