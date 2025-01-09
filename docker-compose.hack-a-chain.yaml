@@ -104,17 +104,18 @@ services:
     image: alpine
     volumes:
       - ./indexer/certs:/certs
-    entrypoint: /bin/sh -c '
+    entrypoint: |
+      /bin/sh -c '
       apk add --no-cache openssl &&
       mkdir -p /certs &&
-      openssl req -new -newkey rsa:4096 -days 365 -nodes -x509 
-        -keyout /certs/server.key 
-        -out /certs/server.crt 
+      openssl req -new -newkey rsa:4096 -days 365 -nodes -x509 \
+        -keyout /certs/server.key \
+        -out /certs/server.crt \
         -subj "/C=US/ST=Blockchain/L=Kadena/O=Hackachain/OU=Indexer/CN=localhost" &&
       chown -R 999:999 /certs &&
       chmod 600 /certs/server.key
-      ' 
-    
+      '
+
   postgres:
     hostname: indexer-postgres
     image: postgres:latest
@@ -142,37 +143,35 @@ services:
       certs:
         condition: service_completed_successfully
 
-## Indexer Startup
+  ## Indexer Startup
+
   # Run migrations when databases are up
   indexer-migrations:
     # user: ${UID:-1000}:${GID:-1000}
     build:
       context: ${INDEXER_REPO}
-      dockerfile: Dockerfile
-    command: > 
-      node dist/index.js --database
-      && npx sequelize-cli db:migrate
+      dockerfile: Dockerfile.development
+    command: ["yarn", "create:database"]
     env_file:
       - .env
       - .env.indexer 
-    ports:
-      - "3000:3000"
     depends_on:
       postgres:
         condition: service_healthy
       chainweb-node:
         condition: service_healthy
 
-  # Main indexer service
-  indexer:
-    # user: ${UID:-1000}:${GID:-1000}
+  # GraphQL API
+  indexer-kadenagraphql:
+    hostname: indexer-kadenagraphql
+    user: ${UID:-1000}:${GID:-1000}
     build:
       context: ${INDEXER_REPO}
-      dockerfile: Dockerfile
-    command: ["node", "dist/index.js", "--streaming"]
+      dockerfile: Dockerfile.development
+    command: ["yarn", "dev:graphql"]
     env_file:
       - .env
-      - .env.indexer 
+      - .env.indexer
     ports:
       - "3000:3000"
     depends_on:
@@ -183,20 +182,23 @@ services:
       indexer-migrations:
         condition: service_completed_successfully
 
-  indexer-kadenagraphql:
-    hostname: indexer-kadenagraphql
-    user: ${UID:-1000}:${GID:-1000}
+  # Main indexer service
+  indexer:
     build:
       context: ${INDEXER_REPO}
-      dockerfile: Dockerfile
-    command: ["node", "dist/index.js", "--graphql"]
+      dockerfile: Dockerfile.development
+    command: ["yarn", "dev:streaming"]
     env_file:
       - .env
       - .env.indexer 
     ports:
       - "3001:3001"
     depends_on:
-      indexer:
+      postgres:
+        condition: service_healthy
+      chainweb-node:
+        condition: service_healthy
+      indexer-kadenagraphql:
         condition: service_started
       
 
