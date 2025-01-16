@@ -114,7 +114,7 @@ in
           location = /health-check {
             proxy_pass http://service-api;
           }
-          location ~ ^/chainweb/0.0/[0-9a-zA-Z\-\_]+/chain/[0-9]+/pact/ {
+          location ~ ^/chainweb/0.0/[0-9a-zA-Z\-\_]+/chain/[0-9]+/pact/* {
             proxy_pass http://service-api;
             ${throttleDirectives}
           }
