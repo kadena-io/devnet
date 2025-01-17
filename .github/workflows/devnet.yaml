@@ -60,7 +60,7 @@ jobs:
       run: echo "${{ secrets.DOCKERHUB_PAT }}" | docker login -u "${{ secrets.DOCKERHUB_USER }}" --password-stdin
    
     - name: ssh test
-      run: ssh nixremotebuilderamd64 "echo connection success" -vvvv
+      run: ssh nixremotebuilderamd64 "echo connection success" 
     
     - name: Nix build
       run: ./.github/workflows/build_and_load_docker_images.sh
