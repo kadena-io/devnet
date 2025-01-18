@@ -1,8 +1,11 @@
 logging:
   logger:
-    log_level: warn
+    log_level: info
   backend:
-    format: json
+    format: text
+    color: 'true'
   telemetryBackend:
+    enabled: true
     configuration:
-      format: json
+      format: text
+      color: 'true'
