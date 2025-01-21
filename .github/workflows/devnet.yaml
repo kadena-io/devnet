@@ -36,6 +36,8 @@ jobs:
           IdentityFile ~/.ssh/id_rsa
           IdentitiesOnly yes
           IdentityAgent none
+          ServerAliveCountMax 900
+          ServerAliveInterval 60
 
         Host nixremotebuilderarm64
           HostName ${{ secrets.REMOTE_NIX_BUILDER_HOST_ARM64 }}
@@ -43,6 +45,8 @@ jobs:
           IdentityFile ~/.ssh/id_rsa
           IdentitiesOnly yes
           IdentityAgent none
+          ServerAliveCountMax 900
+          ServerAliveInterval 60
           
         EOF
         
