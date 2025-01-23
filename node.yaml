@@ -52,13 +52,12 @@ services:
         order: stop-first
 
     healthcheck:
-      test: 
+      test:
       - 'CMD'
       - '/bin/bash'
       - '-c'
       - 'exec 3<>/dev/tcp/localhost/1848; printf "GET /health-check HTTP/1.1\r\nhost: http://localhost:1848\r\nConnection: close\r\n\r\n" >&3; grep -q "200 OK" <&3 || exit 1'
-      interval: 30s
+      interval: 1s
       timeout: 30s
-      retries: 5
-      start_period: 2m
-
+      retries: 100
+      start_period: 30s
