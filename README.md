@@ -18,16 +18,15 @@ This version contains a single node, a miner, and an api nginx service for the a
 docker compose -f docker-compose.minimal.yaml up -d
 ```
 
-#### docker-compose.hack-a-chain.yaml
-This version contains all of the above, plus the required components to start the hack-a-chain indexer process and expose the Kadena GraphQL service on port 3001.
+#### docker-compose.indexer.yaml
+This version contains all of the above, plus the required components to start the indexer indexer process and expose the Kadena GraphQL service on port 3001.
 
 ```sh
-docker compose -f docker-compose.hack-a-chain.yaml build
-docker compose -f docker-compose.hack-a-chain.yaml up -d
+docker compose -f docker-compose.indexer.yaml up --build -d
 ```
 
 To watch the indexer and postgres in a terminal, it helps to start it like this:
-`docker compose -f docker-compose.hack-a-chain.yaml up --no-attach simulation-miner --no-attach chainweb-node --no-attach localstack`
+`docker compose -f docker-compose.indexer.yaml up --no-attach simulation-miner --no-attach chainweb-node --no-attach localstack`
 
 
 
