@@ -87,7 +87,7 @@ services:
     - index.ts
     environment:
       CHAINS: ${CHAINS:-0}
-      CONSENSUS_ENDPOINT: http://chainweb-node:1848/chainweb/0.0/development
+      CONSENSUS_ENDPOINT: http://bootstrap-node:1848/chainweb/0.0/development
       CONTINUOUS_INTERVAL: ${CONTINUOUS_INTERVAL:-20000}
       MINER_HOSTNAME: simulation-miner
       MINING_MODE: ${MINING_MODE:-triggered}
