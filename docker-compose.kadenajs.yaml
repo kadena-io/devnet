@@ -64,15 +64,44 @@ services:
     command:
     - --public-key=${MINER_PUBLIC_KEY}
     - --node=bootstrap-node:1848
-    - --worker=constant-delay
+    - --worker=on-demand
     - --thread-count=1
-    - --log-level=info
+    - --log-level=debug
     - --no-tls
     - --constant-delay-block-time=10
     ports:
     - target: 1917
       published: 1917
       protocol: tcp
+
+  mining-trigger:
+    container_name: mining-trigger
+    depends_on:
+        chainweb-node:
+            condition: service_healthy
+        # simulation-miner:
+        #     condition: service_healthy
+    entrypoint:
+    - bun
+    - --watch
+    - index.ts
+    environment:
+      CHAINS: ${CHAINS:-0}
+      CONSENSUS_ENDPOINT: http://chainweb-node:1848/chainweb/0.0/development
+      CONTINUOUS_INTERVAL: ${CONTINUOUS_INTERVAL:-20000}
+      MINER_HOSTNAME: simulation-miner
+      MINING_MODE: ${MINING_MODE:-triggered}
+      MINING_PORT: '1917'
+      TRIGGER_BLOCK_COUNT: ${TRIGGER_BLOCK_COUNT:-1}
+      TRIGGER_PORT: '1791'
+    expose:
+    - '1791'
+    hostname: mining-trigger
+    image: oven/bun:latest
+    restart: unless-stopped
+    volumes:
+    - ./mining-trigger:/app
+    working_dir: /app
 
 # ########################################################################## #
 # Nginx API Proxy
