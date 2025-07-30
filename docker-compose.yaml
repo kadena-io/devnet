@@ -1,5 +1,3 @@
-version: "3.9"
-
 # API Services are exposed on port 8080 on the host
 
 # boostrap certificate fingerprint: YNo7pXthYQ9RQKv1bbpQf2R5LcLYA3ppx2BL2Hf8fIM
@@ -36,7 +34,7 @@ services:
     - --p2p-certificate-chain-file=/chainweb/devnet-bootstrap-node.cert.pem
     - --p2p-certificate-key-file=/chainweb/devnet-bootstrap-node.key.pem
     - --p2p-hostname=bootstrap-node
-    - --bootstrap-reachability=1
+    - --bootstrap-reachability=0
     - --cluster-id=bootstrap-node
     environment:
     - DISABLE_POW_VALIDATION

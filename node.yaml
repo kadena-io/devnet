@@ -11,6 +11,7 @@ services:
 
     # image: ghcr.io/kadena-io/chainweb-node/ubuntu:latest
     image: ${CHAINWEB_NODE_IMAGE}
+    # platform: linux/arm64
     restart: unless-stopped
     stop_grace_period: 20s
     stop_signal: SIGINT
@@ -40,6 +41,7 @@ services:
     # Common Configuration
     - --config-file=config/chainweb-node.common.yaml
     - --config-file=config/chainweb-node.logging.yaml
+    - --disable-pow
 
     deploy:
       restart_policy:
