@@ -102,7 +102,7 @@ by clicking on `Run Workflow` selecting the respective branch.
 
 The docker image URLs are:
 
-- development image for git rev SHORT_REV: `ghcr.io/kadena-io/chainweb-node:sha-SHORT_REV` (private)
+- development image for git rev SHORT_REV: `ghcr.io/kadena-io/chainweb-node:sha-SHORT_REV-frozen` (private)
 - latest released ubuntu image: `ghcr.io/kadena-io/chainweb-node/ubuntu:latest` (public)
 - latest released alpine image: `ghcr.io/kadena-io/chainweb-node/alpine:latest` (public)
 
@@ -120,7 +120,7 @@ to create a [PAT token for that purpose](https://docs.github.com/en/packages/wor
 Override docker image (chainweb-node revision):
 
 ```sh
-export CHAINWEB_NODE_IMAGE=ghcr.io/kadena-io/chainweb-node:sha-SHORT_REV
+export CHAINWEB_NODE_IMAGE=ghcr.io/kadena-io/chainweb-node:sha-SHORT_REV-frozen
 docker compose up -d
 ```
 
@@ -231,13 +231,6 @@ This should be started from the root of the devnet folder just like the main doc
 
 ```
 docker compose -f docker-compose.minimal.yaml up --remove-orphans -d
-# use --remove-orphans if you no longer need the full devnet containers and they're causing problems
-```
-
-For MacOS with M1 chips you could use:
-
-```
-docker compose -f docker-compose.mac.minimal.yaml up --remove-orphans -d
 # use --remove-orphans if you no longer need the full devnet containers and they're causing problems
 ```
 
