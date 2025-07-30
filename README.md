@@ -49,7 +49,6 @@ Start network:
 docker compose pull
 docker compose up -d
 ```
-
 Stop network:
 
 ```sh
@@ -261,7 +260,9 @@ db/0/sqlite
   - As of 2.18, this is a height of 500. It takes four hours or so to reach this from scratch.
   - The rest api should be exposed on your localhost, so you can use the command below to check the height of chain 0.
 
-    `curl -s http://localhost:8080/chainweb/0.0/development/cut | jq '.hashes."'0'".height'`
+    `curl -s http://localhost:8080/chainweb/0.0/fast-development/cut | jq '.hashes."'0'".height`
+
+    NOTE: Chainweb version name for minimal devnet is `fast-development`, make sure you use the correct name when querying the API.
 
     You can also use the commands listed elsewhere in this document to query into the node container directly if you reference the right container name: devnet-bootstrap-node-1
 
